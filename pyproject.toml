@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "aircontrol"
+version = "0.1.0a0"
+description = ""
+authors = ["likianta <likianta@foxmail.com>"]
+# readme = "README.md"
+packages = [{ include = "aircontrol" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+argsense = "^0.5.8"
+lk-utils = { version = "^2.10.8", source = "likianta-host" }
+robyn = "^0.58.2"
+sanic = "^24.6.0"
+websockets = "^12.0"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.26.0"
+
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "likianta-host"
+url = "http://likianta.pro:2006/"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
