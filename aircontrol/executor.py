@@ -74,11 +74,37 @@ class Executor:
         return load(self._conn.recv())
 
 
-# server_call = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server').run
-# client_call = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client').run
-# server = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server')
+class WebappExecutor(Executor):
+    def run(
+        self,
+        source: t.Union[str, FunctionType],
+        kwargs: dict = None
+    ) -> t.Any:
+        if not self.is_opened:  # lazily open connection.
+            self.open()
+        if isinstance(source, str):
+            print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
+            code = _interpret_code(source)
+        else:
+            print(':v', source)
+            code = _interpret_func(source)
+        # print(':r2', '```python\n{}\n```'.format(code.strip()))
+        self._conn.send(dump((code, kwargs)))
+        from time import sleep
+        while True:
+            resp = self._conn.recv()
+            #   `<id>:working...` | str serialized_data
+            if resp.endswith(':working...'):
+                sleep(2e-3)
+                task_id = resp.split(':')[0]
+                self._conn.send(f'{task_id}:done?')
+            else:
+                return load(resp)
+
+
+server = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server')
+webapp = WebappExecutor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/webapp')
 client = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
-# local_exe = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
 
 
 def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
