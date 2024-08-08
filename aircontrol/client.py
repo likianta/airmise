@@ -14,14 +14,24 @@ from .serdes import load
 
 class Client:
     
-    def __init__(self, port: int = 2005) -> None:
-        self.url = f'ws://localhost:{port}'
-        self._conn = connect(self.url)
-        self._conn.recv()  # consume message from on_connect handler
-        atexit.register(self._conn.close)
+    def __init__(self, port: int = 2005, open_now: bool = True) -> None:
+        self.port = port
+        self._conn = None
+        if open_now: self.open()
+        atexit.register(self.close)
     
-    # def open(self, port: int) -> None:
-    #     self._conn = connect(f'ws://localhost:{port}')
+    @property
+    def is_opened(self) -> bool:
+        return bool(self._conn)
+    
+    def open(self) -> None:
+        self._conn = connect(f'ws://localhost:{self.port}')
+        self._conn.recv()  # consume message from on_connect handler
+    
+    def close(self) -> None:
+        if self._conn:
+            self._conn.close()
+            self._conn = None
     
     def run(
         self,
