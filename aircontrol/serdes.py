@@ -30,11 +30,7 @@ def dump(data: t.Any) -> str:
         x = str(node)
         #   e.g. '<object at 0x7f...>', '[object, object, ...]'
         if x.startswith('<') and x.endswith('>'):
-            print(
-                'serdes.py:43 >',
-                'this maybe a unserializable object!',
-                node
-            )
+            print(':v3', 'this maybe a unserializable object!', node)
         return x
     
     out = serialize(data)
@@ -45,10 +41,10 @@ def dump(data: t.Any) -> str:
 
 
 def load(data: str) -> t.Any:
-    if data.startswith('\\'):
+    if data.startswith('\\'):  # fast recognize pure str type.
         return data[1:]
     try:
         return eval(data)
     except Exception as e:
-        print('serdes.py:62 >', 'failed deserializing data!', data)
+        print(':v4', 'failed deserializing data!', data)
         raise e

@@ -25,8 +25,11 @@ async def _message(ws, msg: str) -> str:
     notice: we cannot change the param signature of this function, otherwise
     robyn will raise an error.
     """
-    print(msg, ':lv')
+    # print(msg, ':v')
     code, kwargs = load(msg)
+    # print(code, ':vi2')
+    print(':vr2', '```python\n{}\n```'.format(code.strip()))
+    if kwargs: print(kwargs, ':vl')
     # return dump(_execute1(code, kwargs))
     return dump(_execute2(code, kwargs))
 

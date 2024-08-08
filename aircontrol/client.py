@@ -33,6 +33,10 @@ class Client:
             self._conn.close()
             self._conn = None
     
+    def reopen(self) -> None:
+        self.close()
+        self.open()
+    
     def run(
         self,
         source: t.Union[str, FunctionType],
@@ -40,10 +44,12 @@ class Client:
     ) -> t.Any:
         # TODO: check if source is a file path.
         if isinstance(source, str):
+            print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
             code = _interpret_code(source)
         else:
+            print(':v', source)
             code = _interpret_function(source)
-        print(':v', code)
+        # print(':r2', '```python\n{}\n```'.format(code.strip()))
         self._conn.send(dump((code, kwargs)))
         return load(self._conn.recv())
 
@@ -97,8 +103,10 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
                     .format(whitespaces, a, a, c)
             else:
                 out += '{}{} = __ref__["{}"]\n'.format(whitespaces, a, a)
-        elif line.startswith('return ') and interpret_return:
-            out += '__ref__["__result__"] = {}\n'.format(line[7:])
+        elif line.lstrip().startswith('return ') and interpret_return:
+            whitespaces = re.match(' *', line).group()
+            out += '{}__ref__["__result__"] = {}\n' \
+                .format(whitespaces, line.lstrip()[7:])
         else:
             out += line + '\n'
     return out
