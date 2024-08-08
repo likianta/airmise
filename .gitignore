@@ -1,3 +1,5 @@
 /.idea/
 /dist/
+/third_libs/*
 __pycache__/
+!**/.gitkeep
