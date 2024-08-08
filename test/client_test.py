@@ -2,14 +2,14 @@ from random import choice
 
 from lk_logger import start_ipython
 
-from aircontrol import LocalExecutor
+from aircontrol import client
 
 
 def test() -> None:
-    exe = LocalExecutor()
+    client.open(False)
     
     def _demo1() -> None:
-        ret = exe.run(
+        ret = client.run(
             '''
             from random import randint
             class FakeDriver:
@@ -23,7 +23,7 @@ def test() -> None:
         print(hex(x), hex(ret[0]), hex(ret[1]))
     
     def _demo2() -> None:
-        ret = exe.run(
+        ret = client.run(
             '''
             memo d
             return (reg, d.read(reg))
@@ -33,8 +33,8 @@ def test() -> None:
         print(hex(x), hex(ret[0]), hex(ret[1]))
     
     start_ipython({
-        'exe'  : exe,
-        'run'  : exe.run,
+        'exe'  : client,
+        'run'  : client.run,
         'demo1': _demo1,
         'demo2': _demo2,
     })

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aircontrol"
-version = "0.1.0a3"
+version = "0.1.0a6"
 description = ""
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"

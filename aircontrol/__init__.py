@@ -10,7 +10,7 @@ if 2:
 from .client import client_runner
 # from .executor import client_call
 # from .executor import server_call
-from .executor import local_exe
+from .executor import client
 from .serdes import dump
 from .serdes import load
 # from .server import messenger

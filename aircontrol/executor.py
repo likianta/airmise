@@ -77,8 +77,8 @@ class Executor:
 # server_call = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server').run
 # client_call = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client').run
 # server = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server')
-# client = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
-local_exe = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
+client = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
+# local_exe = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
 
 
 def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
