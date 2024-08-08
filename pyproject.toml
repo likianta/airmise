@@ -11,7 +11,7 @@ python = "^3.8"
 argsense = "^0.5.8"
 lk-logger = { version = "^6.0.0a2", source = "likianta-host" }
 lk-utils = { version = "^2.10.8", source = "likianta-host" }
-robyn = "^0.58.2"
+# robyn = "^0.58.2"
 sanic = "^24.6.0"
 websockets = "^12.0"
 
