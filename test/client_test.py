@@ -1,14 +1,15 @@
+from random import choice
+
 from lk_logger import start_ipython
 
-from aircontrol import Client
+from aircontrol import LocalExecutor
 
 
 def test() -> None:
-    client = Client()
+    exe = LocalExecutor()
     
-    def _demo() -> None:
-        from random import choice
-        ret = client.run(
+    def _demo1() -> None:
+        ret = exe.run(
             '''
             from random import randint
             class FakeDriver:
@@ -21,13 +22,29 @@ def test() -> None:
         )
         print(hex(x), hex(ret[0]), hex(ret[1]))
     
+    def _demo2() -> None:
+        ret = exe.run(
+            '''
+            memo d
+            return (reg, d.read(reg))
+            ''',
+            {'reg': (x := choice((0xA, 0xB, 0xC, 0xD)))}
+        )
+        print(hex(x), hex(ret[0]), hex(ret[1]))
+    
     start_ipython({
-        'client': client,
-        'run'   : client.run,
-        'demo'  : _demo,
+        'exe'  : exe,
+        'run'  : exe.run,
+        'demo1': _demo1,
+        'demo2': _demo2,
     })
 
 
 if __name__ == '__main__':
-    # pox test/client_test.py
+    # 1. pox -m aircontrol run-client
+    # 2. pox test/client_test.py
+    #   in ipython:
+    #       demo1()
+    #       demo2()
+    #       ...
     test()

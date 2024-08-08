@@ -10,10 +10,12 @@ def dump(data: t.Any) -> str:
     """
     _caller_layer = 1
     
-    def serialize(node: t.Any) -> t.Union[str, tuple, dict]:
+    def serialize(node: t.Any) -> t.Any:
         nonlocal _caller_layer
         _caller_layer += 1
         
+        if node is None:
+            return node
         if isinstance(node, str):
             return node
         if isinstance(node, (tuple, list, set)):
@@ -22,7 +24,7 @@ def dump(data: t.Any) -> str:
             return {k: serialize(v) for k, v in node.items()}
         
         # trusted types
-        if isinstance(node, (bool, bytes, int, float, type(None))):
+        if isinstance(node, (bool, bytes, int, float)):
             return node
         
         # untrusted object

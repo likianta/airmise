@@ -1,75 +1,53 @@
 import typing as t
+from asyncio import sleep
+from collections import deque
+from time import sleep as sleep_sync
 
-from robyn import Robyn
-from robyn import WebSocket
+from sanic import Sanic
+from sanic import Websocket as SanicWebSocket
 
-from .serdes import dump
-from .serdes import load
-
-app = Robyn(__file__)
-ws = WebSocket(app, '/')
-
-__ref__ = {}
+server_runner = Sanic('aircontrol-server')
 
 
-@ws.on('connect')
-async def _connect() -> str:
-    print('connected', ':v2')
-    return ''
-
-
-# noinspection PyUnusedLocal
-@ws.on('message')
-async def _message(ws, msg: str) -> str:
-    """
-    notice: we cannot change the param signature of this function, otherwise
-    robyn will raise an error.
-    """
-    # print(msg, ':v')
-    code, kwargs = load(msg)
-    # print(code, ':vi2')
-    print(':vr2', '```python\n{}\n```'.format(code.strip()))
-    if kwargs: print(kwargs, ':vl')
-    # return dump(_execute1(code, kwargs))
-    return dump(_execute2(code, kwargs))
-
-
-def _execute1(code: str, kwargs: dict) -> t.Any:
-    __ref__['__result__'] = None
-    exec(code, {'__ref__': __ref__}, kwargs)
-    return __ref__['__result__']
-
-
-def _execute2(code: str, kwargs: t.Optional[dict]) -> t.Any:
-    """
-    FIXME: there is a weird bug that if we use `_execute1`, it may report name
-        not defined error. it is likely related to <https://stackoverflow.com
-        /questions/29979313/python-weird-nameerror-name-is-not-defined-in-an
-        -exec-environment> but i don't know how to figure it out.
-        so i use `exec(code, globals(), globals())` as a workaround. see below.
-    """
-    if kwargs:
-        globals().update(kwargs)
-    __ref__['__result__'] = None
-    # FIXME: there is a weird bug that if we use
-    #   `exec(msg, {'__ref__': __ref__}, __ref__)`, it may report name not
-    #   defined error. it is likely related to <https://stackoverflow.com
-    #   /questions/29979313/python-weird-nameerror-name-is-not-defined-in-an
-    #   -exec-environment> but i don't know how to figure it out.
-    #   so i use `exec(msg, globals(), globals())` as a workaround. see below.
-    exec(code, globals(), globals())
-    globals().update(__ref__)
-    return __ref__['__result__']
-
-
-@ws.on('close')
-async def _close() -> str:
-    print('closed', ':v2')
-    return ''
-
-
-class Server:
+class Messenger:
+    class _Undefined:
+        def __bool__(self) -> bool:
+            return False
     
-    @staticmethod
-    def run(port: int = 2005) -> None:
-        app.start(host='127.0.0.1', port=port)
+    _UNDEFINED = _Undefined()
+    
+    def __init__(self) -> None:
+        self.queue = deque()
+        self._auto_id = 0
+        self._callbacks = {}  # {id: (None | _UNDEFINED | callable), ...}
+    
+    def send_sync(self, data: str) -> t.Any:
+        self._auto_id += 1
+        self._callbacks[self._auto_id] = self._UNDEFINED
+        self.queue.append((self._auto_id, data))
+        while self._callbacks[self._auto_id] is self._UNDEFINED:
+            sleep_sync(1e-3)
+        return self._callbacks.pop(self._auto_id)
+    
+    async def send_async(self, data: str, callback: t.Callable = None) -> None:
+        self._auto_id += 1
+        self._callbacks[self._auto_id] = callback
+        self.queue.append((self._auto_id, data))
+    
+    def callback(self, id: str, data: str) -> None:
+        if cb := self._callbacks.pop(id):
+            cb(data)
+
+
+messenger = Messenger()
+
+
+@server_runner.websocket('/server')  # noqa
+async def _on_message(_, ws: SanicWebSocket) -> None:
+    while True:
+        await sleep(1e-3)
+        if messenger.queue:
+            id, data = messenger.queue.popleft()
+            await ws.send(data)
+            resp = await ws.recv()
+            messenger.callback(id, resp)
