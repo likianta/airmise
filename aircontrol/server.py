@@ -8,7 +8,8 @@ from collections import deque
 from sanic import Sanic
 from sanic import Websocket as SanicWebSocket
 
-server_runner = Sanic('aircontrol-server')
+# server_runner = Sanic('aircontrol-server')
+server_runner = Sanic.get_app('aircontrol-server', force_create=True)
 
 
 @server_runner.websocket('/webapp')  # noqa

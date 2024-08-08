@@ -7,7 +7,8 @@ from sanic import Websocket as SanicWebSocket
 from .serdes import dump
 from .serdes import load
 
-client_runner = Sanic('aircontrol-client')
+# client_runner = Sanic('aircontrol-client')
+client_runner = Sanic.get_app('aircontrol-client', force_create=True)
 
 
 @client_runner.websocket('/client')  # noqa
