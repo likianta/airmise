@@ -5,22 +5,22 @@ import typing as t
 from textwrap import dedent
 from types import FunctionType
 
+from websockets.sync.client import ClientConnection
 from websockets.sync.client import connect
 
-from .const import CLIENT_DEFAULT_PORT
+from . import const
 from .serdes import dump
 from .serdes import load
-from .server import messenger
 
 
-class LocalExecutor:
+class Executor:
+    port: int
+    _conn: t.Optional[ClientConnection]
     
-    def __init__(
-        self, port: int = CLIENT_DEFAULT_PORT, open_now: bool = True
-    ) -> None:
-        self.port = port
+    def __init__(self, url: str) -> None:
+        assert url.startswith(('ws://', 'wss://'))
+        self.url = url
         self._conn = None
-        if open_now: self.open()
         atexit.register(self.close)
     
     @property
@@ -28,7 +28,7 @@ class LocalExecutor:
         return bool(self._conn)
     
     def open(self) -> None:
-        self._conn = connect(f'ws://localhost:{self.port}/client')
+        self._conn = connect(self.url)
     
     def close(self) -> None:
         if self._conn:
@@ -45,6 +45,8 @@ class LocalExecutor:
         source: t.Union[str, FunctionType],
         kwargs: dict = None
     ) -> t.Any:
+        if not self.is_opened:  # lazily open connection.
+            self.open()
         # TODO: check if source is a file path.
         if isinstance(source, str):
             print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
@@ -57,25 +59,8 @@ class LocalExecutor:
         return load(self._conn.recv())
 
 
-class RemoteExecutor:
-    @staticmethod
-    def run(
-        source: t.Union[str, FunctionType], kwargs: dict = None
-    ) -> t.Any:
-        # TODO: check if source is a file path.
-        if isinstance(source, str):
-            print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
-            code = _interpret_code(source)
-        else:
-            print(':v', source)
-            code = _interpret_func(source)
-        # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        ret = messenger.send_sync(dump((code, kwargs)))
-        return load(ret)
-
-
-# local_exe = LocalExecutor()
-remote_exe = RemoteExecutor()
+server_call = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server').run
+client_call = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client').run
 
 
 def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:

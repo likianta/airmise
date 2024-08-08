@@ -2,14 +2,6 @@
     // see `aircontrol.server:server_runner.websocket('/server')`
     // FIXME: use public url instead of localhost
     const ws_server = new WebSocket('ws://localhost:2040/server');
-    // ws_server.onmessage = (e) => {
-    //     // special mark:
-    //     // the first character of the message is either '0' or '1'.
-    //     // '0' means the referer is server, '1' means client.
-    //     if (e.data.startsWith('0')) {
-    //         ws_client.send(e.data.slice(1));
-    //     }
-    // }
     ws_server.onmessage = (e) => {
         ws_client.send(e.data);
     }

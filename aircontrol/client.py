@@ -13,7 +13,7 @@ client_runner = Sanic('aircontrol-client')
 @client_runner.websocket('/client')  # noqa
 async def _on_message(_, ws: SanicWebSocket) -> None:
     while True:
-        await sleep(10e-3)
+        await sleep(1e-3)
         data = await ws.recv()
         code, kwargs = load(data)
         print(':vr2', '```python\n{}\n```'.format(code.strip()))

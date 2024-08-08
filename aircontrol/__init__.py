@@ -8,11 +8,9 @@ if 2:
     lk_logger.setup(quiet=True)
 
 from .client import client_runner
-from .executor import LocalExecutor
-from .executor import RemoteExecutor
-# from .executor import local_exe
-from .executor import remote_exe
+from .executor import client_call
+from .executor import server_call
 from .serdes import dump
 from .serdes import load
-from .server import messenger
-from .server import server_runner
+# from .server import messenger
+# from .server import server_runner

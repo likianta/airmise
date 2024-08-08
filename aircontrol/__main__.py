@@ -16,6 +16,7 @@ def run_server(
         port=port,
         auto_reload=debug,
         access_log=False,
+        single_process=True,  # FIXME: why multi-process does not work?
     )
 
 
