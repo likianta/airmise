@@ -1,5 +1,7 @@
 /.idea/
+/abandoned/
 /dist/
-/third_libs/*
+/deps/core/*
+/deps/extra/*
 __pycache__/
 !**/.gitkeep
