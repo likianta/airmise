@@ -5,6 +5,8 @@ import typing as t
 from textwrap import dedent
 from types import FunctionType
 
+from lk_utils import run_new_thread
+from lk_utils.subproc import ThreadBroker
 from websockets.sync.client import ClientConnection
 from websockets.sync.client import connect
 
@@ -16,19 +18,32 @@ from .serdes import load
 class Executor:
     port: int
     _conn: t.Optional[ClientConnection]
+    _thread: t.Optional[ThreadBroker]
     
     def __init__(self, url: str) -> None:
         assert url.startswith(('ws://', 'wss://'))
         self.url = url
         self._conn = None
+        self._thread = None
         atexit.register(self.close)
     
     @property
     def is_opened(self) -> bool:
         return bool(self._conn)
     
-    def open(self) -> None:
-        self._conn = connect(self.url)
+    def open(self, lazy: bool = False) -> None:
+        def _connect() -> None:
+            self._conn = connect(self.url)
+            self._thread = None
+        
+        if lazy:
+            self._thread = run_new_thread(_connect)
+        else:
+            if self._thread:
+                self._thread.join()
+                assert self._conn
+            else:
+                _connect()
     
     def close(self) -> None:
         if self._conn:
@@ -59,8 +74,11 @@ class Executor:
         return load(self._conn.recv())
 
 
-server_call = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server').run
-client_call = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client').run
+# server_call = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server').run
+# client_call = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client').run
+# server = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server')
+# client = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
+local_exe = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
 
 
 def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
