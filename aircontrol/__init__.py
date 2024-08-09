@@ -7,11 +7,11 @@ if 2:
     import lk_logger
     lk_logger.setup(quiet=True)
 
+from . import frontend
 from .client import client_runner
 from .executor import client
 from .executor import server  # DELETE?
 from .executor import webapp
-from .frontend import FRONTEND_HTML
 from .serdes import dump
 from .serdes import load
 from .server import messenger

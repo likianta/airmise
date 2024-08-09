@@ -1,16 +1,13 @@
 import streamlit as st
 import streamlit.components.v1 as stv1
-from lk_utils import fs
 
 from aircontrol import webapp
+from aircontrol.frontend import FRONTEND_TAG
 
 
 def main() -> None:
     st.title('AirControl')
-    stv1.html(
-        fs.load(fs.xpath('../aircontrol/frontend.html')),
-        width=0, height=0
-    )
+    stv1.html(FRONTEND_TAG, width=0, height=0)
     dirpath = st.text_input('Enter a directory path')
     if st.button('Get file tree from client computer'):
         files = webapp.run(
