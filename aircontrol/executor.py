@@ -8,54 +8,54 @@ from types import FunctionType
 
 from lk_utils import run_new_thread
 from lk_utils.subproc import ThreadBroker
-from websockets.sync.client import ClientConnection
-from websockets.sync.client import connect
+from websocket import WebSocket
+from websocket import create_connection  # pip install websocket-client
 
 from . import const
 from .serdes import dump
 from .serdes import load
-from .server import get_local_ip_address
+from .util import get_local_ip_address
 
 
 class Executor:
     url: str
-    _conn: t.Optional[ClientConnection]
     _thread: t.Optional[ThreadBroker]
+    _ws: t.Optional[WebSocket]
     
     def __init__(self, url: str) -> None:
         assert url.startswith(('ws://', 'wss://'))
         self.url = url
-        self._conn = None
+        self._ws = None
         self._thread = None
         atexit.register(self.close)
     
     @property
     def is_opened(self) -> bool:
-        return bool(self._conn)
+        return bool(self._ws)
     
     def open(self, lazy: bool = False) -> None:
-        def do_connect() -> None:
+        def connect() -> None:
             try:
-                self._conn = connect(self.url)
+                self._ws = create_connection(self.url)
             except Exception:
                 print(':v4', self.url)
                 raise
             self._thread = None
         
         if lazy:
-            self._thread = run_new_thread(do_connect)
+            self._thread = run_new_thread(connect)
         else:
             if self._thread:
                 self._thread.join()
-                assert self._conn
+                assert self._ws
             else:
-                do_connect()
+                connect()
     
     def close(self) -> None:
-        if self._conn:
+        if self._ws:
             print('close connection', ':vs')
-            self._conn.close()
-            self._conn = None
+            self._ws.close()
+            self._ws = None
     
     def reopen(self) -> None:
         self.close()
@@ -66,14 +66,14 @@ class Executor:
             self.open()
         # TODO: check if source is a file path.
         if isinstance(source, str):
-            print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
+            # print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
             code = _interpret_code(source)
         else:
-            print(':v', source)
+            # print(':v', source)
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        self._conn.send(dump((code, kwargs or None)))
-        return load(self._conn.recv())
+        self._ws.send(dump((code, kwargs or None)))
+        return load(self._ws.recv())
 
 
 class WebappExecutor(Executor):
@@ -87,14 +87,14 @@ class WebappExecutor(Executor):
             print(':v', source)
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        self._conn.send(dump((code, kwargs or None)))
+        self._ws.send(dump((code, kwargs or None)))
         while True:
-            resp = self._conn.recv()
+            resp = self._ws.recv()
             #   `<id>:working...` | str serialized_data
             if resp.endswith(':working...'):
                 sleep(2e-3)
                 task_id = resp.split(':')[0]
-                self._conn.send(f'{task_id}:done?')
+                self._ws.send(f'{task_id}:done?')
             else:
                 return load(resp)
 

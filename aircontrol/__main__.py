@@ -2,8 +2,8 @@ from argsense import cli
 
 from . import const
 from .client import client_runner
-from .server import get_local_ip_address
 from .server import server_runner
+from .util import get_local_ip_address
 
 
 @cli.cmd()
