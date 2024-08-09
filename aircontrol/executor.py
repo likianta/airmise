@@ -13,6 +13,7 @@ from websockets.sync.client import connect
 from . import const
 from .serdes import dump
 from .serdes import load
+from .server import get_local_ip_address
 
 
 class Executor:
@@ -33,7 +34,11 @@ class Executor:
     
     def open(self, lazy: bool = False) -> None:
         def _connect() -> None:
-            self._conn = connect(self.url)
+            try:
+                self._conn = connect(self.url)
+            except Exception:
+                print(':v4', self.url)
+                raise
             self._thread = None
         
         if lazy:
@@ -102,9 +107,20 @@ class WebappExecutor(Executor):
                 return load(resp)
 
 
-server = Executor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/server')
-webapp = WebappExecutor(f'ws://localhost:{const.SERVER_DEFAULT_PORT}/webapp')
-client = Executor(f'ws://localhost:{const.CLIENT_DEFAULT_PORT}/client')
+client = Executor('ws://{}:{}/client'.format(
+    'localhost', const.CLIENT_DEFAULT_PORT
+))
+# FIXME: make sure server ip is visible in client side.
+#   currently we are using local ip address, which is visible across local
+#   network (that means clients should join the same local network as server).
+#   for furtuer usage, especially in production, we should use a public ip
+#   address.
+server = Executor('ws://{}:{}/server'.format(
+    get_local_ip_address(), const.SERVER_DEFAULT_PORT
+))
+webapp = WebappExecutor('ws://{}:{}/webapp'.format(
+    get_local_ip_address(), const.SERVER_DEFAULT_PORT
+))
 
 
 def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
@@ -119,7 +135,7 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
         return <obj>
             store <obj> to `__result__`.
 
-    example 1:
+    example:
         raw_code:
             from random import randint
             def aaa() -> int:

@@ -13,6 +13,7 @@ from .executor import client
 from .executor import server  # DELETE?
 from .executor import webapp
 from .serdes import dump
+from .server import get_local_ip_address
 from .serdes import load
 from .server import messenger
 from .server import server_runner

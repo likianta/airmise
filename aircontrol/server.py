@@ -1,6 +1,8 @@
 """
 guide: docs/server-webapp-client-structure.zh.md
 """
+import socket
+import sys
 import typing as t
 from asyncio import sleep
 from collections import deque
@@ -83,3 +85,11 @@ class Messenger:
 
 
 messenger = Messenger()
+
+
+def get_local_ip_address() -> str:
+    # https://stackoverflow.com/a/166520/9695911
+    if sys.platform == 'linux':
+        return socket.gethostbyname(socket.getfqdn())
+    else:
+        return socket.gethostbyname(socket.gethostname())

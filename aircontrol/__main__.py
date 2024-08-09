@@ -2,12 +2,13 @@ from argsense import cli
 
 from . import const
 from .client import client_runner
+from .server import get_local_ip_address
 from .server import server_runner
 
 
 @cli.cmd()
 def run_server(
-    host: str = 'localhost',
+    host: str = get_local_ip_address(),
     port: int = const.SERVER_DEFAULT_PORT,
     debug: bool = False,
 ) -> None:
