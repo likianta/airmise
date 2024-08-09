@@ -1,6 +1,8 @@
 import typing as t
 from asyncio import sleep
+from textwrap import dedent
 
+from lk_utils import timestamp
 from sanic import Sanic
 from sanic import Websocket as SanicWebSocket
 
@@ -17,7 +19,15 @@ async def _on_message(_, ws: SanicWebSocket) -> None:
         await sleep(1e-3)
         data = await ws.recv()
         code, kwargs = load(data)
-        print(':vr2', '```python\n{}\n```'.format(code.strip()))
+        print(':vr2', dedent(
+            '''
+            > *message at {}*
+            
+            ```python
+            {}
+            ```
+            '''
+        ).format(timestamp(), code.strip()))
         if kwargs: print(kwargs, ':vl')
         result = _execute2(code, kwargs)
         await ws.send(dump(result))
