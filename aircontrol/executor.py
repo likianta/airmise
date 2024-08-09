@@ -60,11 +60,7 @@ class Executor:
         self.close()
         self.open()
     
-    def run(
-        self,
-        source: t.Union[str, FunctionType],
-        kwargs: dict = None
-    ) -> t.Any:
+    def run(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
         if not self.is_opened:  # lazily open connection.
             self.open()
         # TODO: check if source is a file path.
@@ -75,16 +71,12 @@ class Executor:
             print(':v', source)
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        self._conn.send(dump((code, kwargs)))
+        self._conn.send(dump((code, kwargs or None)))
         return load(self._conn.recv())
 
 
 class WebappExecutor(Executor):
-    def run(
-        self,
-        source: t.Union[str, FunctionType],
-        kwargs: dict = None
-    ) -> t.Any:
+    def run(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
         if not self.is_opened:  # lazily open connection.
             self.open()
         if isinstance(source, str):
@@ -94,7 +86,7 @@ class WebappExecutor(Executor):
             print(':v', source)
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        self._conn.send(dump((code, kwargs)))
+        self._conn.send(dump((code, kwargs or None)))
         from time import sleep
         while True:
             resp = self._conn.recv()
