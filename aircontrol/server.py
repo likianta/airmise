@@ -6,6 +6,7 @@ import sys
 import typing as t
 from asyncio import sleep
 from collections import deque
+from functools import cache
 
 from sanic import Sanic
 from sanic import Websocket as SanicWebSocket
@@ -87,6 +88,7 @@ class Messenger:
 messenger = Messenger()
 
 
+@cache
 def get_local_ip_address() -> str:
     # https://stackoverflow.com/a/166520/9695911
     if sys.platform == 'linux':

@@ -3,6 +3,7 @@ import inspect
 import re
 import typing as t
 from textwrap import dedent
+from time import sleep
 from types import FunctionType
 
 from lk_utils import run_new_thread
@@ -17,7 +18,7 @@ from .server import get_local_ip_address
 
 
 class Executor:
-    port: int
+    url: str
     _conn: t.Optional[ClientConnection]
     _thread: t.Optional[ThreadBroker]
     
@@ -33,7 +34,7 @@ class Executor:
         return bool(self._conn)
     
     def open(self, lazy: bool = False) -> None:
-        def _connect() -> None:
+        def do_connect() -> None:
             try:
                 self._conn = connect(self.url)
             except Exception:
@@ -42,13 +43,13 @@ class Executor:
             self._thread = None
         
         if lazy:
-            self._thread = run_new_thread(_connect)
+            self._thread = run_new_thread(do_connect)
         else:
             if self._thread:
                 self._thread.join()
                 assert self._conn
             else:
-                _connect()
+                do_connect()
     
     def close(self) -> None:
         if self._conn:
@@ -87,7 +88,6 @@ class WebappExecutor(Executor):
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         self._conn.send(dump((code, kwargs or None)))
-        from time import sleep
         while True:
             resp = self._conn.recv()
             #   `<id>:working...` | str serialized_data
@@ -99,21 +99,7 @@ class WebappExecutor(Executor):
                 return load(resp)
 
 
-client = Executor('ws://{}:{}/client'.format(
-    'localhost', const.CLIENT_DEFAULT_PORT
-))
-# FIXME: make sure server ip is visible in client side.
-#   currently we are using local ip address, which is visible across local
-#   network (that means clients should join the same local network as server).
-#   for furtuer usage, especially in production, we should use a public ip
-#   address.
-server = Executor('ws://{}:{}/server'.format(
-    get_local_ip_address(), const.SERVER_DEFAULT_PORT
-))
-webapp = WebappExecutor('ws://{}:{}/webapp'.format(
-    get_local_ip_address(), const.SERVER_DEFAULT_PORT
-))
-
+# -----------------------------------------------------------------------------
 
 def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
     """
@@ -183,3 +169,34 @@ def _interpret_func(func: FunctionType) -> str:
         _interpret_code(inspect.getsource(func), interpret_return=False),
         '__ref__["__result__"] = {}(*args, **kwargs)'.format(func.__name__)
     )
+
+
+# -----------------------------------------------------------------------------
+
+client = Executor('ws://{}:{}/client'.format(
+    'localhost', const.CLIENT_DEFAULT_PORT
+))
+# FIXME: make sure server ip is visible in client side.
+#   currently we are using local ip address, which is visible across local
+#   network (that means clients should join the same local network as server).
+#   for furtuer usage, especially in production, we should use a public ip
+#   address.
+server = Executor('ws://{}:{}/server'.format(
+    get_local_ip_address(), const.SERVER_DEFAULT_PORT
+))
+webapp = WebappExecutor('ws://{}:{}/webapp'.format(
+    get_local_ip_address(), const.SERVER_DEFAULT_PORT
+))
+
+# -----------------------------------------------------------------------------
+
+_default_executor = webapp
+
+
+def replace_default_executor(exe: Executor) -> None:
+    global _default_executor
+    _default_executor = exe
+
+
+def run(source: t.Union[str, FunctionType], **kwargs) -> t.Any:
+    return _default_executor.run(source, **kwargs)
