@@ -7,6 +7,11 @@ from .util import get_local_ip_address
 
 
 @cli.cmd()
+def show_ip() -> None:
+    print(get_local_ip_address(), ':v2s1')
+
+
+@cli.cmd()
 def run_server(
     host: str = get_local_ip_address(),
     port: int = const.SERVER_DEFAULT_PORT,
@@ -26,7 +31,8 @@ def run_client(
     host: str = 'localhost',
     port: int = const.CLIENT_DEFAULT_PORT,
 ) -> None:
-    assert host in ('localhost', '127.0.0.1')
+    if host not in ('localhost', '127.0.0.1'):
+        print(':v3', 'generally client should be run on localhost')
     client_runner.run(host=host, port=port, single_process=True)
 
 
