@@ -35,7 +35,7 @@ streamlit = { version = "^1.37.0", python = "!=3.9.7" }
 
 [[tool.poetry.source]]
 name = "likianta-host"
-url = "http://likianta.pro:2006/"
+url = "http://likianta.pro:2131/"
 priority = "supplemental"
 
 [build-system]

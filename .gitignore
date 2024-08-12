@@ -3,5 +3,6 @@
 /dist/
 /deps/core/*
 /deps/extra/*
+/requirements_extra.txt
 __pycache__/
 !**/.gitkeep
