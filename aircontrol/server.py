@@ -18,6 +18,7 @@ async def _on_webapp_message(_, ws: SanicWebSocket) -> None:
         await sleep(2e-3)
         data = await ws.recv()
         #   `<id>:done?` | str serialized_data
+        # print(data, ':v')
         resp = messenger.send_sync(data)
         await ws.send(resp)
 
@@ -25,6 +26,7 @@ async def _on_webapp_message(_, ws: SanicWebSocket) -> None:
 @server_runner.websocket('/server')  # noqa
 async def _on_server_message(_, ws: SanicWebSocket) -> None:
     print(':r', '[green dim]setup websocket "/server"[/]')
+    messenger.frontend_active = True
     while True:
         await sleep(2e-3)
         if messenger.queue:
@@ -43,6 +45,7 @@ class Messenger:
     _UNDEFINED = _Undefined()
     
     def __init__(self) -> None:
+        self.frontend_active = False
         self.queue = deque()
         self._auto_id = 0
         self._callbacks = {}  # {id: (None | _UNDEFINED | callable), ...}
@@ -69,6 +72,9 @@ class Messenger:
                 return self._callbacks.pop(id)
         
         # ---------------------------------------------------------------------
+        
+        if not self.frontend_active:
+            raise Exception('frontend is not online')
         
         self._auto_id += 1
         self._callbacks[self._auto_id] = self._UNDEFINED

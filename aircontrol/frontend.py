@@ -1,5 +1,7 @@
 from textwrap import dedent
 
+from .server import messenger
+
 FRONTEND_SCRIPT = dedent(
     '''
     // see `aircontrol.server:server_runner.websocket('/server')`
@@ -16,3 +18,7 @@ FRONTEND_SCRIPT = dedent(
 ).strip()
 
 FRONTEND_TAG = '<script>\n{}\n</script>'.format(FRONTEND_SCRIPT)
+
+
+def is_frontend_online() -> bool:
+    return messenger.frontend_active
