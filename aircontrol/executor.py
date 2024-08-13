@@ -6,6 +6,7 @@ from textwrap import dedent
 from time import sleep
 from types import FunctionType
 
+from lk_logger import logger
 from lk_utils import run_new_thread
 from lk_utils.subproc import ThreadBroker
 from websocket import WebSocket
@@ -40,6 +41,8 @@ class Executor:
             except Exception:
                 print(':v4', self.url)
                 raise
+            else:
+                print(':v2', 'executor is connected to server', self.url)
             self._thread = None
         
         if lazy:
@@ -81,15 +84,17 @@ class WebappExecutor(Executor):
         if not self.is_opened:  # lazily open connection.
             self.open()
         if isinstance(source, str):
-            print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
+            print(':pv')
+            print(':pvr2', '```python\n{}\n```'.format(dedent(source).strip()))
             code = _interpret_code(source)
         else:
-            print(':v', source)
+            print(':pv', source)
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         self._ws.send(dump((code, kwargs or None)))
         while True:
             resp = self._ws.recv()
+            # print(resp, ':vi')
             #   `<id>:working...` | str serialized_data
             if resp.endswith(':working...'):
                 sleep(2e-3)
@@ -199,4 +204,5 @@ def replace_default_executor(exe: Executor) -> None:
 
 
 def run(source: t.Union[str, FunctionType], **kwargs) -> t.Any:
-    return _default_executor.run(source, **kwargs)
+    with logger.elevate_caller_stack():
+        return _default_executor.run(source, **kwargs)
