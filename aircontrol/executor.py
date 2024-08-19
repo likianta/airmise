@@ -3,7 +3,6 @@ import inspect
 import re
 import typing as t
 from textwrap import dedent
-from time import sleep
 from types import FunctionType
 
 from lk_logger import logger
@@ -12,10 +11,8 @@ from lk_utils.subproc import ThreadBroker
 from websocket import WebSocket
 from websocket import create_connection  # pip install websocket-client
 
-from . import const
 from .serdes import dump
 from .serdes import load
-from .util import get_local_ip_address
 
 
 class Executor:
@@ -23,12 +20,14 @@ class Executor:
     _thread: t.Optional[ThreadBroker]
     _ws: t.Optional[WebSocket]
     
-    def __init__(self, url: str) -> None:
-        assert url.startswith(('ws://', 'wss://'))
-        self.url = url
+    def __init__(self) -> None:
         self._ws = None
         self._thread = None
         atexit.register(self.close)
+    
+    def connect(self, host: str, port: int, lazy: bool = True) -> None:
+        self.url = 'ws://{}:{}'.format(host, port)
+        self.open(lazy)
     
     @property
     def is_opened(self) -> bool:
@@ -77,31 +76,6 @@ class Executor:
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         self._ws.send(dump((code, kwargs or None)))
         return load(self._ws.recv())
-
-
-class WebappExecutor(Executor):
-    def run(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
-        if not self.is_opened:  # lazily open connection.
-            self.open()
-        if isinstance(source, str):
-            print(':pv')
-            print(':pvr2', '```python\n{}\n```'.format(dedent(source).strip()))
-            code = _interpret_code(source)
-        else:
-            print(':pv', source)
-            code = _interpret_func(source)
-        # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        self._ws.send(dump((code, kwargs or None)))
-        while True:
-            resp = self._ws.recv()
-            # print(resp, ':vi')
-            #   `<id>:working...` | str serialized_data
-            if resp.endswith(':working...'):
-                sleep(2e-3)
-                task_id = resp.split(':')[0]
-                self._ws.send(f'{task_id}:done?')
-            else:
-                return load(resp)
 
 
 # -----------------------------------------------------------------------------
@@ -178,31 +152,10 @@ def _interpret_func(func: FunctionType) -> str:
 
 # -----------------------------------------------------------------------------
 
-client = Executor('ws://{}:{}/client'.format(
-    'localhost', const.CLIENT_DEFAULT_PORT
-))
-# FIXME: make sure server ip is visible in client side.
-#   currently we are using local ip address, which is visible across local
-#   network (that means clients should join the same local network as server).
-#   for furtuer usage, especially in production, we should use a public ip
-#   address.
-server = Executor('ws://{}:{}/server'.format(
-    get_local_ip_address(), const.SERVER_DEFAULT_PORT
-))
-webapp = WebappExecutor('ws://{}:{}/webapp'.format(
-    get_local_ip_address(), const.SERVER_DEFAULT_PORT
-))
+executor = Executor()
+connect = executor.connect
+run = executor.run
 
-# -----------------------------------------------------------------------------
-
-_default_executor = webapp
-
-
-def replace_default_executor(exe: Executor) -> None:
-    global _default_executor
-    _default_executor = exe
-
-
-def run(source: t.Union[str, FunctionType], **kwargs) -> t.Any:
-    with logger.elevate_caller_stack():
-        return _default_executor.run(source, **kwargs)
+# def run(source: t.Union[str, FunctionType], **kwargs) -> t.Any:
+#     with logger.elevate_caller_stack():
+#         return executor.run(source, **kwargs)

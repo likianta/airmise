@@ -519,12 +519,12 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "lk-logger"
-version = "6.0.0a3"
+version = "6.0.0a6"
 description = "Python print with source map and varnames."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "lk_logger-6.0.0a3-py3-none-any.whl", hash = "sha256:05905e585c4bea6aa93cbb784b37eefe5d96085cde81257c84994b5111a76ad0"},
+    {file = "lk_logger-6.0.0a6-py3-none-any.whl", hash = "sha256:7f10c27aabcf5505edde074e06a943a2e11b80ba0e600a0ed672c84b7e2a7aa6"},
 ]
 
 [package.dependencies]
@@ -2118,4 +2118,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "21bfa901c38e116b49583d04f99912d2eef182c573dcd9086df0dfaeb97fc5d9"
+content-hash = "84befff288690e450dbcd49c0954f7dab476a499984b7691e5475ceb3faa3c33"

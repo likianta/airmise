@@ -2,28 +2,16 @@ from argsense import cli
 
 from . import const
 from .client import client_runner
-from .server import server_runner
+from .server import run_server
 from .util import get_local_ip_address
 
 
 @cli.cmd()
-def show_ip() -> None:
+def show_my_ip() -> None:
     print(get_local_ip_address(), ':v2s1')
 
 
-@cli.cmd()
-def run_server(
-    host: str = get_local_ip_address(),
-    port: int = const.SERVER_DEFAULT_PORT,
-    debug: bool = False,
-) -> None:
-    server_runner.run(
-        host=host,
-        port=port,
-        auto_reload=debug,
-        access_log=False,
-        single_process=True,  # FIXME: why multi-process does not work?
-    )
+cli.add_cmd(run_server)
 
 
 @cli.cmd()

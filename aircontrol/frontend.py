@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from .server import messenger
+from .webapp import messenger
 
 FRONTEND_SCRIPT = dedent(
     '''

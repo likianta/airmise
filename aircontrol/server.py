@@ -1,91 +1,87 @@
-"""
-guide: docs/server-webapp-client-structure.zh.md
-"""
 import typing as t
 from asyncio import sleep
-from collections import deque
+from textwrap import dedent
 
+from lk_utils import timestamp
 from sanic import Sanic
 from sanic import Websocket as SanicWebSocket
+from tornado.web import decode_signed_value
 
-# server_runner = Sanic('aircontrol-server')
+from . import const
+from .serdes import dump
+from .serdes import load
+from .util import get_local_ip_address
+
 server_runner = Sanic.get_app('aircontrol-server', force_create=True)
 
 
-@server_runner.websocket('/webapp')  # noqa
-async def _on_webapp_message(_, ws: SanicWebSocket) -> None:
+def run_server(
+    host: str = get_local_ip_address(),
+    port: int = const.SERVER_DEFAULT_PORT,
+    debug: bool = False,
+    user_namespace: dict = None,
+) -> None:
+    if user_namespace:
+        globals().update(user_namespace)
+    server_runner.run(
+        host=host,
+        port=port,
+        auto_reload=debug,
+        access_log=False,
+        single_process=True,
+        #   FIXME: why multi-process does not work?
+    )
+
+
+# -----------------------------------------------------------------------------
+
+@server_runner.websocket('/')  # noqa
+async def _on_message(_, ws: SanicWebSocket) -> None:
+    print(':r', '[green dim]server side setups websocket[/]')
     while True:
-        await sleep(2e-3)
+        await sleep(1e-3)
         data = await ws.recv()
-        #   `<id>:done?` | str serialized_data
-        # print(data, ':v')
-        resp = messenger.send_sync(data)
-        await ws.send(resp)
-
-
-@server_runner.websocket('/server')  # noqa
-async def _on_server_message(_, ws: SanicWebSocket) -> None:
-    print(':r', '[green dim]setup websocket "/server"[/]')
-    messenger.frontend_active = True
-    while True:
-        await sleep(2e-3)
-        if messenger.queue:
-            id, data = messenger.queue.popleft()
-            print(id, data, ':v')
-            await ws.send(data)
-            resp = await ws.recv()
-            messenger[id] = resp
-
-
-class Messenger:
-    class _Undefined:
-        def __bool__(self) -> bool:
-            return False
-    
-    _UNDEFINED = _Undefined()
-    
-    def __init__(self) -> None:
-        self.frontend_active = False
-        self.queue = deque()
-        self._auto_id = 0
-        self._callbacks = {}  # {id: (None | _UNDEFINED | callable), ...}
-    
-    def __setitem__(self, id: int, value: str) -> None:
-        if self._callbacks[id]:
-            # self._callbacks.pop(id)(value)
-            self._callbacks[id](value)
-        else:
-            self._callbacks[id] = value
-            #   will be popped in `self.send_sync._wait_for_result`
-    
-    def send_sync(self, data: str) -> str:
-        """
-        param data: `<id>:done?` | str serialized_data
-        returns: `<id>:working...` | str serialized_data
-        """
-        # data: `<id>:done?` | str serialized_data
-        if data.endswith(':done?'):
-            id = int(data.split(':')[0])
-            if self._callbacks[id] is self._UNDEFINED:
-                return f'{id}:working...'
-            else:
-                return self._callbacks.pop(id)
+        code, kwargs = load(data)
+        print(':vr2', dedent(
+            '''
+            > *message at {}*
         
-        # ---------------------------------------------------------------------
-        
-        if not self.frontend_active:
-            raise Exception('frontend is not online')
-        
-        self._auto_id += 1
-        self._callbacks[self._auto_id] = self._UNDEFINED
-        self.queue.append((self._auto_id, data))
-        print(len(self.queue), ':v')
-        return f'{self._auto_id}:working...'
-    
-    async def send_async(self, data: str, callback: t.Callable = None) -> None:
-        self._auto_id += 1
-        self._callbacks[self._auto_id] = callback
-        self.queue.append((self._auto_id, data))
+            ```python
+            {}
+            ```
+            '''
+        ).format(timestamp(), code.strip()))
+        if kwargs: print(kwargs, ':vl')
+        result = _execute2(code, kwargs)
+        await ws.send(dump(result))
 
 
-messenger = Messenger()
+__ref__ = {}
+
+
+def _execute1(code: str, kwargs: dict) -> t.Any:
+    __ref__['__result__'] = None
+    exec(code, {'__ref__': __ref__}, kwargs)
+    return __ref__['__result__']
+
+
+def _execute2(code: str, kwargs: t.Optional[dict]) -> t.Any:
+    """
+    FIXME: there is a weird bug that if we use `_execute1`, it may report name
+        not defined error. it is likely related to <https://stackoverflow.com
+        /questions/29979313/python-weird-nameerror-name-is-not-defined-in-an
+        -exec-environment> but i don't know how to figure it out.
+        so i use `exec(code, globals(), globals())` as a workaround. see below.
+    """
+    if kwargs:
+        globals().update(kwargs)
+    __ref__['__result__'] = None
+    exec(code, globals(), globals())
+    globals().update(__ref__)
+    return __ref__['__result__']
+
+
+# -----------------------------------------------------------------------------
+
+def release_client(id: str) -> None:
+    pass
