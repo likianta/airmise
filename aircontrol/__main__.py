@@ -45,6 +45,6 @@ def run_client(
 
 
 if __name__ == '__main__':
-    # pox -m aircontrol run-server
+    # pox -m aircontrol run-local-server
     # pox -m aircontrol run-client
     cli.run()

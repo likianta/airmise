@@ -1,9 +1,17 @@
 /.idea/
 /abandoned/
+/build/mini_deps/
 /build/python/
+/build/venv
 /dist/
 /deps/core/*
 /deps/extra/*
+/lib/
 /requirements_extra.txt
+/run_local_server.build/
+/run_local_server.dist/
+/run_local_server.onefine-build/
+/nuitka-crash-report.xml
+/run_local_server.exe
 __pycache__/
 !**/.gitkeep

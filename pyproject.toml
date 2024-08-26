@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aircontrol"
-version = "0.1.0a12"
+version = "0.1.0a23"
 description = ""
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
@@ -10,7 +10,7 @@ packages = [{ include = "aircontrol" }]
 python = "^3.8"
 argsense = "^0.5.8"
 lk-logger = { version = "^6.0.0a6", source = "likianta-host" }
-lk-utils = { version = "^2.10.8", source = "likianta-host" }
+lk-utils = { version = "^2.10.9b0", source = "likianta-host" }
 # robyn = "^0.58.2"
 sanic = "^24.6.0"
 websocket-client = "^1.8.0"
@@ -31,10 +31,15 @@ pandas = [  # <- streamlit
 # pyinstaller = { version = "*", python = ">=3.12,<3.13" }
 streamlit = { version = "^1.37.0", python = "!=3.9.7" }
 
-# [[tool.poetry.source]]
-# name = "tsinghua"
-# url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-# priority = "primary"
+# --- extra
+hidapi = "*"
+modbus-tk = "*"
+pyserial = "*"
+
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
 
 [[tool.poetry.source]]
 name = "likianta-host"

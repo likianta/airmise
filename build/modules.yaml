@@ -1,0 +1,14 @@
+root: ..
+search_paths:
+  - <root>/build/venv
+  - <root>/build/venv/setuptools/_vendor  # bad design, required by `pkg_resources <- tracerite <- sanic`
+  # - <root>/deps/core
+  - <root>/deps/extra
+  - <root>
+modules:
+  <root>/aircontrol/__main__.py: aircontrol-main
+  <root>/build/run_local_server.py: aircontrol-run-local-server
+build:
+  module_graphs: '*'
+  spec_files:
+    - <root>/aircontrol/__main__.py
