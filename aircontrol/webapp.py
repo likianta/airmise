@@ -3,88 +3,142 @@ guide: docs/server-webapp-client-structure.zh.md
 """
 import typing as t
 from asyncio import sleep
-from collections import deque
+from collections import defaultdict
+from textwrap import dedent
+from uuid import uuid1
 
 from sanic import Sanic
 from sanic import Websocket as SanicWebSocket
 
-webapp_runner = Sanic.get_app('aircontrol-webapp', force_create=True)
+from . import const
+from .client import Client
+from .server import Server
+from .util import get_local_ip_address
 
 
-@webapp_runner.websocket('/backend')  # noqa
-async def _on_backend_message(_, ws: SanicWebSocket) -> None:
-    while True:
-        await sleep(2e-3)
-        data = await ws.recv()
-        #   `<id>:done?` | str serialized_data
-        # print(data, ':v')
-        resp = messenger.send_sync(data)
-        await ws.send(resp)
-
-
-@webapp_runner.websocket('/messenger')  # noqa
-async def _on_frontend_message(_, ws: SanicWebSocket) -> None:
-    print(':r', '[green dim]setup websocket "/messenger"[/]')
-    messenger.frontend_active = True
-    while True:
-        await sleep(2e-3)
-        if messenger.queue:
-            id, data = messenger.queue.popleft()
-            print(id, data, ':v')
-            await ws.send(data)
-            resp = await ws.recv()
-            messenger[id] = resp
-
-
-class Messenger:
-    class _Undefined:
-        def __bool__(self) -> bool:
-            return False
-    
-    _UNDEFINED = _Undefined()
-    
+class LocalServer(Server):
     def __init__(self) -> None:
-        self.frontend_active = False
-        self.queue = deque()
-        self._auto_id = 0
-        self._callbacks = {}  # {id: (None | _UNDEFINED | callable), ...}
+        super().__init__(
+            'aircontrol-local-server',
+            'localhost',
+            const.WEBAPP_DEFAULT_PORT,
+        )
+
+
+class WebServer:
+    class _Undefined:
+        pass
     
-    def __setitem__(self, id: int, value: str) -> None:
-        if self._callbacks[id]:
-            # self._callbacks.pop(id)(value)
-            self._callbacks[id](value)
-        else:
-            self._callbacks[id] = value
-            #   will be popped in `self.send_sync._wait_for_result`
+    def __init__(
+        self,
+        name: str = 'aircontrol-web-server',
+        host: str = get_local_ip_address(),
+        port: int = const.WEBAPP_DEFAULT_PORT,
+    ) -> None:
+        self.host = host
+        self.port = port
+        self.is_front_online = False
+        # TODO: queue is not complete.
+        self._requests = defaultdict(lambda: t.cast(str, self._Undefined))
+        self._responses = defaultdict(lambda: t.cast(str, self._Undefined))
+        # self._message_queue = defaultdict(lambda: (deque(), deque()))
+        # #   {client_id: (requests, responses), ...}
+        # #       requests: [(id, req), ...]
+        # #       responses: [(id, rsp), ...]
+        self._runner = Sanic.get_app(name, force_create=True)
+        self._runner.websocket('/frontend/<client_id>')(self._frontend)  # noqa
+        self._runner.websocket('/backend/<client_id>')(self._backend)  # noqa
     
-    def send_sync(self, data: str) -> str:
-        """
-        param data: `<id>:done?` | str serialized_data
-        returns: `<id>:working...` | str serialized_data
-        """
-        # data: `<id>:done?` | str serialized_data
-        if data.endswith(':done?'):
-            id = int(data.split(':')[0])
-            if self._callbacks[id] is self._UNDEFINED:
-                return f'{id}:working...'
+    def run(self, debug: bool = False) -> None:
+        self._runner.run(
+            host=self.host,
+            port=self.port,
+            auto_reload=debug,
+            access_log=False,
+            single_process=True,
+        )
+    
+    async def _frontend(self, _, ws: SanicWebSocket, client_id: str) -> None:
+        self.is_front_online = True
+        while True:
+            while self._requests[client_id] is self._Undefined:
+                await sleep(2e-3)
+            req: str = self._requests.pop(client_id)
+            await ws.send(req)
+            rsp: str = await ws.recv()
+            self._responses[client_id] = rsp
+    
+    async def _backend(self, _, ws: SanicWebSocket, client_id: str) -> None:
+        while True:
+            req = await ws.recv()  # blocking
+            self._requests[client_id] = req
+            while self._responses[client_id] is self._Undefined:
+                await sleep(2e-3)
             else:
-                return self._callbacks.pop(id)
-        
-        # ---------------------------------------------------------------------
-        
-        if not self.frontend_active:
-            raise Exception('frontend is not online')
-        
-        self._auto_id += 1
-        self._callbacks[self._auto_id] = self._UNDEFINED
-        self.queue.append((self._auto_id, data))
-        print(len(self.queue), ':v')
-        return f'{self._auto_id}:working...'
+                rsp: str = self._responses.pop(client_id)
+                await ws.send(rsp)
     
-    async def send_async(self, data: str, callback: t.Callable = None) -> None:
-        self._auto_id += 1
-        self._callbacks[self._auto_id] = callback
-        self.queue.append((self._auto_id, data))
+    '''
+    async def _frontend(self, _, ws: SanicWebSocket, client_id: str) -> None:
+        self.fontend_active = True
+        requests, responses = self._message_queue[client_id]
+        while True:
+            await sleep(2e-3)
+            if requests:
+                id, data = requests.popleft()
+                print(id, data, ':v')
+                await ws.send(data)
+                resp = await ws.recv()
+                responses.append((id, resp))
+
+    async def _backend(self, _, ws: SanicWebSocket, client_id: str) -> None:
+        requests, responses = self._message_queue[client_id]
+        while True:
+            if data := await ws.recv(2e-3):
+                requests.append(load(data))
+            while responses:
+                await ws.send(dump(responses.popleft()))
+            await sleep(2e-3)
+    '''
 
 
-messenger = Messenger()
+class WebClient:
+    def __init__(
+        self,
+        host: str = get_local_ip_address(),
+        port: int = const.WEBAPP_DEFAULT_PORT
+    ) -> None:
+        id = uuid1().hex
+        self.front_script = dedent(
+            '''
+            const web_host = window.location.hostname;
+            // console.log(web_host);
+            
+            const web_client = new WebSocket(
+                `ws://${{web_host}}:{port}/frontend/{id}`);
+            const user_client = new WebSocket('ws://localhost:{port}/{id}');
+            
+            web_client.onmessage = (e) => {{ user_client.send(e.data); }}
+            user_client.onmessage = (e) => {{ web_client.send(e.data); }}
+            '''.format(port=port, id=id)
+        )
+        self.front_tag = '<script>\n{}\n</script>'.format(self.front_script)
+        self.back_client = Client()
+        self.back_client.url = 'ws://{}:{}/backend/{}'.format(host, port, id)
+        self.back_client.open(lazy=True)
+        self.run = self.back_client.run
+        self.open = self.back_client.open
+        self.reopen = self.back_client.reopen
+        self.close = self.back_client.close
+    
+    # @property
+    # def SCRIPT(self) -> str:
+    #     return self.front_script
+    
+    # @property
+    # def TAG(self) -> str:
+    #     return self.front_tag
+    
+    @property
+    def is_opened(self) -> bool:
+        return self.back_client.is_opened
