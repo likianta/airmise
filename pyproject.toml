@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aircontrol"
-version = "0.1.0a23"
+version = "0.1.0a26"
 description = ""
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
@@ -28,6 +28,7 @@ pandas = [  # <- streamlit
     { version = ">=2.2.2", python = ">=3.9" },
     { version = ">=1.5,<2.0", python = "<3.9" }
 ]
+pinkrain = { version = "^0.0.0a10", source = "likianta-host" }
 # pyinstaller = { version = "*", python = ">=3.12,<3.13" }
 streamlit = { version = "^1.37.0", python = "!=3.9.7" }
 
