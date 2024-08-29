@@ -1,6 +1,20 @@
 from argsense import cli
 from lk_utils import fs
 
+from .poetry import poetry
+
+abspath = lambda x: fs.xpath(x, True)
+
+
+@cli.cmd()
+def regenerate_bat_2_exe() -> None:
+    poetry.run(
+        'python', 'build/build.py', 'bat-2-exe', abspath('../launcher/run.bat'),
+        '--show-console', '--icon', abspath('../launcher/airmagic.ico'),
+        cwd='C:/Likianta/workspace/dev_master_likianta/depsland',
+    )
+    print(':t', '"build/launcher/run.exe" is regenerated')
+
 
 @cli.cmd()
 def dist() -> None:
@@ -52,6 +66,7 @@ def dist() -> None:
 
 
 if __name__ == '__main__':
-    # pox build/build.py dist
-    # main()
+    # pox -m build.build_tool regenerate-bat-2-exe
+    # pox -m build.build_tool dist
+    #   before do this, you need to bump the version in pyproject.toml first.
     cli.run()
