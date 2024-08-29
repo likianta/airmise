@@ -144,45 +144,74 @@ class WebServer:
     '''
 
 
-class WebClient:
-    def __init__(
-        self,
-        host: str = get_local_ip_address(),
-        port: int = const.WEBAPP_DEFAULT_PORT,
-        uid: str = None,
-    ) -> None:
-        if uid is None:
-            uid = uuid1().hex
-        self.front_script = dedent(
+class WebClient(Client):
+    front_func: str
+    front_pyfunc: str
+    front_pyscript: str
+    front_pytag: str
+    front_script: str
+    front_tag: str
+    session_id: str
+    
+    def __init__(self, session_id: str = None) -> None:
+        super().__init__()
+        self.session_id = session_id or uuid1().hex
+    
+    def connect(self, host: str, port: int, lazy: bool = True) -> None:
+        self.front_func = dedent(
             '''
-            const web_host = window.location.hostname;
-            // console.log(web_host);
-            
-            const web_client = new WebSocket(
-                `ws://${{web_host}}:{port}/frontend/{id}`);
-            const user_client = new WebSocket('ws://localhost:{port}/{id}');
-            
-            web_client.onmessage = (e) => {{ user_client.send(e.data); }}
-            user_client.onmessage = (e) => {{ web_client.send(e.data); }}
-            '''.format(port=port, id=uid)
+            function init_aircontrol_websockets() {
+                const user_client = new WebSocket('ws://localhost:<port>/<id>');
+                const host_client = new WebSocket(
+                    `ws://${window.location.hostname}:<port>/frontend/<id>`);
+                );
+                host_client.onmessage = (e) => { user_client.send(e.data); }
+                user_client.onmessage = (e) => { host_client.send(e.data); }
+            }
+            '''
+            .replace('<port>', str(port))
+            .replace('<id>', self.session_id)
+        )
+        self.front_script = '{}\n{}'.format(
+            self.front_func,
+            'init_aircontrol_websockets();',
         )
         self.front_tag = '<script>\n{}\n</script>'.format(self.front_script)
-        self.back_client = Client()
-        self.back_client.url = 'ws://{}:{}/backend/{}'.format(host, port, uid)
-        self.back_client.open(lazy=True)
-        self.run = self.back_client.run
-        self.open = self.back_client.open
-        self.reopen = self.back_client.reopen
-        self.close = self.back_client.close
-    
-    # @property
-    # def SCRIPT(self) -> str:
-    #     return self.front_script
-    
-    # @property
-    # def TAG(self) -> str:
-    #     return self.front_tag
-    
-    @property
-    def is_opened(self) -> bool:
-        return self.back_client.is_opened
+        
+        self.front_pyfunc = dedent(
+            '''
+            # executed by brython.
+            from browser import window
+            
+            def init_aircontrol_websockets() -> None:
+                user_client = window.WebSocket.new(
+                    f'ws://localhost:<port>/<id>'
+                )
+                host_client = window.WebSocket.new(
+                    f'ws://{}:<port>/frontend/<id>'.format(
+                        window.location.hostname
+                    )
+                )
+                
+                def _transfer_to_user(e) -> None:
+                    user_client.send(e.data)
+                    
+                def _transfer_to_host(e) -> None:
+                    host_client.send(e.data)
+                    
+                host_client.onmessage = _transfer_to_user
+                user_client.onmessage = _transfer_to_host
+            '''
+            .replace('<port>', str(port))
+            .replace('<id>', self.session_id)
+        )
+        self.front_pyscript = '{}\n{}'.format(
+            self.front_pyfunc,
+            'init_aircontrol_websockets()',
+        )
+        self.front_pytag = '<script type="text/python">\n{}\n</script>'.format(
+            self.front_pyscript
+        )
+        
+        self.url = 'ws://{}:{}/backend/{}'.format(host, port, self.session_id)
+        self.open(lazy)
