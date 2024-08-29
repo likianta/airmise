@@ -4,6 +4,7 @@ from . import const
 from .client import client
 from .server import server
 from .util import get_local_ip_address
+from .webapp import UserLocalServer, WebServer
 
 
 @cli.cmd()
@@ -22,13 +23,20 @@ def run_server(
 
 @cli.cmd()
 def run_local_server(
-    host: str = 'localhost',
-    port: int = const.SERVER_DEFAULT_PORT,
+    # host: str = 'localhost',
+    # port: int = const.SERVER_DEFAULT_PORT,
     **kwargs
 ) -> None:
-    if host not in ('localhost', '127.0.0.1', '0.0.0.0'):
-        print(':v3', 'the local server should be run on "local" host')
-    server.run(host=host, port=port, user_namespace=kwargs)
+    # if host not in ('localhost', '127.0.0.1', '0.0.0.0'):
+    #     print(':v3', 'the local server should be run on "local" host')
+    server = UserLocalServer()
+    server.run(user_namespace=kwargs)
+
+
+@cli.cmd()
+def run_web_server():
+    server = WebServer()
+    server.run()
 
 
 @cli.cmd()
@@ -45,6 +53,7 @@ def run_client(
 
 
 if __name__ == '__main__':
-    # pox -m aircontrol run-local-server
+    # pox -m aircontrol run-server
     # pox -m aircontrol run-client
+    # pox -m aircontrol run-local-server
     cli.run()

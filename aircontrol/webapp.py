@@ -1,5 +1,5 @@
 """
-guide: docs/server-webapp-client-structure.zh.md
+docs/webapp-work-model.zh.md
 """
 import typing as t
 from asyncio import sleep
@@ -7,22 +7,64 @@ from collections import defaultdict
 from textwrap import dedent
 from uuid import uuid1
 
+from lk_utils import timestamp
 from sanic import Sanic
 from sanic import Websocket as SanicWebSocket
 
 from . import const
 from .client import Client
-from .server import Server
+from .serdes import dump
+from .serdes import load
 from .util import get_local_ip_address
 
 
-class LocalServer(Server):
-    def __init__(self) -> None:
-        super().__init__(
-            'aircontrol-local-server',
-            'localhost',
-            const.WEBAPP_DEFAULT_PORT,
+class UserLocalServer:
+    def __init__(self, name: str = 'aircontrol-local-server') -> None:
+        self._runner = Sanic.get_app(name, force_create=True)
+        self._runner.websocket('/<client_id>')(self._on_message)  # noqa
+        self._all_users_namespace = defaultdict(self._init_user_namespace)
+        self._default_user_namespace = None
+    
+    def _init_user_namespace(self) -> dict:
+        out = {'__result__': None}
+        if self._default_user_namespace:
+            out.update(self._default_user_namespace)
+        return out
+    
+    def run(self, debug: bool = False, user_namespace: dict = None) -> None:
+        self._default_user_namespace = user_namespace
+        self._runner.run(
+            host='localhost',
+            port=const.WEBAPP_DEFAULT_PORT,
+            auto_reload=debug,
+            access_log=False,
+            single_process=True,  # FIXME
         )
+    
+    async def _on_message(self, _, ws: SanicWebSocket, client_id: str) -> None:
+        context = self._all_users_namespace[client_id]
+        
+        while True:
+            await sleep(1e-3)
+            data = await ws.recv()
+            code, kwargs = load(data)
+            
+            print(':vr2', dedent(
+                '''
+                > *message at {}*
+
+                ```python
+                {}
+                ```
+                '''
+            ).format(timestamp(), code.strip()))
+            if kwargs:
+                print(kwargs, ':vl')
+                context.update(kwargs)
+            
+            exec(code, context, {'__ctx__': context})
+            result = context['__result__']
+            await ws.send(dump(result))
 
 
 class WebServer:
@@ -106,9 +148,11 @@ class WebClient:
     def __init__(
         self,
         host: str = get_local_ip_address(),
-        port: int = const.WEBAPP_DEFAULT_PORT
+        port: int = const.WEBAPP_DEFAULT_PORT,
+        uid: str = None,
     ) -> None:
-        id = uuid1().hex
+        if uid is None:
+            uid = uuid1().hex
         self.front_script = dedent(
             '''
             const web_host = window.location.hostname;
@@ -120,11 +164,11 @@ class WebClient:
             
             web_client.onmessage = (e) => {{ user_client.send(e.data); }}
             user_client.onmessage = (e) => {{ web_client.send(e.data); }}
-            '''.format(port=port, id=id)
+            '''.format(port=port, id=uid)
         )
         self.front_tag = '<script>\n{}\n</script>'.format(self.front_script)
         self.back_client = Client()
-        self.back_client.url = 'ws://{}:{}/backend/{}'.format(host, port, id)
+        self.back_client.url = 'ws://{}:{}/backend/{}'.format(host, port, uid)
         self.back_client.open(lazy=True)
         self.run = self.back_client.run
         self.open = self.back_client.open

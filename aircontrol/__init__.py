@@ -21,6 +21,6 @@ from .server import run_server as serving
 from .server import server
 from .util import get_local_ip_address
 from .util import random_name
-from .webapp import LocalServer
+from .webapp import UserLocalServer
 from .webapp import WebClient
 from .webapp import WebServer
