@@ -113,7 +113,7 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
                 history.append(randint(0, 9))
                 return sum(history)
             __result__ = aaa()
-            __ctx__.update(globals())
+            __ctx__.update(locals())
     """
     scope = []
     out = ''
@@ -149,7 +149,7 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
         else:
             out += line + '\n'
     if interpret_return:
-        out += '__ctx__.update(globals())'
+        out += '__ctx__.update(locals())'
     
     assert not scope
     return out
@@ -159,5 +159,5 @@ def _interpret_func(func: FunctionType) -> str:
     return '\n'.join((
         _interpret_code(inspect.getsource(func), interpret_return=False),
         '__result__ = {}(*args, **kwargs)'.format(func.__name__),
-        '__ctx__.update(globals())',
+        '__ctx__.update(locals())',
     ))

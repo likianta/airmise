@@ -11,19 +11,37 @@ def main():
             item.text = client.front_script
         
         with pr.comp.Column():
-            with pr.daisy.Button('Test') as btn:
+            with pr.daisy.Button('Test', cls='w-32') as btn:
                 @btn.on_click
                 def _():
                     data = client.run(
                         '''
+                        from pprint import pprint
                         from random import randint
+                        
                         memo alist := []
                         alist.append(randint(0, 0xFFFF))
-                        return hex(alist[-1])
+                        aaa = 'alpha'
+                        
+                        out = hex(alist[-1])
+                        
+                        print('{} check globals'.format('-' * 60))
+                        pprint({
+                            k: v for k, v in globals().items()
+                            if not (k.startswith('__') and k != '__result__')
+                        })
+                        
+                        print('{} check locals'.format('-' * 60))
+                        pprint({
+                            k: v for k, v in locals().items()
+                            if not (k.startswith('__') and k != '__result__')
+                        })
+                        
+                        return out
                         '''
                     )
                     print(data)
-                    para.text = 'Got data: ' + data
+                    para.text = f'Got data: {data}'
             
             with pr.html.p() as para:
                 para.text = 'Click the button to test the websocket connection.'
