@@ -19,7 +19,8 @@ class Server:
         self._runner = Sanic.get_app(name, force_create=True)
         # noinspection PyCallingNonCallable
         self._runner.websocket('/')(self._on_message)
-        self._context = {'__result__': None}
+        self._context = {}
+        self._references = {'__result__': None}
     
     def run(
         self,
@@ -41,7 +42,17 @@ class Server:
     
     async def _on_message(self, _, ws: SanicWebSocket) -> None:
         print(':r', '[green dim]server side setups websocket[/]')
-        context = self._context.copy()
+        ctx = self._context.copy()
+        ref = self._references.copy()
+        '''
+            what is `ctx` and `ref`?
+            `ctx` is an implicit "background" information for the code to run.
+            `ref` is a hook to preserve the key variables.
+            for example, when code is doing `import numpy`, the `numpy` module
+            will be stored in `ctx` so that the next code can access it.
+            when code is doing `memo data = [123]`, the `data` will be stored
+            in `ref` so that the next code can access it by `memo data`.
+        '''
         while True:
             await sleep(1e-3)
             data = await ws.recv()
@@ -58,12 +69,8 @@ class Server:
             ).format(timestamp(), code.strip()))
             if kwargs:
                 print(kwargs, ':vl')
-                context.update(kwargs)
+                ctx.update(kwargs)
             
-            exec(code, context, {'__ctx__': context})
-            result = context['__result__']
+            exec(code, ctx, {'__ctx__': ctx, '__ref__': ref})
+            result = ref['__result__']
             await ws.send(dump(result))
-
-
-server = Server()
-run_server = server.run

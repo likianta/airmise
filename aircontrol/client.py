@@ -5,8 +5,6 @@ import typing as t
 from textwrap import dedent
 from types import FunctionType
 
-from lk_utils import run_new_thread
-from lk_utils.subproc import ThreadBroker
 from websocket import WebSocket
 from websocket import create_connection  # pip install websocket-client
 
@@ -16,41 +14,32 @@ from .serdes import load
 
 class Client:
     url: str
-    _thread: t.Optional[ThreadBroker]
     _ws: t.Optional[WebSocket]
     
     def __init__(self) -> None:
         self._ws = None
-        self._thread = None
         atexit.register(self.close)
     
     def connect(self, host: str, port: int, lazy: bool = True) -> None:
         self.url = 'ws://{}:{}'.format(host, port)
-        self.open(lazy)
+        if not lazy: self.open()
     
     @property
     def is_opened(self) -> bool:
         return bool(self._ws)
     
-    def open(self, lazy: bool = False) -> None:
-        def connect() -> None:
-            try:
-                self._ws = create_connection(self.url)
-            except Exception:
-                print(':v4', self.url)
-                raise
-            else:
-                print(':v2', 'executor is connected to server', self.url)
-            self._thread = None
-        
-        if lazy:
-            self._thread = run_new_thread(connect)
+    def open(self, **kwargs) -> None:
+        try:
+            self._ws = create_connection(self.url, **kwargs)
+        except Exception:
+            print(
+                ':v4',
+                'cannot connect to server via {}! '
+                'please check if server online.'.format(self.url)
+            )
+            raise
         else:
-            if self._thread:
-                self._thread.join()
-                assert self._ws
-            else:
-                connect()
+            print(':v2', 'executor is connected to server', self.url)
     
     def close(self) -> None:
         if self._ws:
@@ -63,7 +52,7 @@ class Client:
         self.open()
     
     def run(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
-        if not self.is_opened:  # lazily open connection.
+        if not self.is_opened:
             self.open()
         # TODO: check if source is a file path.
         if isinstance(source, str):
@@ -107,13 +96,16 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
         interpreted:
             from random import randint
             def aaa() -> int:
-                if 'history' not in __ctx__:
-                    __ctx__['history'] = []
-                history = __ctx__['history']
+                if 'history' not in __ref__:
+                    __ref__['history'] = []
+                history = __ref__['history']
                 history.append(randint(0, 9))
                 return sum(history)
-            __result__ = aaa()
+            __ref__['__result__'] = aaa()
             __ctx__.update(locals())
+        note:
+            `__ctx__` and `__ref__` are explained in
+            `.server.Server._on_message`.
     """
     scope = []
     out = ''
@@ -136,16 +128,16 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
             a, b, c = re.match(r'memo (\w+)(?: (:)?= (.+))?', linex).groups()
             if b:
                 out += (
-                    '{}{} = __ctx__["{}"] if "{}" in __ctx__ else '
-                    '__ctx__.setdefault("{}", {})\n'
+                    '{}{} = __ref__["{}"] if "{}" in __ref__ else '
+                    '__ref__.setdefault("{}", {})\n'
                     .format(ws, a, a, a, a, c)
                 )
             elif c:
-                out += '{}{} = __ctx__["{}"] = {}\n'.format(ws, a, a, c)
+                out += '{}{} = __ref__["{}"] = {}\n'.format(ws, a, a, c)
             else:
-                out += '{}{} = __ctx__["{}"]\n'.format(ws, a, a)
+                out += '{}{} = __ref__["{}"]\n'.format(ws, a, a)
         elif linex.startswith('return ') and not scope and interpret_return:
-            out += '{}__result__ = {}\n'.format(ws, linex[7:])
+            out += '{}__ref__["__result__"] = {}\n'.format(ws, linex[7:])
         else:
             out += line + '\n'
     if interpret_return:
@@ -158,6 +150,6 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
 def _interpret_func(func: FunctionType) -> str:
     return '\n'.join((
         _interpret_code(inspect.getsource(func), interpret_return=False),
-        '__result__ = {}(*args, **kwargs)'.format(func.__name__),
+        '__ref__["__result__"] = {}(*args, **kwargs)'.format(func.__name__),
         '__ctx__.update(locals())',
     ))

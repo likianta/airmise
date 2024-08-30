@@ -17,8 +17,7 @@ from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT
 from .serdes import dump
 from .serdes import load
-from .server import run_server as serving
-from .server import server
+from .server import Server
 from .util import get_local_ip_address
 from .util import random_name
 from .webapp import UserLocalServer
