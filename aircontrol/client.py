@@ -18,14 +18,22 @@ class Client:
     
     def __init__(self) -> None:
         self._ws = None
+        self._todo = None
         atexit.register(self.close)
     
     def connect(self, host: str, port: int, lazy: bool = True) -> None:
         self.url = 'ws://{}:{}'.format(host, port)
-        if not lazy: self.open()
+        if lazy:
+            self._todo = self.open
+        else:
+            self.open()
     
     @property
     def is_opened(self) -> bool:
+        if self._todo:
+            print(':v', 'open now', self.url)
+            self._todo()
+            self._todo = None
         return bool(self._ws)
     
     def open(self, **kwargs) -> None:
@@ -52,8 +60,7 @@ class Client:
         self.open()
     
     def run(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
-        if not self.is_opened:
-            self.open()
+        assert self.is_opened
         # TODO: check if source is a file path.
         if isinstance(source, str):
             # print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))

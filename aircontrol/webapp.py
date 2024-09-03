@@ -214,4 +214,7 @@ class WebClient(Client):
         )
         
         self.url = 'ws://{}:{}/backend/{}'.format(host, port, self.session_id)
-        self.open(lazy)
+        if lazy:
+            self._todo = self.open
+        else:
+            self.open()
