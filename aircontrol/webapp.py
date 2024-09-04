@@ -151,13 +151,19 @@ class WebClient(Client):
     front_pytag: str
     front_script: str
     front_tag: str
-    session_id: str
+    session_id: str  # TODO: rename to 'id'?
     
     def __init__(self, session_id: str = None) -> None:
         super().__init__()
         self.session_id = session_id or uuid1().hex
     
-    def connect(self, host: str, port: int, lazy: bool = True) -> None:
+    def connect(
+        self,
+        host: str,
+        port: int,
+        path: str = '/backend/{client_id}',
+        lazy: bool = True
+    ) -> None:
         self.front_func = dedent(
             '''
             function init_aircontrol_websockets() {
@@ -213,8 +219,6 @@ class WebClient(Client):
             self.front_pyscript
         )
         
-        self.url = 'ws://{}:{}/backend/{}'.format(host, port, self.session_id)
-        if lazy:
-            self._todo = self.open
-        else:
-            self.open()
+        super().connect(
+            host, port, path.format(client_id=self.session_id), lazy
+        )

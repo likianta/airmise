@@ -21,8 +21,14 @@ class Client:
         self._todo = None
         atexit.register(self.close)
     
-    def connect(self, host: str, port: int, lazy: bool = True) -> None:
-        self.url = 'ws://{}:{}'.format(host, port)
+    def connect(
+        self,
+        host: str,
+        port: int,
+        path: str = '/',
+        lazy: bool = True
+    ) -> None:
+        self.url = 'ws://{}:{}/{}'.format(host, port, path.lstrip('/'))
         if lazy:
             self._todo = self.open
         else:
@@ -47,7 +53,7 @@ class Client:
             )
             raise
         else:
-            print(':v2', 'executor is connected to server', self.url)
+            print(':v2', 'server connected', self.url)
     
     def close(self) -> None:
         if self._ws:
