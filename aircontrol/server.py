@@ -1,3 +1,4 @@
+import json
 from asyncio import sleep
 from textwrap import dedent
 
@@ -65,12 +66,20 @@ class Server:
                 ```python
                 {}
                 ```
+                
+                {}
                 '''
-            ).format(timestamp(), code.strip()))
+            ).format(
+                timestamp(),
+                code.strip(),
+                '```json\n{}\n```'.format(json.dumps(
+                    kwargs, default=str, ensure_ascii=False, indent=4
+                )) if kwargs else ''
+            ).strip())
             if kwargs:
-                print(kwargs, ':vl')
                 ctx.update(kwargs)
             
+            ref['__result__'] = None
             exec(code, ctx, {'__ctx__': ctx, '__ref__': ref})
             result = ref['__result__']
             await ws.send(dump(result))
