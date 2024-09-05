@@ -16,11 +16,16 @@ class Client:
     url: str
     _ws: t.Optional[WebSocket]
     
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         self._ws = None
         self._todo = None
+        if kwargs: self.config(**kwargs)
         atexit.register(self.close)
+        
+    def config(self, host: str, port: int, path: str = '/') -> None:
+        self.url = 'ws://{}:{}/{}'.format(host, port, path.lstrip('/'))
     
+    # DELETE
     def connect(
         self,
         host: str,
@@ -48,7 +53,7 @@ class Client:
         except Exception:
             print(
                 ':v4',
-                'cannot connect to server via {}! '
+                'cannot connect to server via "{}"! '
                 'please check if server online.'.format(self.url)
             )
             raise
