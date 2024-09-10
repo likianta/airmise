@@ -9,7 +9,6 @@ if 2:
 
 from . import const
 from .client import Client
-from .client import client
 from .client import connect
 from .client import run
 from .const import CLIENT_DEFAULT_PORT

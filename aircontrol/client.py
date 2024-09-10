@@ -8,44 +8,38 @@ from types import FunctionType
 from websocket import WebSocket
 from websocket import create_connection  # pip install websocket-client
 
+from .const import SERVER_DEFAULT_PORT
 from .serdes import dump
 from .serdes import load
 
 
 class Client:
-    url: str
+    host: str
+    path: str
+    port: int
     _ws: t.Optional[WebSocket]
     
-    def __init__(self, **kwargs) -> None:
-        self._ws = None
-        self._todo = None
-        if kwargs: self.config(**kwargs)
-        atexit.register(self.close)
-        
-    def config(self, host: str, port: int, path: str = '/') -> None:
-        self.url = 'ws://{}:{}/{}'.format(host, port, path.lstrip('/'))
-    
-    # DELETE
-    def connect(
-        self,
-        host: str,
-        port: int,
-        path: str = '/',
-        lazy: bool = True
+    def __init__(
+        self, host: str = None, port: int = None, path: str = '/'
     ) -> None:
-        self.url = 'ws://{}:{}/{}'.format(host, port, path.lstrip('/'))
-        if lazy:
-            self._todo = self.open
-        else:
-            self.open()
+        self._ws = None
+        if host and port and path:
+            self.config(host, port, path)
+        atexit.register(self.close)
     
     @property
     def is_opened(self) -> bool:
-        if self._todo:
-            print(':v', 'open now', self.url)
-            self._todo()
-            self._todo = None
         return bool(self._ws)
+    
+    @property
+    def url(self) -> str:
+        return 'ws://{}:{}/{}'.format(
+            self.host, self.port, self.path.lstrip('/')
+        )
+    
+    def config(self, host: str, port: int, path: str = '/') -> None:
+        assert not self.is_opened, 'cannot config while connection is opened'
+        self.host, self.port, self.path = host, port, path
     
     def open(self, **kwargs) -> None:
         try:
@@ -81,12 +75,22 @@ class Client:
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         self._ws.send(dump((code, kwargs or None)))
-        return load(self._ws.recv())
+        code, result = load(self._ws.recv())
+        if code == 0:
+            return result
+        else:
+            raise Exception(result)
 
 
-client = Client()
-connect = client.connect
-run = client.run
+_default_client = Client(host='localhost', port=SERVER_DEFAULT_PORT)
+run = _default_client.run
+
+
+def connect(host: str = None, port: int = None, path: str = None):
+    if host: _default_client.host = host
+    if port: _default_client.port = port
+    if path: _default_client.path = path
+    _default_client.open()
 
 
 # -----------------------------------------------------------------------------

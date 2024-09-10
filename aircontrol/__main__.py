@@ -1,10 +1,11 @@
 from argsense import cli
 
 from . import const
-from .client import client
-from .server import server
+from .client import Client
+from .server import Server
 from .util import get_local_ip_address
-from .webapp import UserLocalServer, WebServer
+from .webapp import UserLocalServer
+from .webapp import WebServer
 
 
 @cli.cmd()
@@ -18,6 +19,7 @@ def run_server(
     port: int = const.SERVER_DEFAULT_PORT,
     **kwargs
 ) -> None:
+    server = Server()
     server.run(host=host, port=port, user_namespace=kwargs)
 
 
@@ -43,9 +45,11 @@ def run_web_server():
 def run_client(
     host: str = 'localhost',
     port: int = const.SERVER_DEFAULT_PORT,
+    path: str = '/',
 ) -> None:
     from lk_logger import start_ipython
-    client.connect(host, port, lazy=False)
+    client = Client()
+    client.config(host, port, path)
     start_ipython({
         'client': client,
         'run'   : client.run,
