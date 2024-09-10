@@ -1,6 +1,7 @@
 import json
 from asyncio import sleep
 from textwrap import dedent
+from traceback import format_exception
 
 from lk_utils import timestamp
 from sanic import Sanic
@@ -80,6 +81,9 @@ class Server:
                 ctx.update(kwargs)
             
             ref['__result__'] = None
-            exec(code, ctx, {'__ctx__': ctx, '__ref__': ref})
-            result = ref['__result__']
-            await ws.send(dump(result))
+            try:
+                exec(code, ctx, {'__ctx__': ctx, '__ref__': ref})
+            except Exception as e:
+                await ws.send(dump((1, ''.join(format_exception(e)))))
+            else:
+                await ws.send(dump((0, ref['__result__'])))
