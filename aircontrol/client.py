@@ -42,6 +42,13 @@ class Client:
         self.host, self.port, self.path = host, port, path
     
     def open(self, **kwargs) -> None:
+        if self.is_opened:
+            print(
+                ':v3p',
+                'client already connected. if you want to reconnect, please '
+                'use `reopen` method'
+            )
+            return
         try:
             self._ws = create_connection(self.url, **kwargs)
         except Exception:
@@ -55,7 +62,7 @@ class Client:
             print(':v2', 'server connected', self.url)
     
     def close(self) -> None:
-        if self._ws:
+        if self.is_opened:
             print('close connection', ':vs')
             self._ws.close()
             self._ws = None
