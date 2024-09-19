@@ -10,29 +10,23 @@ from sanic import Websocket as SanicWebSocket
 from . import const
 from .serdes import dump
 from .serdes import load
-from .util import get_local_ip_address
 
 
 class Server:
-    def __init__(
-        self,
-        name: str = 'aircontrol-server',
-    ) -> None:
+    def __init__(self, name: str = 'aircontrol-server') -> None:
         self._runner = Sanic.get_app(name, force_create=True)
-        # noinspection PyCallingNonCallable
-        self._runner.websocket('/')(self._on_message)
-        self._context = {}
-        self._references = {'__result__': None}
+        self._runner.websocket('/')(self._on_message)  # noqa
+        self._default_user_namespace = {}
     
     def run(
         self,
-        host: str = get_local_ip_address(),
+        host: str = '0.0.0.0',
         port: int = const.SERVER_DEFAULT_PORT,
         debug: bool = False,
         user_namespace: dict = None,
     ) -> None:
         if user_namespace:
-            self._context.update(user_namespace)
+            self._default_user_namespace.update(user_namespace)
         self._runner.run(
             host=host,
             port=port,
@@ -44,8 +38,10 @@ class Server:
     
     async def _on_message(self, _, ws: SanicWebSocket) -> None:
         print(':r', '[green dim]server side setups websocket[/]')
-        ctx = self._context.copy()
-        ref = self._references.copy()
+        ctx = {
+            **self._default_user_namespace,
+            '__ref__': {'__result__': None},
+        }
         '''
             what is `ctx` and `ref`?
             `ctx` is an implicit "background" information for the code to run.
@@ -54,6 +50,7 @@ class Server:
             will be stored in `ctx` so that the next code can access it.
             when code is doing `memo data = [123]`, the `data` will be stored
             in `ref` so that the next code can access it by `memo data`.
+            TODO: we may remove `ref` and use `ctx` only in the future.
         '''
         while True:
             await sleep(1e-3)
@@ -80,10 +77,10 @@ class Server:
             if kwargs:
                 ctx.update(kwargs)
             
-            ref['__result__'] = None
+            ctx['__ref__']['__result__'] = None
             try:
-                exec(code, ctx, {'__ctx__': ctx, '__ref__': ref})
+                exec(code, ctx)
             except Exception as e:
                 await ws.send(dump((1, ''.join(format_exception(e)))))
             else:
-                await ws.send(dump((0, ref['__result__'])))
+                await ws.send(dump((0, ctx['__ref__']['__result__'])))
