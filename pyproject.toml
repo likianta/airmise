@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aircontrol"
-version = "0.1.0a33"
+version = "0.1.0a34"
 description = ""
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
@@ -8,20 +8,27 @@ packages = [{ include = "aircontrol" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-argsense = "^0.5.8"
-lk-logger = { version = "^6.0.0a6", source = "likianta-host" }
-lk-utils = { version = "^2.10.9b0", source = "likianta-host" }
+argsense = { version = "^0.5.9a0", source = "likianta-host" }
+lk-logger = { version = "^6.0.0a19", source = "likianta-host" }
+lk-utils = { version = "^2.11.0a12", source = "likianta-host" }
 # robyn = "^0.58.2"
 sanic = "^24.6.0"
 websocket-client = "^1.8.0"
 # websockets = "^12.0"
 
+[tool.poetry.group.extra.dependencies]
+# hidapi = "*"
+# modbus-tk = "*"
+omni-driver-kit = { version = "^3.0.0", source = "likianta-host" }
+# pyserial = "*"
+
 [tool.poetry.group.dev.dependencies]
 # auto-py-to-exe = { version = "^2.44.1", python = ">=3.12,<3.13" }
+depsland = { version = "^0.8.1a0", source = "likianta-host" }
 ipython = { version = "^8.26.0", python = "^3.10" }
-nuitka = { version = "*", python = ">=3.12,<3.13" }
+# nuitka = { version = "*", python = ">=3.12,<3.13" }
 numpy = [  # <- streamlit
-    { version = ">=1.26.4", python = ">=3.9" },
+    { version = ">=2.0.0", python = ">=3.9" },
     { version = ">=1.23,<1.24", python = "<3.9" }
 ]
 pandas = [  # <- streamlit
@@ -30,12 +37,7 @@ pandas = [  # <- streamlit
 ]
 pinkrain = { version = "^0.0.0a10", source = "likianta-host" }
 # pyinstaller = { version = "*", python = ">=3.12,<3.13" }
-streamlit = { version = "^1.37.0", python = "!=3.9.7" }
-
-# --- extra
-hidapi = "*"
-modbus-tk = "*"
-pyserial = "*"
+streamlit = { version = "^1.38.0", python = "!=3.9.7" }
 
 [[tool.poetry.source]]
 name = "tsinghua"

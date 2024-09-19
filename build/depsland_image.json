@@ -1,0 +1,28 @@
+{
+    "appid": "aircontrol_qnhesafi",
+    "name": "Aircontrol",
+    "version": "0.1.0a38",
+    "start_directory": "..",
+    "assets": {
+        "aircontrol": "all",
+        "build/launcher/airmagic.ico": "all"
+    },
+    "dependencies": "poetry.lock",
+    "launcher": {
+        "# command": "python -m aircontrol run-local-server",
+        "target": "aircontrol",
+        "type": "package",
+        "icon": "build/launcher/airmagic.ico",
+        "args": ["run-local-server"],
+        "kwargs": {},
+        "enable_cli": false,
+        "add_to_desktop": true,
+        "add_to_start_menu": false,
+        "show_console": false
+    },
+    "experiments": {
+        "calculate_dir_hash": false,
+        "package_provider": "oss"
+    },
+    "depsland_version": "0.8.1"
+}
