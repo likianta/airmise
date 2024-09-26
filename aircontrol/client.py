@@ -1,4 +1,3 @@
-import atexit
 import inspect
 import re
 import typing as t
@@ -25,7 +24,7 @@ class Client:
         self._ws = None
         if host and port and path:
             self.config(host, port, path)
-        atexit.register(self.close)
+        # atexit.register(self.close)
     
     @property
     def is_opened(self) -> bool:
@@ -52,6 +51,8 @@ class Client:
         try:
             print(self.url, ':p')
             self._ws = create_connection(self.url, **kwargs)
+            assert self._ws.recv() == 'CONNECTED'
+            #   see `.server2.Server._on_connect`
         except Exception:
             print(
                 ':v4',
@@ -65,7 +66,7 @@ class Client:
     def close(self) -> None:
         if self.is_opened:
             print('close connection', ':vs')
-            self._ws.close()
+            self._ws.close(timeout=0.1)  # noqa
             self._ws = None
     
     def reopen(self) -> None:

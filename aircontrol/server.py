@@ -43,14 +43,14 @@ class Server:
             '__ref__': {'__result__': None},
         }
         '''
-            what is `ctx` and `ref`?
-            `ctx` is an implicit "background" information for the code to run.
-            `ref` is a hook to preserve the key variables.
-            for example, when code is doing `import numpy`, the `numpy` module
-            will be stored in `ctx` so that the next code can access it.
-            when code is doing `memo data = [123]`, the `data` will be stored
-            in `ref` so that the next code can access it by `memo data`.
-            TODO: we may remove `ref` and use `ctx` only in the future.
+        what is `ctx` and `ref`?
+        `ctx` is an implicit "background" information for the code to run.
+        `ref` is a hook to preserve the key variables.
+        for example, when code is doing `import numpy`, the `numpy` module will
+        be stored in `ctx` so that the next code can access it.
+        when code is doing `memo data = [123]`, the `data` will be stored in
+        `ref` so that the next code can access it by `memo data`.
+        TODO: we may remove `ref` and use `ctx` only in the future.
         '''
         while True:
             await sleep(1e-3)

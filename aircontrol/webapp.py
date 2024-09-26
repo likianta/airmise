@@ -35,7 +35,7 @@ class UserLocalServer:
         self._default_user_namespace = user_namespace
         self._runner.run(
             host='localhost',
-            port=const.WEBAPP_DEFAULT_PORT,
+            port=const.SERVER_DEFAULT_PORT,
             auto_reload=debug,
             access_log=False,
             single_process=True,  # FIXME
@@ -160,9 +160,8 @@ class WebClient(Client):
     def connect(
         self,
         host: str,
-        port: int,
+        port: int = const.SERVER_DEFAULT_PORT,
         path: str = '/backend/{client_id}',
-        lazy: bool = True
     ) -> None:
         self.front_func = dedent(
             '''
@@ -219,6 +218,4 @@ class WebClient(Client):
             self.front_pyscript
         )
         
-        super().connect(
-            host, port, path.format(client_id=self.session_id), lazy
-        )
+        super().config(host, port, path.format(client_id=self.session_id))

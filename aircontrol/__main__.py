@@ -2,7 +2,7 @@ from argsense import cli
 
 from . import const
 from .client import Client
-from .server import Server
+from .server2 import Server
 from .util import get_local_ip_address
 from .webapp import UserLocalServer
 from .webapp import WebServer
@@ -24,7 +24,7 @@ def run_server(
 
 
 @cli.cmd()
-def run_local_server(
+def run_local_server(  # DELETE
     # host: str = 'localhost',
     # port: int = const.SERVER_DEFAULT_PORT,
     **kwargs
