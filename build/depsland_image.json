@@ -1,7 +1,7 @@
 {
     "appid": "aircontrol_qnhesafi",
     "name": "Aircontrol",
-    "version": "0.1.0a40",
+    "version": "0.1.0a45",
     "start_directory": "..",
     "assets": {
         "aircontrol": "all",
@@ -18,7 +18,7 @@
         "enable_cli": false,
         "add_to_desktop": true,
         "add_to_start_menu": false,
-        "show_console": false
+        "show_console": true
     },
     "experiments": {
         "calculate_dir_hash": false,

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aircontrol"
-version = "0.1.0a34"
+version = "0.1.0a36"
 description = ""
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
@@ -8,36 +8,41 @@ packages = [{ include = "aircontrol" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+aiohttp = "^3.10.6"
 argsense = { version = "^0.5.9a0", source = "likianta-host" }
 lk-logger = { version = "^6.0.0a19", source = "likianta-host" }
-lk-utils = { version = "^2.11.0a12", source = "likianta-host" }
-# robyn = "^0.58.2"
-sanic = "^24.6.0"
+# lk-utils = { version = ">=2.11.0b0,<4.0.0", source = "likianta-host" }
+lk-utils = { version = "^3.0.0a2", source = "likianta-host" }
 websocket-client = "^1.8.0"
 # websockets = "^12.0"
 
 [tool.poetry.group.extra.dependencies]
 # hidapi = "*"
 # modbus-tk = "*"
-omni-driver-kit = { version = "^3.0.0", source = "likianta-host" }
+omni-driver-kit = { version = "^3.1.0a7", source = "likianta-host" }
 # pyserial = "*"
 
 [tool.poetry.group.dev.dependencies]
 # auto-py-to-exe = { version = "^2.44.1", python = ">=3.12,<3.13" }
-depsland = { version = "^0.8.1a0", source = "likianta-host" }
+# depsland = { version = "^0.8.1a0", source = "likianta-host" }
 ipython = { version = "^8.26.0", python = "^3.10" }
 # nuitka = { version = "*", python = ">=3.12,<3.13" }
-numpy = [  # <- streamlit
-    { version = ">=2.0.0", python = ">=3.9" },
-    { version = ">=1.23,<1.24", python = "<3.9" }
-]
+# numpy = [  # <- streamlit
+#     { version = ">=2.0.0", python = ">=3.9" },
+#     { version = ">=1.23,<1.24", python = "<3.9" }
+# ]
 pandas = [  # <- streamlit
     { version = ">=2.2.2", python = ">=3.9" },
     { version = ">=1.5,<2.0", python = "<3.9" }
 ]
-pinkrain = { version = "^0.0.0a10", source = "likianta-host" }
+pinkrain = { version = "^0.0.0a13", source = "likianta-host" }
 # pyinstaller = { version = "*", python = ">=3.12,<3.13" }
 streamlit = { version = "^1.38.0", python = "!=3.9.7" }
+
+# --- web framework candidates ---
+aiohttp = "^3.10.6"
+robyn = "^0.61.1"
+sanic = "^24.6.0"
 
 [[tool.poetry.source]]
 name = "tsinghua"

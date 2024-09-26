@@ -37,7 +37,7 @@ class Server:
         )
     
     async def _on_message(self, _, ws: SanicWebSocket) -> None:
-        print(':r', '[green dim]server side setups websocket[/]')
+        print(':r', '[green dim]server set up websocket[/]')
         ctx = {
             **self._default_user_namespace,
             '__ref__': {'__result__': None},

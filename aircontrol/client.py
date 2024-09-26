@@ -51,7 +51,7 @@ class Client:
         try:
             print(self.url, ':p')
             self._ws = create_connection(self.url, **kwargs)
-            assert self._ws.recv() == 'CONNECTED'
+            # assert self._ws.recv() == 'CONNECTED'
             #   see `.server2.Server._on_connect`
         except Exception:
             print(

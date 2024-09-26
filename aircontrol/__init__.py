@@ -14,7 +14,7 @@ from .client import run
 from .const import CLIENT_DEFAULT_PORT
 from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT
-from .server2 import Server
+from .server3 import Server
 from .serdes import dump
 from .serdes import load
 from .util import get_local_ip_address
