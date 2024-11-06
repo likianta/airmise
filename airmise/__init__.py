@@ -2,8 +2,8 @@ if 1:
     import sys
     from os.path import exists
     from lk_utils import xpath
-    if exists(x := xpath('../deps')):
-        sys.path.extend((f'{x}/core', f'{x}/extra'))
+    if exists(xpath('../.airmise_standalone.txt')):
+        sys.path.extend(('deps/core', 'deps/extra'))
 
 if 2:
     import lk_logger
@@ -12,8 +12,8 @@ if 2:
 from . import const
 from .client import Client
 from .client import connect
+from .client import call
 from .client import run
-from .client import run as call
 from .const import CLIENT_DEFAULT_PORT
 from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT

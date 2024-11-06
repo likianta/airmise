@@ -1,0 +1,3 @@
+this file exists to tell the caller that we are in "standalone" mode.
+
+see also `airmise/__init__.py`.

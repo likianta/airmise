@@ -89,10 +89,18 @@ class Client:
             return result
         else:
             raise Exception(result)
+    
+    # TODO: there may be a better way
+    def call(self, func_name: str, *args, **kwargs) -> t.Any:
+        return self.run(
+            'return {}(*args, **kwargs)'.format(func_name),
+            args=args, kwargs=kwargs
+        )
 
 
 _default_client = Client(host='localhost', port=SERVER_DEFAULT_PORT)
 run = _default_client.run
+call = _default_client.call
 
 
 def connect(host: str = None, port: int = None, path: str = None):
