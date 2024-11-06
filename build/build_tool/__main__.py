@@ -65,6 +65,11 @@ def dist() -> None:
     print('see result at "{}"'.format(dist_dir), ':v2t')
 
 
+@cli.cmd()
+def publish_via_depsland():
+    pass
+
+
 if __name__ == '__main__':
     # pox -m build.build_tool regenerate-bat-2-exe
     # pox -m build.build_tool dist
