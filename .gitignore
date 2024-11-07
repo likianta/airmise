@@ -13,5 +13,6 @@
 /run_local_server.onefine-build/
 /nuitka-crash-report.xml
 /run_local_server.exe
+/test/_downloaded.txt
 __pycache__/
 !**/.gitkeep
