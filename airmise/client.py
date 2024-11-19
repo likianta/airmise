@@ -42,11 +42,11 @@ class Client:
     
     def open(self, **kwargs) -> None:
         if self.is_opened:
-            print(
-                ':v3p',
-                'client already connected. if you want to reconnect, please '
-                'use `reopen` method'
-            )
+            # print(
+            #     ':v3p',
+            #     'client already connected. if you want to reconnect, please '
+            #     'use `reopen` method'
+            # )
             return
         try:
             print(self.url, ':p')
@@ -74,7 +74,8 @@ class Client:
         self.open()
     
     def run(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
-        assert self.is_opened
+        if not self.is_opened:
+            self.open()
         # TODO: check if source is a file path.
         if isinstance(source, str):
             # print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
@@ -90,7 +91,7 @@ class Client:
         else:
             raise Exception(result)
     
-    # TODO: there may be a better way
+    # TODO: there should be a better way
     def call(self, func_name: str, *args, **kwargs) -> t.Any:
         return self.run(
             'return {}(*args, **kwargs)'.format(func_name),
