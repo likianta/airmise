@@ -29,7 +29,7 @@ class Server:
         aiohttp.web.run_app(self._app, host=host, port=port)
     
     async def _ws_handler(self, req: aiohttp.web.Request):
-        print(':r', '[green dim]server set up websocket[/]')
+        print(':v3', 'server set up websocket')
         ctx = {
             **self._default_user_namespace,
             '__ref__': {'__result__': None},
@@ -70,6 +70,6 @@ class Server:
                 result = dump((0, ctx['__ref__']['__result__']))
             await ws.send_str(result)
         
-        print(':r', '[red dim]server closed websocket[/]')
+        print(':v7', 'server closed websocket')
         del ctx
         return ws

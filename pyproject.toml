@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airmise"
-version = "0.1.0a43"
+version = "0.1.0a44"
 description = "The native experience of calling remote functions, like local ones."
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
@@ -10,8 +10,8 @@ packages = [{ include = "airmise" }]
 python = "^3.8"
 aiohttp = "^3.10.6"
 argsense = { version = "^0.5.9a0", source = "likianta-host" }
-lk-logger = { version = "^6.0.2a0", source = "likianta-host" }
-lk-utils = { version = "^3.0.2a7", source = "likianta-host" }
+lk-logger = { version = "^6.0.2", source = "likianta-host" }
+lk-utils = { version = "^3.1.0", source = "likianta-host" }
 # robyn = "^0.61.1"
 # sanic = "^24.6.0"
 websocket-client = "^1.8.0"
@@ -20,7 +20,7 @@ websocket-client = "^1.8.0"
 [tool.poetry.group.extra.dependencies]
 # hidapi = "*"
 # modbus-tk = "*"
-omni-driver-kit = { version = "^3.1.0a9", source = "likianta-host" }
+omni-driver-kit = { version = "^3.1.0b1", source = "likianta-host" }
 # pyserial = "*"
 
 [tool.poetry.group.dev.dependencies]

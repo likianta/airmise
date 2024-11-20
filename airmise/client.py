@@ -9,7 +9,6 @@ from websocket import create_connection
 
 from .const import DEFAULT_HOST
 from .const import DEFAULT_PORT
-from .const import SERVER_DEFAULT_PORT
 from .serdes import dump
 from .serdes import load
 
@@ -49,29 +48,31 @@ class Client:
     def open(self, **kwargs) -> None:
         if self.is_opened:
             # print(
-            #     ':v3p',
+            #     ':v6p',
             #     'client already connected. if you want to reconnect, please '
             #     'use `reopen` method'
             # )
             return
         try:
             print(self.url, ':p')
-            self._ws = create_connection(self.url, **kwargs)
+            self._ws = create_connection(
+                self.url, skip_utf8_validation=True, **kwargs
+            )
             # assert self._ws.recv() == 'CONNECTED'
             #   see `.server2.Server._on_connect`
         except Exception:
             print(
-                ':v4',
+                ':v8',
                 'cannot connect to server via "{}"! '
                 'please check if server online.'.format(self.url)
             )
             raise
         else:
-            print(':v2', 'server connected', self.url)
+            print(':v4', 'server connected', self.url)
     
     def close(self) -> None:
         if self.is_opened:
-            print('close connection', ':vs')
+            print('close connection', ':v')
             self._ws.close(timeout=0.1)  # noqa
             self._ws = None
     
@@ -90,12 +91,21 @@ class Client:
             # print(':v', source)
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        self._ws.send(dump((code, kwargs or None)))
+        try:
+            self._ws.send(dump((code, kwargs or None)))
+        except ConnectionResetError:
+            self.reopen()  # TEST: try re-connect
+            self._ws.send(dump((code, kwargs or None)))
         code, result = load(self._ws.recv())
         if code == 0:
             return result
-        else:
+        elif code == 1:
             raise Exception(result)
+        elif code == 2:  # FIXME
+            print(':v7', 'server closed connection')
+            self.close()
+        else:
+            raise NotImplementedError(code, result)
     
     # TODO: there should be a better way
     def call(self, func_name: str, *args, **kwargs) -> t.Any:
@@ -167,6 +177,7 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
         ws, linex = re.match(r'( *)(.*)', line).groups()
         indent = len(ws)
         
+        # noinspection PyUnresolvedReferences
         if linex and scope and indent <= scope[-1]:
             scope.pop()
         if linex.startswith(('class ', 'def ')):
