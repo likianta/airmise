@@ -11,10 +11,13 @@ if 2:
 
 from . import const
 from .client import Client
+from .client import config
 from .client import connect
 from .client import call
 from .client import run
 from .const import CLIENT_DEFAULT_PORT
+from .const import DEFAULT_HOST
+from .const import DEFAULT_PORT
 from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT
 from .server3 import Server

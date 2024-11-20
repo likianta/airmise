@@ -5,8 +5,10 @@ from textwrap import dedent
 from types import FunctionType
 
 from websocket import WebSocket
-from websocket import create_connection  # pip install websocket-client
+from websocket import create_connection
 
+from .const import DEFAULT_HOST
+from .const import DEFAULT_PORT
 from .const import SERVER_DEFAULT_PORT
 from .serdes import dump
 from .serdes import load
@@ -18,12 +20,11 @@ class Client:
     port: int
     _ws: t.Optional[WebSocket]
     
-    def __init__(
-        self, host: str = None, port: int = None, path: str = '/'
-    ) -> None:
+    def __init__(self) -> None:
+        self.host = DEFAULT_HOST
+        self.port = DEFAULT_PORT
+        self.path = '/'
         self._ws = None
-        if host and port and path:
-            self.config(host, port, path)
         # atexit.register(self.close)
     
     @property
@@ -36,9 +37,14 @@ class Client:
             self.host, self.port, self.path.lstrip('/')
         )
     
-    def config(self, host: str, port: int, path: str = '/') -> None:
-        assert not self.is_opened, 'cannot config while connection is opened'
+    def config(self, host: str, port: int, path: str = '/') -> t.Self:
+        if (self.host, self.port, self.path) == (host, port, path):
+            return
+        if self.is_opened:
+            print('restart client to apply new config', ':pv')
+            self.close()
         self.host, self.port, self.path = host, port, path
+        return self
     
     def open(self, **kwargs) -> None:
         if self.is_opened:
@@ -99,12 +105,14 @@ class Client:
         )
 
 
-_default_client = Client(host='localhost', port=SERVER_DEFAULT_PORT)
+_default_client = Client()
 run = _default_client.run
 call = _default_client.call
+config = _default_client.config
+# connect = _default_client.open
 
 
-def connect(host: str = None, port: int = None, path: str = None):
+def connect(host: str = None, port: int = None, path: str = None) -> None:
     if host: _default_client.host = host
     if port: _default_client.port = port
     if path: _default_client.path = path

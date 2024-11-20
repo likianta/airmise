@@ -20,7 +20,7 @@ class Server:
     def run(
         self,
         host: str = '0.0.0.0',
-        port: int = const.SERVER_DEFAULT_PORT,
+        port: int = const.DEFAULT_PORT,
         debug: bool = False,  # TODO  # noqa
         user_namespace: dict = None,
     ) -> None:

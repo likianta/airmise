@@ -1,16 +1,32 @@
-# from IPython import start_ipython
+import airmise as air
 from argsense import cli
 from lk_logger import start_ipython
 
-import aircontrol as air
+
+@cli.cmd()
+def run_server() -> None:
+    def foo(*args, **kwargs) -> str:
+        print(args, kwargs)
+        return 'ok'
+    
+    air.Server().run(user_namespace={'foo': foo})
 
 
 @cli.cmd()
 def test_client(
-    server_host: str,
-    server_port: int = air.SERVER_DEFAULT_PORT
+    server_host: str = air.DEFAULT_HOST,
+    server_port: int = air.DEFAULT_PORT,
+    interactive: bool = False,
 ) -> None:
+    """
+    kwargs:
+        interactive (-i):
+    """
     air.connect(server_host, server_port)
+    
+    result = air.call('foo', 123, 456, abc='xyz')
+    print(result)
+    
     result = air.run(
         '''
         print('hello world')  # this should be found in the server console
@@ -18,13 +34,12 @@ def test_client(
         '''
     )
     print(result)
-    start_ipython(user_ns={'air': air})
+    
+    if interactive:
+        start_ipython(user_ns={'air': air})
 
 
 if __name__ == '__main__':
-    # computer A: pox -m aircontrol run-server
-    #   got server running url.
-    # computer B: pox test/server_client_test.py <server_host> <server_port>
-    #   entered ipython:
-    #       air.run(...)
-    cli.run(test_client)
+    # pox test/server_client_test.py run-server
+    # pox test/server_client_test.py test-client
+    cli.run()
