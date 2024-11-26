@@ -81,7 +81,7 @@ class Client:
         self.open()
     
     def run(
-        self, source: t.Union[str, FunctionType], iter: bool = False, **kwargs
+        self, source: t.Union[str, FunctionType], _iter: bool = False, **kwargs
     ) -> t.Any:
         if not self.is_opened:
             self.open()
@@ -94,7 +94,7 @@ class Client:
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         
-        if iter:
+        if _iter:
             def iterator(id: str) -> t.Iterator:
                 encoded_data = dump((
                     '', None, {'is_iterator': True, 'id': id}
@@ -128,11 +128,11 @@ class Client:
     
     # TODO: there should be a better way
     def call(
-        self, func_name: str, *args, iter: bool = False, **kwargs
+        self, func_name: str, *args, _iter: bool = False, **kwargs
     ) -> t.Any:
         return self.run(
             'return {}(*args, **kwargs)'.format(func_name),
-            args=args, kwargs=kwargs, iter=iter,
+            args=args, kwargs=kwargs, _iter=_iter,
         )
     
     def _send(self, encoded_data: str) -> None:
