@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airmise"
-version = "0.1.0"
+version = "0.2.0a1"
 description = "The native experience of calling remote functions, like local ones."
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
