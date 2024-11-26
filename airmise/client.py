@@ -151,18 +151,18 @@ class Client:
             return code, result
 
 
-_default_client = Client()
-run = _default_client.run
-call = _default_client.call
-config = _default_client.config
+default_client = Client()
+run = default_client.run
+call = default_client.call
+config = default_client.config
 # connect = _default_client.open
 
 
 def connect(host: str = None, port: int = None, path: str = None) -> None:
-    if host: _default_client.host = host
-    if port: _default_client.port = port
-    if path: _default_client.path = path
-    _default_client.open()
+    if host: default_client.host = host
+    if port: default_client.port = port
+    if path: default_client.path = path
+    default_client.open()
 
 
 # -----------------------------------------------------------------------------
