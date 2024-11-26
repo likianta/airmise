@@ -13,21 +13,44 @@ from .serdes import load
 
 
 class Server:
+    host: str
+    port: int
+    _app: aiohttp.web.Application
+    _default_user_namespace: dict
+    
+    # @property
+    # def url(self) -> str:
+    #     return 'http://{}:{}'.format(self.host, self.port)
+    
     def __init__(self) -> None:
+        self.host = '0.0.0.0'
+        self.port = const.DEFAULT_PORT
         self._app = aiohttp.web.Application()
         self._app.add_routes((aiohttp.web.get('/', self._ws_handler),))
         self._default_user_namespace = {}
     
+    def config(self, host: str = None, port: int = None) -> t.Self:
+        if host:
+            self.host = host
+        if port:
+            self.port = port
+        return self
+    
     def run(
         self,
-        host: str = '0.0.0.0',
-        port: int = const.DEFAULT_PORT,
-        debug: bool = False,  # TODO  # noqa
         user_namespace: dict = None,
+        /,
+        host: str = None,
+        port: int = None,
+        debug: bool = False,  # TODO  # noqa
     ) -> None:
         if user_namespace:
             self._default_user_namespace.update(user_namespace)
-        aiohttp.web.run_app(self._app, host=host, port=port)
+        aiohttp.web.run_app(
+            self._app,
+            host=host or self.host,
+            port=port or self.port,
+        )
     
     async def _ws_handler(self, req: aiohttp.web.Request):
         print(':v3', 'server set up websocket')

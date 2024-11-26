@@ -130,10 +130,25 @@ class Client:
     def call(
         self, func_name: str, *args, _iter: bool = False, **kwargs
     ) -> t.Any:
-        return self.run(
-            'return {}(*args, **kwargs)'.format(func_name),
-            args=args, kwargs=kwargs, _iter=_iter,
-        )
+        if args and kwargs:
+            return self.run(
+                'return {}(*args, **kwargs)'.format(func_name),
+                args=args, kwargs=kwargs, _iter=_iter,
+            )
+        elif args:
+            return self.run(
+                'return {}(*args)'.format(func_name),
+                args=args, _iter=_iter,
+            )
+        elif kwargs:
+            return self.run(
+                'return {}(**kwargs)'.format(func_name),
+                kwargs=kwargs, _iter=_iter,
+            )
+        else:
+            return self.run(
+                'return {}()'.format(func_name), _iter=_iter,
+            )
     
     def _send(self, encoded_data: str) -> None:
         try:

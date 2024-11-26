@@ -9,7 +9,7 @@ def run_server() -> None:
         print(args, kwargs)
         return 'ok'
     
-    air.Server().run(user_namespace={'foo': foo})
+    air.Server().run({'foo': foo})
 
 
 @cli.cmd()
