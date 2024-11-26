@@ -1,4 +1,5 @@
 import json
+import typing as t
 from textwrap import dedent
 from traceback import format_exception
 
@@ -34,42 +35,78 @@ class Server:
             **self._default_user_namespace,
             '__ref__': {'__result__': None},
         }
+        session_data_holder = {}
         
         ws = aiohttp.web.WebSocketResponse()
         await ws.prepare(req)
         
+        def exec_() -> t.Any:
+            ctx['__ref__']['__result__'] = None
+            exec(code, ctx)
+            return ctx['__ref__']['__result__']
+        
         msg: aiohttp.WSMessage
         async for msg in ws:
-            code, kwargs = load(msg.data)
-            print(':vr2', dedent(
-                '''
-                > *message at {}*
-
-                ```python
-                {}
-                ```
-
-                {}
-                '''
-            ).format(
-                timestamp(),
-                code.strip(),
-                '```json\n{}\n```'.format(json.dumps(
-                    kwargs, default=str, ensure_ascii=False, indent=4
-                )) if kwargs else ''
-            ).strip())
+            
+            code, kwargs, options = load(msg.data)
+            
+            if code:
+                print(':vr2', dedent(
+                    '''
+                    > *message at {}*
+    
+                    ```python
+                    {}
+                    ```
+    
+                    {}
+                    '''
+                ).format(
+                    timestamp(),
+                    code.strip(),
+                    '```json\n{}\n```'.format(json.dumps(
+                        kwargs, default=str, ensure_ascii=False, indent=4
+                    )) if kwargs else ''
+                ).strip())
+            
             if kwargs:
                 ctx.update(kwargs)
             
-            ctx['__ref__']['__result__'] = None
-            try:
-                exec(code, ctx)
-            except Exception as e:
-                result = dump((1, ''.join(format_exception(e))))
+            if options:
+                if options.get('is_iterator'):
+                    iter_id = options['id']
+                    if iter_id not in session_data_holder:
+                        try:
+                            session_data_holder[iter_id] = exec_()
+                        except Exception as e:
+                            response = dump(
+                                (const.ERROR, ''.join(format_exception(e)))
+                            )
+                        else:
+                            response = dump((const.RETURN, 'ready'))
+                        await ws.send_str(response)
+                    else:
+                        try:
+                            datum = next(session_data_holder[iter_id])
+                            result = dump((const.YIELD, datum))
+                        except StopIteration:
+                            result = dump((const.YIELD_END, None))
+                            session_data_holder.pop(iter_id)
+                        except Exception as e:
+                            result = dump(
+                                (const.ERROR, ''.join(format_exception(e)))
+                            )
+                        await ws.send_str(result)
+                else:
+                    raise Exception(options)
             else:
-                result = dump((0, ctx['__ref__']['__result__']))
-            await ws.send_str(result)
+                try:
+                    result = exec_()
+                except Exception as e:
+                    result = dump((const.ERROR, ''.join(format_exception(e))))
+                else:
+                    result = dump((const.RETURN, result))
+                await ws.send_str(result)
         
         print(':v7', 'server closed websocket')
-        del ctx
         return ws

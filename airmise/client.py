@@ -1,14 +1,15 @@
 import inspect
 import re
 import typing as t
+from functools import partial
 from textwrap import dedent
 from types import FunctionType
+from uuid import uuid1
 
 from websocket import WebSocket
 from websocket import create_connection
 
-from .const import DEFAULT_HOST
-from .const import DEFAULT_PORT
+from . import const
 from .serdes import dump
 from .serdes import load
 
@@ -20,8 +21,8 @@ class Client:
     _ws: t.Optional[WebSocket]
     
     def __init__(self) -> None:
-        self.host = DEFAULT_HOST
-        self.port = DEFAULT_PORT
+        self.host = const.DEFAULT_HOST
+        self.port = const.DEFAULT_PORT
         self.path = '/'
         self._ws = None
         # atexit.register(self.close)
@@ -80,7 +81,9 @@ class Client:
         self.close()
         self.open()
     
-    def run(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
+    def run(
+        self, source: t.Union[str, FunctionType], iter: bool = False, **kwargs
+    ) -> t.Any:
         if not self.is_opened:
             self.open()
         # TODO: check if source is a file path.
@@ -91,30 +94,62 @@ class Client:
             # print(':v', source)
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        try:
-            self._ws.send(dump((code, kwargs or None)))
-        except ConnectionResetError:
-            # TEST
-            print(':v5', 'test auto reconnect', self.url)
-            self.reopen()
-            self._ws.send(dump((code, kwargs or None)))
-        code, result = load(self._ws.recv())
-        if code == 0:
+        
+        if iter:
+            def iterator(id: str) -> t.Iterator:
+                encoded_data = dump((
+                    '', None, {'is_iterator': True, 'id': id}
+                ))
+                while True:
+                    self._send(encoded_data)
+                    code, result = self._recv()
+                    if code == const.YIELD:
+                        yield result
+                    elif code == const.YIELD_END:
+                        break
+                    else:
+                        raise Exception(code, result)
+            
+            iter_id = uuid1().hex
+            self._send(dump((
+                code, kwargs or None, {'is_iterator': True, 'id': iter_id})
+            ))
+            code, result = self._recv()
+            assert result == 'ready'
+            return partial(iterator, iter_id)
+        else:
+            self._send(dump((code, kwargs or None)))
+        
+        code, result = self._recv()
+        if code == const.RETURN:
             return result
-        elif code == 1:
-            raise Exception(result)
-        elif code == 2:  # FIXME
+        elif code == const.CLOSED:  # TODO
             print(':v7', 'server closed connection')
             self.close()
-        else:
-            raise NotImplementedError(code, result)
     
     # TODO: there should be a better way
-    def call(self, func_name: str, *args, **kwargs) -> t.Any:
+    def call(
+        self, func_name: str, *args, iter: bool = False, **kwargs
+    ) -> t.Any:
         return self.run(
             'return {}(*args, **kwargs)'.format(func_name),
-            args=args, kwargs=kwargs
+            args=args, kwargs=kwargs, iter=iter,
         )
+    
+    def _send(self, encoded_data: str) -> None:
+        try:
+            self._ws.send(encoded_data)
+        except ConnectionResetError:
+            print(':v5', 'test auto reconnect', self.url)
+            self.reopen()
+            self._ws.send(encoded_data)
+    
+    def _recv(self) -> t.Tuple[int, t.Any]:
+        code, result = load(self._ws.recv())
+        if code == const.ERROR:
+            raise Exception(result)
+        else:
+            return code, result
 
 
 _default_client = Client()
