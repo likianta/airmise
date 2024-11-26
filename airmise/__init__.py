@@ -14,6 +14,7 @@ from .client import Client
 from .client import config
 from .client import connect
 from .client import call
+from .client import default_client
 from .client import run
 from .const import CLIENT_DEFAULT_PORT
 from .const import DEFAULT_HOST
