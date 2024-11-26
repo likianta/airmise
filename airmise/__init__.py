@@ -28,3 +28,5 @@ from .util import random_name
 # from .webapp import UserLocalServer
 # from .webapp import WebClient
 # from .webapp import WebServer
+
+__version__ = '0.1.0'

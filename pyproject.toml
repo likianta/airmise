@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airmise"
-version = "0.1.0a44"
+version = "0.1.0b1"
 description = "The native experience of calling remote functions, like local ones."
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
@@ -9,19 +9,16 @@ packages = [{ include = "airmise" }]
 [tool.poetry.dependencies]
 python = "^3.8"
 aiohttp = "^3.10.6"
-argsense = { version = "^0.5.9a0", source = "likianta-host" }
-lk-logger = { version = "^6.0.2", source = "likianta-host" }
-lk-utils = { version = "^3.1.0", source = "likianta-host" }
+argsense = "^0.5.8"
+# argsense = { version = "^0.5.9a0", source = "likianta-host" }
+lk-logger = "^6.0.2"
+# lk-logger = { version = "^6.0.2", source = "likianta-host" }
+lk-utils = "^3.1.1"
+# lk-utils = { version = "^3.1.0", source = "likianta-host" }
 # robyn = "^0.61.1"
 # sanic = "^24.6.0"
 websocket-client = "^1.8.0"
 # websockets = "^12.0"
-
-[tool.poetry.group.extra.dependencies]
-# hidapi = "*"
-# modbus-tk = "*"
-omni-driver-kit = { version = "^3.1.0b1", source = "likianta-host" }
-# pyserial = "*"
 
 [tool.poetry.group.dev.dependencies]
 # auto-py-to-exe = { version = "^2.44.1", python = ">=3.12,<3.13" }
@@ -32,13 +29,19 @@ ipython = { version = "^8.26.0", python = "^3.10" }
 #     { version = ">=2.0.0", python = ">=3.9" },
 #     { version = ">=1.23,<1.24", python = "<3.9" }
 # ]
-pandas = [  # <- streamlit
-    { version = ">=2.2.2", python = ">=3.9" },
-    { version = ">=1.5,<2.0", python = "<3.9" }
-]
-pinkrain = { version = "^0.0.0a13", source = "likianta-host" }
+# pandas = [  # <- streamlit
+#     { version = ">=2.2.2", python = ">=3.9" },
+#     { version = ">=1.5,<2.0", python = "<3.9" }
+# ]
+pinkrain = { version = "^0.0.0a17", source = "likianta-host" }
 # pyinstaller = { version = "*", python = ">=3.12,<3.13" }
-streamlit = { version = "^1.38.0", python = "!=3.9.7" }
+streamlit = { version = "^1.40.0", python = "!=3.9.7" }
+
+# --- extras
+# hidapi = "*"
+# modbus-tk = "*"
+omni-driver-kit = { version = "^3.1.0b1", source = "likianta-host" }
+# pyserial = "*"
 
 [[tool.poetry.source]]
 name = "tsinghua"

@@ -94,7 +94,9 @@ class Client:
         try:
             self._ws.send(dump((code, kwargs or None)))
         except ConnectionResetError:
-            self.reopen()  # TEST: try re-connect
+            # TEST
+            print(':v5', 'test auto reconnect', self.url)
+            self.reopen()
             self._ws.send(dump((code, kwargs or None)))
         code, result = load(self._ws.recv())
         if code == 0:
