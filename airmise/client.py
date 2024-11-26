@@ -1,7 +1,6 @@
 import inspect
 import re
 import typing as t
-from functools import partial
 from textwrap import dedent
 from types import FunctionType
 from uuid import uuid1
@@ -116,7 +115,7 @@ class Client:
             ))
             code, result = self._recv()
             assert result == 'ready'
-            return partial(iterator, iter_id)
+            return iterator(iter_id)
         else:
             self._send(dump((code, kwargs or None)))
         
