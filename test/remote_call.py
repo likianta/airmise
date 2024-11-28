@@ -17,15 +17,15 @@ def _foo(*args, client_backdoor, **kwargs) -> str:
     return 'ok'
 
 
-def _list_client_files(client_host, client_port):
+def _list_client_files(client_host: str, client_port: int) -> None:
     air.connect(client_host, client_port)
-    files = air.run(
+    client_cwd, files = air.run(
         '''
         import os
-        return os.listdir(os.getcwd())
+        return os.getcwd(), os.listdir(os.getcwd())
         '''
     )
-    print(files, ':l')
+    print(client_cwd, files, ':l')
 
 
 # -----------------------------------------------------------------------------
@@ -35,7 +35,7 @@ def client() -> None:
     run_cmd_args(
         (
             sys.executable, '-m', 'airmise', 'remote-call', 'localhost', 'foo',
-            'aaa', 'bbb', '--ccc', 'ddd', '--interactive'
+            'aaa', 'bbb', '--ccc', 'ddd', '--backdoor'
         ),
         verbose=True,
         force_term_color=True,

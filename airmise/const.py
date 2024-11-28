@@ -41,7 +41,6 @@ import os
 
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 2140
-LOCAL_HOST = 'localhost'
 SECONDARY_PORT = 2141
 
 # FLAG

@@ -47,14 +47,14 @@ def remote_call(
     func_name: str,
     *args,
     port: int = const.DEFAULT_PORT,
-    interactive: bool = False,
+    backdoor: bool = False,
     **kwargs
 ) -> None:
-    if interactive:
-        temp_host, temp_port = get_local_ip_address(), const.SECONDARY_PORT
-        # run_server(temp_host, temp_port)
-        run_new_thread(run_server, (temp_host, temp_port))
-        kwargs['client_backdoor'] = (temp_host, temp_port)
+    if backdoor:
+        back_host, back_port = get_local_ip_address(), const.SECONDARY_PORT
+        # run_server(back_host, back_port)
+        run_new_thread(run_server, (back_host, back_port))
+        kwargs['client_backdoor'] = (back_host, back_port)
     client = Client()
     client.config(host=host, port=port)
     client.open()
