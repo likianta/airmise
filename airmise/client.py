@@ -117,7 +117,7 @@ class Client:
             assert result == 'ready'
             return iterator(iter_id)
         else:
-            self._send(dump((code, kwargs or None)))
+            self._send(dump((code, kwargs or None, None)))
         
         code, result = self._recv()
         if code == const.RETURN:

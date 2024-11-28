@@ -1,11 +1,10 @@
 from argsense import cli
+from lk_utils import run_new_thread
 
 from . import const
 from .client import Client
 from .server3 import Server
 from .util import get_local_ip_address
-from .webapp import UserLocalServer
-from .webapp import WebServer
 
 
 @cli.cmd()
@@ -16,29 +15,11 @@ def show_my_ip() -> None:
 @cli.cmd()
 def run_server(
     host: str = '0.0.0.0',
-    port: int = const.SERVER_DEFAULT_PORT,
+    port: int = const.DEFAULT_PORT,
     **kwargs
 ) -> None:
     server = Server()
-    server.run(host=host, port=port, user_namespace=kwargs)
-
-
-@cli.cmd()
-def run_local_server(  # DELETE
-    # host: str = 'localhost',
-    # port: int = const.SERVER_DEFAULT_PORT,
-    **kwargs
-) -> None:
-    # if host not in ('localhost', '127.0.0.1', '0.0.0.0'):
-    #     print(':v3', 'the local server should be run on "local" host')
-    server = UserLocalServer()
-    server.run(user_namespace=kwargs)
-
-
-@cli.cmd()
-def run_web_server():
-    server = WebServer()
-    server.run()
+    server.run(kwargs, host=host, port=port)
 
 
 @cli.cmd()
@@ -58,6 +39,26 @@ def run_client(
         'run'   : client.run,
         'call'  : client.call,
     })
+
+
+@cli.cmd()
+def remote_call(
+    host: str,
+    func_name: str,
+    *args,
+    port: int = const.DEFAULT_PORT,
+    interactive: bool = False,
+    **kwargs
+) -> None:
+    if interactive:
+        temp_host, temp_port = get_local_ip_address(), const.SECONDARY_PORT
+        # run_server(temp_host, temp_port)
+        run_new_thread(run_server, (temp_host, temp_port))
+        kwargs['client_backdoor'] = (temp_host, temp_port)
+    client = Client()
+    client.config(host=host, port=port)
+    client.open()
+    client.call(func_name, *args, **kwargs)
 
 
 if __name__ == '__main__':

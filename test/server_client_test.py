@@ -4,7 +4,7 @@ from lk_logger import start_ipython
 
 
 @cli.cmd()
-def run_server() -> None:
+def server() -> None:
     def foo(*args, **kwargs) -> str:
         print(args, kwargs)
         return 'ok'
@@ -13,7 +13,7 @@ def run_server() -> None:
 
 
 @cli.cmd()
-def test_client(
+def client(
     server_host: str = air.DEFAULT_HOST,
     server_port: int = air.DEFAULT_PORT,
     interactive: bool = False,
@@ -40,6 +40,6 @@ def test_client(
 
 
 if __name__ == '__main__':
-    # pox test/server_client_test.py run-server
-    # pox test/server_client_test.py test-client
+    # pox test/server_client_test.py server
+    # pox test/server_client_test.py client
     cli.run()

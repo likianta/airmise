@@ -39,8 +39,10 @@ scenario (2):
 
 import os
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 2014
+DEFAULT_HOST = '0.0.0.0'
+DEFAULT_PORT = 2140
+LOCAL_HOST = 'localhost'
+SECONDARY_PORT = 2141
 
 # FLAG
 RETURN = 0
