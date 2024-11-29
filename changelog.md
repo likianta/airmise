@@ -1,6 +1,6 @@
 # Airmise Changelog
 
-### 0.2.0 (wip)
+### 0.2.0 (2024-11-29)
 
 - support iterator
 - remote call
