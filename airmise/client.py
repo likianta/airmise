@@ -6,6 +6,7 @@ from types import FunctionType
 from uuid import uuid1
 
 from websocket import WebSocket
+from websocket import WebSocketConnectionClosedException
 from websocket import create_connection
 
 from . import const
@@ -19,10 +20,15 @@ class Client:
     port: int
     _ws: t.Optional[WebSocket]
     
-    def __init__(self) -> None:
-        self.host = const.DEFAULT_HOST
-        self.port = const.DEFAULT_PORT
-        self.path = '/'
+    def __init__(
+        self, 
+        host: str = const.DEFAULT_HOST, 
+        port: int = const.DEFAULT_PORT, 
+        path: str = '/'
+    ) -> None:
+        self.host = host
+        self.port = port
+        self.path = path
         self._ws = None
         # atexit.register(self.close)
     
@@ -151,12 +157,14 @@ class Client:
             )
     
     def _send(self, encoded_data: str) -> None:
-        try:
-            self._ws.send(encoded_data)
-        except ConnectionResetError:
-            print(':v5', 'test auto reconnect', self.url)
-            self.reopen()
-            self._ws.send(encoded_data)
+        for _ in range(3):
+            try:
+                self._ws.send(encoded_data)
+                break
+            except (ConnectionResetError, WebSocketConnectionClosedException):
+                self.reopen()
+        else:
+            raise TimeoutError('cannot send data to server')
     
     def _recv(self) -> t.Tuple[int, t.Any]:
         code, result = load(self._ws.recv())

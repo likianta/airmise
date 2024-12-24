@@ -1,6 +1,5 @@
 import airmise as air
 from argsense import cli
-from lk_logger import start_ipython
 
 
 @cli.cmd()
@@ -9,34 +8,33 @@ def server() -> None:
         print(args, kwargs)
         return 'ok'
     
-    air.Server().run({'foo': foo})
+    server = air.Server()
+    server.run({'foo': foo}, host=air.get_local_ip_address(), port=2140)
 
 
 @cli.cmd()
 def client(
     server_host: str = air.DEFAULT_HOST,
     server_port: int = air.DEFAULT_PORT,
-    interactive: bool = False,
 ) -> None:
     """
-    kwargs:
-        interactive (-i):
+    params:
+        server_host:
+        server_port (-p):
     """
-    air.connect(server_host, server_port)
+    client = air.Client(server_host, server_port)
+    client.open()
     
-    result = air.call('foo', 123, 456, abc='xyz')
-    print(result)
+    result = client.call('foo', 123, 456, abc='xyz')
+    print(result)  # -> ok
     
-    result = air.run(
+    result = client.run(
         '''
         print('hello world')  # this should be found in the server console
         return 123
         '''
     )
-    print(result)
-    
-    if interactive:
-        start_ipython(user_ns={'air': air})
+    print(result)  # -> 123
 
 
 if __name__ == '__main__':

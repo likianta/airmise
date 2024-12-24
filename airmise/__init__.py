@@ -11,9 +11,9 @@ if 2:
 
 from . import const
 from .client import Client
+from .client import call
 from .client import config
 from .client import connect
-from .client import call
 from .client import default_client
 from .client import run
 from .const import CLIENT_DEFAULT_PORT
@@ -30,4 +30,4 @@ from .util import random_name
 # from .webapp import WebClient
 # from .webapp import WebServer
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'

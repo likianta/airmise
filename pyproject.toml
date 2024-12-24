@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airmise"
-version = "0.2.0"
+version = "0.2.1a5"
 description = "The native experience of calling remote functions, like local ones."
 authors = ["likianta <likianta@foxmail.com>"]
 # readme = "README.md"
@@ -9,8 +9,8 @@ packages = [{ include = "airmise" }]
 [tool.poetry.dependencies]
 python = "^3.8"
 aiohttp = "^3.10.6"
-argsense = "^0.5.8"
-# argsense = { version = "^0.5.9a0", source = "likianta-host" }
+# argsense = ">=0.5.8,<1.0.0"
+argsense = { version = "^0.6.0", source = "likianta-host" }
 lk-logger = "^6.0.2"
 # lk-logger = { version = "^6.0.2", source = "likianta-host" }
 lk-utils = "^3.1.1"
