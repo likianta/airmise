@@ -21,6 +21,7 @@ from .const import DEFAULT_HOST
 from .const import DEFAULT_PORT
 from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT
+from .export import export_functions
 from .server3 import Server
 from .serdes import dump
 from .serdes import load
@@ -30,4 +31,4 @@ from .util import random_name
 # from .webapp import WebClient
 # from .webapp import WebServer
 
-__version__ = '0.2.1'
+__version__ = '0.3.0'
