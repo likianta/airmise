@@ -9,6 +9,6 @@ def main(aaa: str, bbb: int, *ccc, ddd: dict = None, **fff) -> dict:
 
 
 air.export_functions(
-    (main,),
+    {'foo': main},
     'test/_shell.py'
 )

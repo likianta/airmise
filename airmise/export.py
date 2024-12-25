@@ -24,6 +24,7 @@ from lk_utils.textwrap import join
 
 
 class T:
+    Functions = t.Dict[str, t.Iterable[t.Union[FunctionType, t.Callable]]]
     FallbackType = t.Literal["any", "str"]
     PlainParamType = t.Literal[
         "any",
@@ -39,9 +40,7 @@ class T:
     ]
 
 
-def export_functions(
-    funcs: t.Iterable[t.Union[FunctionType, t.Callable]], output_path: str
-) -> None:
+def export_functions(funcs: T.Functions, output_path: str) -> None:
     """
     params:
         output_path:
@@ -70,9 +69,9 @@ def export_functions(
 
 # noinspection PyUnresolvedReferences
 def _export_functions_to_file(
-    funcs: t.Iterable[FunctionType], output_path: str
+    funcs: T.Functions, output_path: str
 ) -> None:
-    classified_funcs = _classify_functions(funcs)
+    classified_funcs = _classify_functions(funcs.values())  # noqa
     # if len(classified_funcs) > 1:
     #     used_names = set()
     #     for xdict in classified_funcs.values():
@@ -84,15 +83,17 @@ def _export_functions_to_file(
     #             else:
     #                 used_names.add(func_name)
 
+    custom_funcnames = {id(v): k for k, v in funcs.items()}
+    defined_funcnames = []
+    show_module_name_divider_line = len(classified_funcs) > 1
+    
     write_rows = [
         "import airmise as air",
         "from functools import partial",
         "from typing import Any",
         "",
     ]
-    show_module_name_divider_line = len(classified_funcs) > 1
-    defined_funcnames = []
-
+    
     for key0 in sorted(classified_funcs.keys()):
         if show_module_name_divider_line:
             module_name = key0
@@ -104,8 +105,8 @@ def _export_functions_to_file(
             write_rows.append("")
 
         for key1 in sorted(classified_funcs[key0].keys()):
-            func_name = key1
             func_info = classified_funcs[key0][key1]
+            func_name = custom_funcnames[func_info["id"]]
             signature = func_info["signature"]
 
             write_rows.append(
@@ -246,6 +247,7 @@ def _parse_function(func: FunctionType) -> dict:
     return_ = annotations.get_return_type()
 
     return {
+        "id": id(func),
         "module": func.__module__,
         "name": func.__name__,
         "document": func.__doc__ or "",
