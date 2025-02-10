@@ -22,19 +22,16 @@ class Server:
     # def url(self) -> str:
     #     return 'http://{}:{}'.format(self.host, self.port)
     
-    def __init__(self) -> None:
-        self.host = '0.0.0.0'
-        self.port = const.DEFAULT_PORT
+    def __init__(
+        self,
+        host: str = const.DEFAULT_HOST,
+        port: int = const.DEFAULT_PORT,
+    ) -> None:
+        self.host = host
+        self.port = port
         self._app = aiohttp.web.Application()
         self._app.add_routes((aiohttp.web.get('/', self._ws_handler),))
         self._default_user_namespace = {}
-    
-    def config(self, host: str = None, port: int = None) -> t.Self:
-        if host:
-            self.host = host
-        if port:
-            self.port = port
-        return self
     
     def run(
         self,
@@ -133,3 +130,14 @@ class Server:
         
         print(':v7', 'server closed websocket')
         return ws
+
+
+def run_server(
+    user_namespace: dict = None,
+    /,
+    host: str = const.DEFAULT_HOST,
+    port: int = const.DEFAULT_PORT,
+    debug: bool = False,
+) -> None:
+    server = Server(host, port)
+    server.run(user_namespace, debug=debug)

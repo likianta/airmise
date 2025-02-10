@@ -23,6 +23,7 @@ from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT
 from .export import export_functions
 from .server3 import Server
+from .server3 import run_server
 from .serdes import dump
 from .serdes import load
 from .util import get_local_ip_address
