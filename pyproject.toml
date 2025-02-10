@@ -1,48 +1,57 @@
-[tool.poetry]
+[project]
 name = "airmise"
-version = "0.3.0a0"
+version = "0.3.0a5"
 description = "The native experience of calling remote functions, like local ones."
-authors = ["likianta <likianta@foxmail.com>"]
+authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
+dynamic = ["dependencies"]
 # readme = "README.md"
+requires-python = ">=3.8"
 packages = [{ include = "airmise" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-aiohttp = "^3.10.6"
-# argsense = ">=0.5.8,<1.0.0"
-argsense = { version = "^0.6.0", source = "likianta-host" }
-lk-logger = "^6.0.2"
-# lk-logger = { version = "^6.0.2", source = "likianta-host" }
-lk-utils = "^3.1.1"
-# lk-utils = { version = "^3.1.0", source = "likianta-host" }
+aiohttp = [
+    { version = "^3.10.6", python = ">=3.8,<3.9" },
+    { version = "^3.11.11", python = ">=3.9,<4.0" },
+]
+argsense = ">=0.7.0"
+# argsense = { version = "^0.7.0", source = "likianta" }
+lk-logger = "^6.0.4"
+# lk-logger = { version = "^6.0.4", source = "likianta" }
+# lk-utils = "^3.1.2"
+lk-utils = { version = "^3.1.3a4", source = "likianta" }
 # robyn = "^0.61.1"
 # sanic = "^24.6.0"
 websocket-client = "^1.8.0"
 # websockets = "^12.0"
 
 [tool.poetry.group.dev.dependencies]
+# python = "^3.12"
 # auto-py-to-exe = { version = "^2.44.1", python = ">=3.12,<3.13" }
-# depsland = { version = "^0.8.1a0", source = "likianta-host" }
-ipython = { version = "^8.26.0", python = "^3.10" }
+# depsland = { version = "^0.8.1a0", source = "likianta" }
+ipython = { version = "^8.31.0", python = "^3.12" }
 line-profiler = "^4.1.3"
 # nuitka = { version = "*", python = ">=3.12,<3.13" }
 # numpy = [  # <- streamlit
 #     { version = ">=2.0.0", python = ">=3.9" },
 #     { version = ">=1.23,<1.24", python = "<3.9" }
 # ]
-pandas = [  # <- streamlit
-    { version = ">=2.2.2", python = ">=3.10" },
-    { version = ">=1.5,<2.0", python = "<3.10" }
-]
-pinkrain = { version = "^0.0.0a17", source = "likianta-host" }
+# pandas = [  # <- streamlit
+#     { version = ">=2.2.2", python = ">=3.10" },
+#     { version = ">=1.5,<2.0", python = "<3.10" }
+# ]
+pinkrain = { version = "^0.0.0a24", source = "likianta", python = "^3.12" }
 # pyinstaller = { version = "*", python = ">=3.12,<3.13" }
-streamlit = { version = "^1.40.0", python = "!=3.9.7" }
+streamlit = { version = "^1.42.0", python = "^3.12" }
 
 # --- extras
 # hidapi = "*"
 # modbus-tk = "*"
-omni-driver-kit = { version = "^3.1.0b1", source = "likianta-host" }
+omni-driver-kit = { version = "^3.1.0b15", source = "likianta", python = "^3.12" }
 # pyserial = "*"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
 
 [[tool.poetry.source]]
 name = "tsinghua"
@@ -50,7 +59,7 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 priority = "primary"
 
 [[tool.poetry.source]]
-name = "likianta-host"
+name = "likianta"
 url = "http://likianta.pro:2131/"
 priority = "supplemental"
 
