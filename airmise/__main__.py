@@ -62,7 +62,8 @@ def remote_call(
 
 
 if __name__ == '__main__':
-    # pox -m aircontrol run-server
-    # pox -m aircontrol run-client
-    # pox -m aircontrol run-local-server
+    # pox -m airmise show-my-ip
+    # pox -m airmise run-server
+    # pox -m airmise run-client
+    # pox -m airmise run-local-server
     cli.run()
