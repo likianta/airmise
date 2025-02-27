@@ -20,6 +20,7 @@ from types import FunctionType
 
 from lk_utils import fs
 from lk_utils.textwrap import dedent
+from lk_utils.textwrap import indent
 from lk_utils.textwrap import join
 
 
@@ -82,34 +83,35 @@ def _export_functions_to_file(
     #                 )
     #             else:
     #                 used_names.add(func_name)
-
+    
     custom_funcnames = {id(v): k for k, v in funcs.items()}
     defined_funcnames = []
     show_module_name_divider_line = len(classified_funcs) > 1
     
-    write_rows = [
+    out_rows = [
         "import airmise as air",
         "from functools import partial",
-        "from typing import Any",
+        "from typing import Any  # noqa",
+        "",
         "",
     ]
     
     for key0 in sorted(classified_funcs.keys()):
         if show_module_name_divider_line:
             module_name = key0
-            write_rows.append(
+            out_rows.append(
                 "# {} {}".format(
                     "-" * (80 - 2 - len(module_name) - 1), module_name
                 )
             )
-            write_rows.append("")
-
+            out_rows.append("")
+        
         for key1 in sorted(classified_funcs[key0].keys()):
             func_info = classified_funcs[key0][key1]
             func_name = custom_funcnames[func_info["id"]]
             signature = func_info["signature"]
-
-            write_rows.append(
+            
+            out_rows.append(
                 "def {}({}) -> {}:  # noqa".format(
                     func_name,
                     ", ".join(
@@ -147,13 +149,18 @@ def _export_functions_to_file(
                 )
             )
             if func_info["document"]:
-                write_rows.append('    """{}"""'.format(func_info["document"]))
-            write_rows.append("    ...")
-            write_rows.append("")
-
+                out_rows.append(
+                    '    """{}    """'.format(
+                        indent(func_info["document"], rstrip=False)
+                    )
+                )
+            out_rows.append("    ...")
+            out_rows.append("")
+            out_rows.append("")
+            
             defined_funcnames.append(func_name)
-
-    write_rows.append(
+    
+    out_rows.append(
         dedent(
             """
             globals().update({{
@@ -170,8 +177,8 @@ def _export_functions_to_file(
             )
         )
     )
-
-    fs.dump(write_rows, output_path)
+    
+    fs.dump(out_rows, output_path)
 
 
 # -----------------------------------------------------------------------------
@@ -214,7 +221,7 @@ def _parse_function(func: FunctionType) -> dict:
         #   )
     """
     annotations = Annotations(spec.annotations)
-
+    
     args = []
     if spec.defaults:
         args_count = len(spec.args) - len(spec.defaults)
@@ -226,7 +233,7 @@ def _parse_function(func: FunctionType) -> dict:
         args.append((name, type_))
     if spec.varargs:
         args.append(("*" + spec.varargs, "any"))
-
+    
     kwargs = []
     if spec.defaults:
         enum: t.Iterator[t.Tuple[int, int]] = enumerate(
@@ -243,16 +250,16 @@ def _parse_function(func: FunctionType) -> dict:
             kwargs.append((name, type_, default))
     if spec.varkw:
         kwargs.append(("**" + spec.varkw, "any", ...))
-
+    
     return_ = annotations.get_return_type()
-
+    
     return {
-        "id": id(func),
-        "module": func.__module__,
-        "name": func.__name__,
-        "document": func.__doc__ or "",
+        "id"       : id(func),
+        "module"   : func.__module__,
+        "name"     : func.__name__,
+        "document" : func.__doc__ or "",
         "signature": {
-            "args": args,
+            "args"  : args,
             "kwargs": kwargs,
             "return": return_,
         },
@@ -277,27 +284,27 @@ class Annotations:
         self.annotations = annotations
         self._fallback_type = fallback_type
         self._type_2_str = {
-            "any": "any",
-            "anystr": "str",
-            "bool": "bool",
-            "dict": "dict",
-            "float": "float",
-            "int": "int",
-            "list": "list",
+            "any"    : "any",
+            "anystr" : "str",
+            "bool"   : "bool",
+            "dict"   : "dict",
+            "float"  : "float",
+            "int"    : "int",
+            "list"   : "list",
             "literal": "str",
-            "none": "none",
-            "set": "set",
-            "str": "str",
-            "tuple": "tuple",
-            "union": "any",
+            "none"   : "none",
+            "set"    : "set",
+            "str"    : "str",
+            "tuple"  : "tuple",
+            "union"  : "any",
         }
         # if config.BARE_NONE_MEANS_ANY:
         #     self._type_2_str['none'] = 'any'
-
+    
     # noinspection PyUnresolvedReferences,PyProtectedMember
     def _normalize_type(self, type_: t.Any) -> T.PlainParamType:
         out = str(type_)
-
+        
         if isinstance(type_, str):
             pass
         elif isinstance(type_, t._TypedDictMeta):
@@ -328,7 +335,7 @@ class Annotations:
                     return self._normalize_type(type_.__args__[0])
                 elif isinstance(type_, t._GenericAlias):
                     out = type_._name
-
+        
         assert isinstance(out, str)
         out = out.lower()
         if out.startswith("<class "):
@@ -339,13 +346,13 @@ class Annotations:
         if out in self._type_2_str:
             return self._type_2_str[out]
         return "any"
-
+    
     def get_arg_type(self, name: str) -> T.PlainParamType:
         if name in self.annotations:
             return self._normalize_type(self.annotations[name])
         else:
             return self._fallback_type
-
+    
     def get_kwarg_type(self, name: str, value: t.Any) -> T.PlainParamType:
         if name in self.annotations:
             out = self._normalize_type(self.annotations[name])
@@ -353,23 +360,23 @@ class Annotations:
             out = self.deduce_type_by_value(value)
         # noinspection PyTypeChecker
         return out
-
+    
     def get_return_type(self) -> T.PlainParamType:
         if "return" in self.annotations:
             return self._normalize_type(self.annotations["return"])
         else:
             return "none"
-
+    
     @staticmethod
     def deduce_type_by_value(default: t.Any) -> T.PlainParamType:
         # noinspection PyTypeChecker
         return {
-            bool: "bool",
-            dict: "dict",
+            bool : "bool",
+            dict : "dict",
             float: "float",
-            int: "int",
-            list: "list",
-            set: "set",
-            str: "str",
+            int  : "int",
+            list : "list",
+            set  : "set",
+            str  : "str",
             tuple: "tuple",
         }.get(type(default), "any")
