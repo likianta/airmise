@@ -3,7 +3,7 @@ from lk_utils import run_new_thread
 
 from . import const
 from .client import Client
-from .server3 import Server
+from .server import Server
 from .util import get_local_ip_address
 
 
