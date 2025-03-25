@@ -44,7 +44,7 @@ class Client:
     
     def config(self, host: str, port: int, path: str = '/') -> t.Self:
         if (self.host, self.port, self.path) == (host, port, path):
-            return
+            return self
         if self.is_opened:
             print('restart client to apply new config', ':pv')
             self.close()
@@ -224,7 +224,6 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
             `__ctx__` and `__ref__` are explained in
             `.server.Server._on_message`.
     """
-    scope = []
     out = ''
     
     # var abbrs:
@@ -232,34 +231,41 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
     #   linex: left stripped line
     #   __ctx__: context namespace. see also `.server.Server._context`
     
-    for line in dedent(raw_code).splitlines():
-        ws, linex = re.match(r'( *)(.*)', line).groups()
-        indent = len(ws)
-        
-        # noinspection PyUnresolvedReferences
-        if linex and scope and indent <= scope[-1]:
-            scope.pop()
-        if linex.startswith(('class ', 'def ')):
-            scope.append(indent)
-        
-        if linex.startswith('memo '):
-            a, b, c = re.match(r'memo (\w+)(?: (:)?= (.+))?', linex).groups()
-            if b:
-                out += (
-                    '{}{} = __ref__["{}"] if "{}" in __ref__ else '
-                    '__ref__.setdefault("{}", {})\n'
-                    .format(ws, a, a, a, a, c)
-                )
-            elif c:
-                out += '{}{} = __ref__["{}"] = {}\n'.format(ws, a, a, c)
+    if '\n' in raw_code:
+        scope = []
+        for line in dedent(raw_code).splitlines():
+            ws, linex = re.match(r'( *)(.*)', line).groups()
+            indent = len(ws)
+            
+            # noinspection PyUnresolvedReferences
+            if linex and scope and indent <= scope[-1]:
+                scope.pop()
+            if linex.startswith(('class ', 'def ')):
+                scope.append(indent)
+            
+            if linex.startswith('memo '):
+                a, b, c = re.match(r'memo (\w+)(?: (:)?= (.+))?', linex).groups()
+                if b:
+                    out += (
+                        '{}{} = __ref__["{}"] if "{}" in __ref__ else '
+                        '__ref__.setdefault("{}", {})\n'
+                        .format(ws, a, a, a, a, c)
+                    )
+                elif c:
+                    out += '{}{} = __ref__["{}"] = {}\n'.format(ws, a, a, c)
+                else:
+                    out += '{}{} = __ref__["{}"]\n'.format(ws, a, a)
+            elif linex.startswith('return ') and not scope and interpret_return:
+                out += '{}__ref__["__result__"] = {}\n'.format(ws, linex[7:])
             else:
-                out += '{}{} = __ref__["{}"]\n'.format(ws, a, a)
-        elif linex.startswith('return ') and not scope and interpret_return:
-            out += '{}__ref__["__result__"] = {}\n'.format(ws, linex[7:])
+                out += line + '\n'
+        assert not scope
+    else:
+        if raw_code.startswith('return '):
+            out = '__ref__["__result__"] = {}\n'.format(raw_code[7:])
         else:
-            out += line + '\n'
+            out = '__ref__["__result__"] = {}\n'.format(raw_code)
     
-    assert not scope
     return out
 
 
