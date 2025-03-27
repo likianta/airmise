@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "0.3.0a9"
+version = "0.3.0a15"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]
@@ -38,7 +38,7 @@ uvicorn = [
 ]
 
 # --- extras
-omni-driver-kit = { version = "^3.2.0a6", source = "likianta", python = "^3.12" }
+omni-driver-kit = { version = "^3.2.0a9", source = "likianta", python = "^3.12" }
 
 [[tool.poetry.source]]
 name = "tsinghua"
