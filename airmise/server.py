@@ -8,13 +8,16 @@ import aiohttp.web
 from lk_utils import timestamp
 
 from . import const
+from .remote_control import store_object
 from .serdes import dump
 from .serdes import load
+from .util import get_local_ip_address
 
 
 class Server:
     host: str
     port: int
+    verbose: bool
     _app: aiohttp.web.Application
     _default_user_namespace: dict
     
@@ -29,6 +32,7 @@ class Server:
     ) -> None:
         self.host = host
         self.port = port
+        self.verbose = False
         self._app = aiohttp.web.Application()
         self._app.add_routes((aiohttp.web.get('/', self._ws_handler),))
         self._default_user_namespace = {}
@@ -39,10 +43,11 @@ class Server:
         /,
         host: str = None,
         port: int = None,
-        debug: bool = False,  # TODO  # noqa
+        verbose: bool = False,
     ) -> None:
         if user_namespace:
             self._default_user_namespace.update(user_namespace)
+        self.verbose = verbose
         aiohttp.web.run_app(
             self._app,
             host=host or self.host,
@@ -67,27 +72,29 @@ class Server:
         
         msg: aiohttp.WSMessage
         async for msg in ws:
-            
             code, kwargs, options = load(msg.data)
             
-            if code:
-                print(':vr2', dedent(
-                    '''
-                    > *message at {}*
-    
-                    ```python
-                    {}
-                    ```
-    
-                    {}
-                    '''
-                ).format(
-                    timestamp(),
-                    code.strip(),
-                    '```json\n{}\n```'.format(json.dumps(
-                        kwargs, default=str, ensure_ascii=False, indent=4
-                    )) if kwargs else ''
-                ).strip())
+            if self.verbose and code:
+                print(
+                    ':vr2',
+                    dedent(
+                        '''
+                        > *message at {}*
+        
+                        ```python
+                        {}
+                        ```
+        
+                        {}
+                        '''
+                    ).format(
+                        timestamp(),
+                        code.strip(),
+                        '```json\n{}\n```'.format(json.dumps(
+                            kwargs, default=str, ensure_ascii=False, indent=4
+                        )) if kwargs else ''
+                    ).strip()
+                )
             
             if kwargs:
                 ctx.update(kwargs)
@@ -103,7 +110,7 @@ class Server:
                                 (const.ERROR, ''.join(format_exception(e)))
                             )
                         else:
-                            response = dump((const.RETURN, 'ready'))
+                            response = dump((const.NORMAL_OBJECT, 'ready'))
                         await ws.send_str(response)
                     else:
                         try:
@@ -118,15 +125,19 @@ class Server:
                             )
                         await ws.send_str(result)
                 else:
-                    raise Exception(options)
+                    raise NotImplementedError(options)
             else:
                 try:
                     result = exec_()
                 except Exception as e:
-                    result = dump((const.ERROR, ''.join(format_exception(e))))
+                    response = dump((const.ERROR, ''.join(format_exception(e))))
                 else:
-                    result = dump((const.RETURN, result))
-                await ws.send_str(result)
+                    try:
+                        response = dump((const.NORMAL_OBJECT, result))
+                    except Exception:
+                        store_object(x := str(id(result)), result)
+                        response = dump((const.SPECIAL_OBJECT, x))
+                await ws.send_str(response)
         
         print(':v7', 'server closed websocket')
         return ws
@@ -137,7 +148,12 @@ def run_server(
     /,
     host: str = const.DEFAULT_HOST,
     port: int = const.DEFAULT_PORT,
-    debug: bool = False,
+    verbose: bool = False,
 ) -> None:
+    if host == '0.0.0.0':
+        print('server is working on: \n- {}\n- {}'.format(
+            'http://localhost:{}'.format(port),
+            'http://{}:{}'.format(get_local_ip_address(), port)
+        ))
     server = Server(host, port)
-    server.run(user_namespace, debug=debug)
+    server.run(user_namespace, verbose=verbose)

@@ -4,7 +4,7 @@ import typing as t
 _re_escape = re.compile(r'[\\"]')
 
 
-def dump(data: t.Any) -> str:
+def dump(data: t.Any, strict: bool = True) -> str:
     """
     warning: very limited support!
     """
@@ -32,7 +32,10 @@ def dump(data: t.Any) -> str:
         x = str(node)
         #   e.g. '<object at 0x7f...>', '[object, object, ...]'
         if x.startswith('<') and x.endswith('>'):
-            print(':v3', 'this maybe a unserializable object!', node)
+            if strict:
+                raise Exception('object is not serializable!')
+            else:
+                print(':v6', 'this maybe a unserializable object!', node)
         return x
     
     out = serialize(data)

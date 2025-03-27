@@ -126,9 +126,12 @@ class Client:
             self._send(dump((code, kwargs or None, None)))
         
         code, result = self._recv()
-        if code == const.RETURN:
+        if code == const.NORMAL_OBJECT:
             return result
-        elif code == const.CLOSED:  # TODO
+        elif code == const.SPECIAL_OBJECT:
+            from .remote_control import RemoteCall
+            return RemoteCall(remote_object_id=result)
+        elif code == const.CLOSED:
             print(':v7', 'server closed connection')
             self.close()
     
