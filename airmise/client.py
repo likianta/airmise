@@ -134,6 +134,8 @@ class Client:
         elif code == const.CLOSED:
             print(':v7', 'server closed connection')
             self.close()
+        else:
+            raise Exception(code, result)
     
     # TODO: there should be a better way
     def call(

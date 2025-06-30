@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "0.3.0a15"
+version = "0.3.0a19"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]
@@ -16,9 +16,9 @@ aiohttp = [
     { version = ">=3.10", python = ">=3.9,<4.0" },
 ]
 # argsense = ">=0.7.0"
-argsense = { version = "^0.7.1", source = "likianta" }
+argsense = { version = ">=0.7.2", source = "likianta" }
 lk-logger = { version = "^6.0.5", source = "likianta" }
-lk-utils = { version = "^3.2.0a4", source = "likianta" }
+lk-utils = { version = "^3.2.0b1", source = "likianta" }
 # robyn = "^0.61.1"
 # sanic = "^24.6.0"
 websocket-client = "^1.8.0"
@@ -31,7 +31,8 @@ ipython = { version = "^9.0.0", python = "^3.12" }
 # nuitka = { version = "^2.6.8", python = ">=3.12,<3.13" }
 pinkrain = { version = "^0.0.0a28", source = "likianta", python = "^3.12" }
 # pyinstaller = { version = "^6.12.0", python = ">=3.12,<3.13" }
-streamlit = { version = "^1.43.0", python = "^3.12" }
+# sanic = "^24.6.0"
+streamlit = { version = "^1.44.0", python = "^3.12" }
 uvicorn = [
     { version = "^0.34.0", extras = ["standard"], python = "^3.9" },
     { version = "<0.34.0", extras = ["standard"], python = "<3.9" },

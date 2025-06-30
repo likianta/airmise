@@ -30,15 +30,8 @@ def run_client(
 ) -> None:
     import airmise as air
     from lk_logger import start_ipython
-    client = Client()
-    client.config(host, port, path)
-    client.open()
-    start_ipython({
-        'air'   : air,
-        'client': client,
-        'run'   : client.run,
-        'call'  : client.call,
-    })
+    air.connect(host, port, path)
+    start_ipython({'air': air})
 
 
 @cli.cmd()
