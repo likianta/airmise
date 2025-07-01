@@ -1,6 +1,6 @@
 # Airmise Changelog
 
-### 0.3.0 (wip)
+### 0.3.0 (2025-07-01)
 
 - seamingless experience for remote calling
 - share the same code base between server and client
