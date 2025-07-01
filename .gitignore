@@ -4,12 +4,9 @@
 /build/python/
 /build/venv
 /dist/
-/deps/core/*
-/deps/extra/*
 /lib/
 /nuitka-crash-report.xml
 /profile_*
-/requirements_extra.txt
 /run_local_server.build/
 /run_local_server.dist/
 /run_local_server.onefine-build/

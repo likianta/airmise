@@ -1,12 +1,15 @@
 [project]
 name = "airmise"
-version = "0.3.0a19"
+version = "0.3.0b0"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]
-# readme = "README.md"
+readme = "readme.md"
 requires-python = ">=3.8"
 packages = [{ include = "airmise" }]
+
+[project.urls]
+homepage = "https://github.com/likianta/airmise"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -15,10 +18,9 @@ aiohttp = [
     # { version = "^3.11.11", python = ">=3.9,<4.0" },
     { version = ">=3.10", python = ">=3.9,<4.0" },
 ]
-# argsense = ">=0.7.0"
-argsense = { version = ">=0.7.2", source = "likianta" }
+argsense = { version = "^1.0.1b0", source = "likianta" }
 lk-logger = { version = "^6.0.5", source = "likianta" }
-lk-utils = { version = "^3.2.0b1", source = "likianta" }
+lk-utils = { version = "^3.3.0a15", source = "likianta" }
 # robyn = "^0.61.1"
 # sanic = "^24.6.0"
 websocket-client = "^1.8.0"
@@ -29,7 +31,7 @@ fastapi = "^0.115.12"
 ipython = { version = "^9.0.0", python = "^3.12" }
 # line-profiler = "^4.1.3"
 # nuitka = { version = "^2.6.8", python = ">=3.12,<3.13" }
-pinkrain = { version = "^0.0.0a28", source = "likianta", python = "^3.12" }
+# pinkrain = { version = "^0.0.0a28", source = "likianta", python = "^3.12" }
 # pyinstaller = { version = "^6.12.0", python = ">=3.12,<3.13" }
 # sanic = "^24.6.0"
 streamlit = { version = "^1.44.0", python = "^3.12" }
@@ -37,9 +39,6 @@ uvicorn = [
     { version = "^0.34.0", extras = ["standard"], python = "^3.9" },
     { version = "<0.34.0", extras = ["standard"], python = "<3.9" },
 ]
-
-# --- extras
-omni-driver-kit = { version = "^3.2.0a9", source = "likianta", python = "^3.12" }
 
 [[tool.poetry.source]]
 name = "tsinghua"
