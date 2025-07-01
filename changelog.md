@@ -1,5 +1,9 @@
 # Airmise Changelog
 
+### 0.4.0 (wip)
+
+- use built-in socket library
+
 ### 0.3.0 (2025-07-01)
 
 - seamingless experience for remote calling

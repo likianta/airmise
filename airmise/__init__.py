@@ -31,4 +31,4 @@ from .util import random_name
 # from .webapp import WebClient
 # from .webapp import WebServer
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
