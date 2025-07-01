@@ -100,28 +100,28 @@ class Client:
             code = _interpret_func(source)
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         
+        def iterate(id: str) -> t.Iterator:
+            encoded_data = dump((
+                '', None, {'is_iterator': True, 'id': id}
+            ))
+            while True:
+                self._send(encoded_data)
+                code, result = self._recv()
+                if code == const.YIELD:
+                    yield result
+                elif code == const.YIELD_OVER:
+                    break
+                else:
+                    raise Exception(code, result)
+        
         if _iter:
-            def iterator(id: str) -> t.Iterator:
-                encoded_data = dump((
-                    '', None, {'is_iterator': True, 'id': id}
-                ))
-                while True:
-                    self._send(encoded_data)
-                    code, result = self._recv()
-                    if code == const.YIELD:
-                        yield result
-                    elif code == const.YIELD_END:
-                        break
-                    else:
-                        raise Exception(code, result)
-            
-            iter_id = uuid1().hex
+            uid = uuid1().hex
             self._send(dump((
-                code, kwargs or None, {'is_iterator': True, 'id': iter_id})
+                code, kwargs or None, {'is_iterator': True, 'id': uid})
             ))
             code, result = self._recv()
             assert result == 'ready'
-            return iterator(iter_id)
+            return iterate(uid)
         else:
             self._send(dump((code, kwargs or None, None)))
         
@@ -131,6 +131,9 @@ class Client:
         elif code == const.SPECIAL_OBJECT:
             from .remote_control import RemoteCall
             return RemoteCall(remote_object_id=result)
+        elif code == const.ITERATOR:
+            # result is an id.
+            return iterate(result)
         elif code == const.CLOSED:
             print(':v7', 'server closed connection')
             self.close()

@@ -39,17 +39,30 @@ scenario (2):
 
 import os
 
+
+class AutoId:
+    def __init__(self) -> None:
+        self._number = 0
+    
+    def __call__(self) -> int:
+        self._number += 1
+        return self._number
+
+
+_autoid = AutoId()
+
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 2140
 SECONDARY_PORT = 2141
 
 # FLAG
-NORMAL_OBJECT = 0
-SPECIAL_OBJECT = 1
-YIELD = 2
-YIELD_END = 3
-ERROR = 4
-CLOSED = 5
+NORMAL_OBJECT = _autoid()
+SPECIAL_OBJECT = _autoid()
+ITERATOR = _autoid()
+YIELD = _autoid()
+YIELD_OVER = _autoid()
+ERROR = _autoid()
+CLOSED = _autoid()
 
 # DELETE BELOW
 SERVER_DEFAULT_PORT = int(os.getenv('AIRCONTROL_SERVER_PORT', '2140'))

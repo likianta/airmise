@@ -2,6 +2,8 @@ import json
 import typing as t
 from textwrap import dedent
 from traceback import format_exception
+from types import GeneratorType
+from uuid import uuid1
 
 import aiohttp
 import aiohttp.web
@@ -60,7 +62,7 @@ class Server:
             **self._default_user_namespace,
             '__ref__': {'__result__': None},
         }
-        session_data_holder = {}
+        session_data = {}
         
         ws = aiohttp.web.WebSocketResponse()
         await ws.prepare(req)
@@ -102,9 +104,9 @@ class Server:
             if options:
                 if options.get('is_iterator'):
                     iter_id = options['id']
-                    if iter_id not in session_data_holder:
+                    if iter_id not in session_data:
                         try:
-                            session_data_holder[iter_id] = exec_()
+                            session_data[iter_id] = exec_()
                         except Exception as e:
                             response = dump(
                                 (const.ERROR, ''.join(format_exception(e)))
@@ -114,11 +116,11 @@ class Server:
                         await ws.send_str(response)
                     else:
                         try:
-                            datum = next(session_data_holder[iter_id])
+                            datum = next(session_data[iter_id])
                             result = dump((const.YIELD, datum))
                         except StopIteration:
-                            result = dump((const.YIELD_END, None))
-                            session_data_holder.pop(iter_id)
+                            result = dump((const.YIELD_OVER, None))
+                            session_data.pop(iter_id)
                         except Exception as e:
                             result = dump(
                                 (const.ERROR, ''.join(format_exception(e)))
@@ -132,11 +134,16 @@ class Server:
                 except Exception as e:
                     response = dump((const.ERROR, ''.join(format_exception(e))))
                 else:
-                    try:
-                        response = dump((const.NORMAL_OBJECT, result))
-                    except Exception:
-                        store_object(x := str(id(result)), result)
-                        response = dump((const.SPECIAL_OBJECT, x))
+                    if isinstance(result, GeneratorType):
+                        uid = uuid1().hex
+                        session_data[uid] = result
+                        response = dump((const.ITERATOR, uid))
+                    else:
+                        try:
+                            response = dump((const.NORMAL_OBJECT, result))
+                        except Exception:
+                            store_object(x := str(id(result)), result)
+                            response = dump((const.SPECIAL_OBJECT, x))
                 await ws.send_str(response)
         
         print(':v7', 'server closed websocket')
