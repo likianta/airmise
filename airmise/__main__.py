@@ -18,6 +18,10 @@ def run_server(
     port: int = const.DEFAULT_PORT,
     **kwargs
 ) -> None:
+    """
+    params:
+        port (-p):
+    """
     server = Server()
     server.run(kwargs, host=host, port=port)
 

@@ -10,6 +10,34 @@ class T:
     Object = t.TypeVar('Object', bound=t.Union[t.Type, t.Callable])
 
 
+def register(obj: T.Object) -> T.Object:
+    _references[obj.__qualname__] = obj
+    return obj
+
+
+def delegate(obj: T.Object, *args, **kwargs) -> T.Object:
+    if str(type(obj)) == "<class 'type'>":
+        # obj is a class
+        _references[obj.__qualname__] = obj
+        remote_obj_id = client.run(
+            '''
+            import airmise as air
+            from uuid import uuid1
+            some_class = air.remote_control.seek_reference(qualname)
+            instance = some_class(*args, **kwargs)
+            uid = uuid1().hex
+            air.remote_control.store_object(uid, instance)
+            return uid
+            ''',
+            qualname=obj.__qualname__,
+            args=args,
+            kwargs=kwargs,
+        )
+        return t.cast(T.Object, RemoteCall(remote_obj_id))
+    else:
+        raise NotImplementedError
+
+
 def wrap(obj: T.Object) -> T.Object:
     if str(type(obj)) == "<class 'type'>":
         # obj is a class

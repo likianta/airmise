@@ -1,11 +1,4 @@
 if 1:
-    import sys
-    from os.path import exists
-    from lk_utils import xpath
-    if exists(xpath('../.airmise_standalone.txt')):
-        sys.path.extend(('deps/core', 'deps/extra'))
-
-if 2:
     import lk_logger
     lk_logger.setup(quiet=True)
 
@@ -25,6 +18,8 @@ from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT
 from .environment import non_native
 from .export import export_functions
+from .remote_control import delegate
+from .remote_control import register
 from .remote_control import wrap
 from .server import Server
 from .server import run_server
