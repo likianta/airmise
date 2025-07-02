@@ -1,3 +1,4 @@
+import atexit
 import inspect
 import re
 import typing as t
@@ -5,53 +6,44 @@ from textwrap import dedent
 from types import FunctionType
 from uuid import uuid1
 
-from websocket import WebSocket
-from websocket import WebSocketConnectionClosedException
-from websocket import create_connection
-
 from . import const
 from .serdes import dump
 from .serdes import load
+from .socket_wrapper import Socket
 
 
 class Client:
     host: str
-    path: str
     port: int
-    _ws: t.Optional[WebSocket]
+    _socket: t.Optional[Socket]
     
     def __init__(
         self, 
         host: str = const.DEFAULT_HOST, 
-        port: int = const.DEFAULT_PORT, 
-        path: str = '/'
+        port: int = const.DEFAULT_PORT,
     ) -> None:
         self.host = host
         self.port = port
-        self.path = path
-        self._ws = None
-        # atexit.register(self.close)
+        self._socket = None
+        atexit.register(self.close)
     
     @property
     def is_opened(self) -> bool:
-        return bool(self._ws)
+        return bool(self._socket)
     
     @property
     def url(self) -> str:
-        return 'ws://{}:{}/{}'.format(
-            self.host, self.port, self.path.lstrip('/')
-        )
+        return 'tcp://{}:{}'.format(self.host, self.port)
     
-    def config(self, host: str, port: int, path: str = '/') -> t.Self:
-        if (self.host, self.port, self.path) == (host, port, path):
-            return self
-        if self.is_opened:
-            print('restart client to apply new config', ':pv')
-            self.close()
-        self.host, self.port, self.path = host, port, path
+    def config(self, host: str, port: int) -> t.Self:
+        if (self.host, self.port) != (host, port):
+            self.host, self.port = host, port
+            if self.is_opened:
+                print('restart client to apply new config', ':pv')
+                self.reopen()
         return self
     
-    def open(self, **kwargs) -> None:
+    def open(self) -> None:
         if self.is_opened:
             # print(
             #     ':v6p',
@@ -59,34 +51,21 @@ class Client:
             #     'use `reopen` method'
             # )
             return
-        try:
-            print(self.url, ':p')
-            self._ws = create_connection(
-                self.url, skip_utf8_validation=True, **kwargs
-            )
-            # assert self._ws.recv() == 'CONNECTED'
-            #   see `.server2.Server._on_connect`
-        except Exception:
-            print(
-                ':v8',
-                'cannot connect to server via "{}"! '
-                'please check if server online.'.format(self.url)
-            )
-            raise
-        else:
-            print(':v4', 'server connected', self.url)
+        self._socket = Socket()
+        self._socket.connect(self.host, self.port)
     
     def close(self) -> None:
         if self.is_opened:
             print('close connection', ':v')
-            self._ws.close(timeout=0.1)  # noqa
-            self._ws = None
+            self._socket.send_close_event()
+            self._socket.close()
+            self._socket = None
     
     def reopen(self) -> None:
         self.close()
         self.open()
     
-    def run(
+    def exec(
         self, source: t.Union[str, FunctionType], _iter: bool = False, **kwargs
     ) -> t.Any:
         if not self.is_opened:
@@ -105,7 +84,7 @@ class Client:
                 '', None, {'is_iterator': True, 'id': id}
             ))
             while True:
-                self._send(encoded_data)
+                self._socket.sendall(encoded_data)
                 code, result = self._recv()
                 if code == const.YIELD:
                     yield result
@@ -116,14 +95,14 @@ class Client:
         
         if _iter:
             uid = uuid1().hex
-            self._send(dump((
+            self._socket.sendall(dump((
                 code, kwargs or None, {'is_iterator': True, 'id': uid})
             ))
             code, result = self._recv()
             assert result == 'ready'
             return iterate(uid)
         else:
-            self._send(dump((code, kwargs or None, None)))
+            self._socket.sendall(dump((code, kwargs or None, None)))
         
         code, result = self._recv()
         if code == const.NORMAL_OBJECT:
@@ -145,37 +124,27 @@ class Client:
         self, func_name: str, *args, _iter: bool = False, **kwargs
     ) -> t.Any:
         if args and kwargs:
-            return self.run(
+            return self.exec(
                 'return {}(*args, **kwargs)'.format(func_name),
                 args=args, kwargs=kwargs, _iter=_iter,
             )
         elif args:
-            return self.run(
+            return self.exec(
                 'return {}(*args)'.format(func_name),
                 args=args, _iter=_iter,
             )
         elif kwargs:
-            return self.run(
+            return self.exec(
                 'return {}(**kwargs)'.format(func_name),
                 kwargs=kwargs, _iter=_iter,
             )
         else:
-            return self.run(
+            return self.exec(
                 'return {}()'.format(func_name), _iter=_iter,
             )
     
-    def _send(self, encoded_data: str) -> None:
-        for _ in range(3):
-            try:
-                self._ws.send(encoded_data)
-                break
-            except (ConnectionResetError, WebSocketConnectionClosedException):
-                self.reopen()
-        else:
-            raise TimeoutError('cannot send data to server')
-    
     def _recv(self) -> t.Tuple[int, t.Any]:
-        code, result = load(self._ws.recv())
+        code, result = load(self._socket.recvall().decode())
         if code == const.ERROR:
             raise Exception(result)
         else:
@@ -183,7 +152,7 @@ class Client:
 
 
 default_client = Client()
-run = default_client.run
+exec = default_client.exec
 call = default_client.call
 config = default_client.config
 # connect = _default_client.open

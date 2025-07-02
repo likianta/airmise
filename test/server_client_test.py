@@ -2,17 +2,17 @@ import airmise as air
 from argsense import cli
 
 
-@cli.cmd()
-def server() -> None:
+@cli
+def server(host: str = air.DEFAULT_HOST, port: int = air.DEFAULT_PORT) -> None:
     def foo(*args, **kwargs) -> str:
         print(args, kwargs)
         return 'ok'
     
-    server = air.Server()
-    server.run({'foo': foo}, host=air.get_local_ip_address(), port=2140)
+    server = air.Server(host, port)
+    server.run({'foo': foo})
 
 
-@cli.cmd()
+@cli
 def client(
     server_host: str = air.DEFAULT_HOST,
     server_port: int = air.DEFAULT_PORT,
@@ -28,7 +28,7 @@ def client(
     result = client.call('foo', 123, 456, abc='xyz')
     print(result)  # -> ok
     
-    result = client.run(
+    result = client.exec(
         '''
         print('hello world')  # this should be found in the server console
         return 123

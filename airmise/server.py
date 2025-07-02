@@ -5,14 +5,14 @@ from traceback import format_exception
 from types import GeneratorType
 from uuid import uuid1
 
-import aiohttp
-import aiohttp.web
 from lk_utils import timestamp
 
 from . import const
 from .remote_control import store_object
 from .serdes import dump
 from .serdes import load
+from .socket_wrapper import Socket
+from .socket_wrapper import SocketClosed
 from .util import get_local_ip_address
 
 
@@ -20,12 +20,12 @@ class Server:
     host: str
     port: int
     verbose: bool
-    _app: aiohttp.web.Application
     _default_user_namespace: dict
+    _socket: Socket
     
     # @property
     # def url(self) -> str:
-    #     return 'http://{}:{}'.format(self.host, self.port)
+    #     return 'tcp://{}:{}'.format(self.host, self.port)
     
     def __init__(
         self,
@@ -35,9 +35,8 @@ class Server:
         self.host = host
         self.port = port
         self.verbose = False
-        self._app = aiohttp.web.Application()
-        self._app.add_routes((aiohttp.web.get('/', self._ws_handler),))
         self._default_user_namespace = {}
+        self._socket = Socket()
     
     def run(
         self,
@@ -50,31 +49,29 @@ class Server:
         if user_namespace:
             self._default_user_namespace.update(user_namespace)
         self.verbose = verbose
-        aiohttp.web.run_app(
-            self._app,
-            host=host or self.host,
-            port=port or self.port,
-        )
+        self._socket.bind(host or self.host, port or self.port)
+        self._socket.listen(1)
+        self._mainloop(self._socket.accept())
     
-    async def _ws_handler(self, req: aiohttp.web.Request):
-        print(':v3', 'server set up websocket')
+    def _mainloop(self, socket: Socket) -> None:
         ctx = {
             **self._default_user_namespace,
             '__ref__': {'__result__': None},
         }
         session_data = {}
         
-        ws = aiohttp.web.WebSocketResponse()
-        await ws.prepare(req)
-        
         def exec_() -> t.Any:
             ctx['__ref__']['__result__'] = None
             exec(code, ctx)
             return ctx['__ref__']['__result__']
         
-        msg: aiohttp.WSMessage
-        async for msg in ws:
-            code, kwargs, options = load(msg.data)
+        while True:
+            try:
+                data_bytes = socket.recvall()
+            except SocketClosed:
+                return
+            
+            code, kwargs, options = load(data_bytes.decode())
             
             if self.verbose and code:
                 print(
@@ -113,19 +110,17 @@ class Server:
                             )
                         else:
                             response = dump((const.NORMAL_OBJECT, 'ready'))
-                        await ws.send_str(response)
                     else:
                         try:
                             datum = next(session_data[iter_id])
-                            result = dump((const.YIELD, datum))
+                            response = dump((const.YIELD, datum))
                         except StopIteration:
-                            result = dump((const.YIELD_OVER, None))
+                            response = dump((const.YIELD_OVER, None))
                             session_data.pop(iter_id)
                         except Exception as e:
-                            result = dump(
+                            response = dump(
                                 (const.ERROR, ''.join(format_exception(e)))
                             )
-                        await ws.send_str(result)
                 else:
                     raise NotImplementedError(options)
             else:
@@ -144,10 +139,9 @@ class Server:
                         except Exception:
                             store_object(x := str(id(result)), result)
                             response = dump((const.SPECIAL_OBJECT, x))
-                await ws.send_str(response)
-        
-        print(':v7', 'server closed websocket')
-        return ws
+            
+            # assert response
+            socket.sendall(response)
 
 
 def run_server(

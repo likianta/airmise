@@ -33,7 +33,7 @@ def run_client(
     path: str = '/',
 ) -> None:
     import airmise as air
-    from lk_logger import start_ipython
+    from lk_utils import start_ipython
     air.connect(host, port, path)
     start_ipython({'air': air})
 
