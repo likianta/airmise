@@ -3,7 +3,6 @@ import typing as t
 from textwrap import dedent
 from traceback import format_exception
 from types import GeneratorType
-from uuid import uuid1
 
 from lk_utils import timestamp
 
@@ -130,9 +129,10 @@ class Server:
                     response = dump((const.ERROR, ''.join(format_exception(e))))
                 else:
                     if isinstance(result, GeneratorType):
-                        uid = uuid1().hex
-                        session_data[uid] = result
-                        response = dump((const.ITERATOR, uid))
+                        # uid = uuid1().hex
+                        # session_data[uid] = result
+                        # response = dump((const.ITERATOR, uid))
+                        response = dump((const.NORMAL_OBJECT, tuple(result)))
                     else:
                         try:
                             response = dump((const.NORMAL_OBJECT, result))
