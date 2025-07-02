@@ -19,8 +19,12 @@ class Socket:
     
     def accept(self) -> 'Socket':
         conn, addr = self._socket.accept()
-        print(conn, addr, ':v')
         new_socket = Socket(_socket=conn, _url='tcp://{}:{}'.format(*addr))
+        print(
+            'new connection accepted',
+            '{} <- {}'.format(self.url, new_socket.url),
+            ':v'
+        )
         return new_socket
     
     def bind(self, host: str, port: int) -> None:
@@ -49,7 +53,7 @@ class Socket:
         print(':pv2', 'server is listening at {}'.format(self.url))
     
     def recvall(self) -> bytes:
-        digits = int(self._socket.recv(1))
+        size_width = int(self._socket.recv(1))
         '''
             digits      max_hex     max_size
             ----------- ----------  --------
@@ -64,30 +68,61 @@ class Socket:
             8           FFFFFFFF    4GB
             9           FFFFFFFFF   64GB
         '''
-        if digits == 0:
+        if size_width == 0:
             print(':pv7', 'connection closed by client', self.url)
             self._socket.close()
             raise SocketClosed
         
-        exact_size = int(self._socket.recv(digits), 16)
-        data_bytes = self._socket.recv(exact_size)
+        exact_size = int(self._socket.recv(size_width), 16)
+        # notice: https://stackoverflow.com/a/17668009/9695911
+        # trick: https://poe.com/s/2HbNCYsmKHIqZqoQ6Md3
+        data_bytes = bytearray()
+        while exact_size:
+            fact_bytes = self._socket.recv(exact_size)
+            data_bytes.extend(fact_bytes)
+            exact_size -= len(fact_bytes)
+        print(
+            ':vi3',
+            'recv',
+            size_width,
+            '{:X}'.format(exact_size),
+            _shortify_message(data_bytes)
+        )
         return data_bytes
     
     def send_close_event(self) -> None:
-        self._socket.send(b'0')
+        self._socket.sendall(b'0')
     
     def sendall(self, msg: str) -> None:
         for datum in self._encode_message(msg):
-            self._socket.send(datum)
-            
+            self._socket.sendall(datum)
+    
     @staticmethod
     def _encode_message(msg: str) -> t.Iterator[bytes]:
-        msg_in_bytes = msg.encode()
-        exact_size = '{:X}'.format(len(msg_in_bytes))
-        size_in_digits = len(exact_size)
-        yield str(size_in_digits).encode()
+        data_bytes = msg.encode()
+        exact_size = '{:X}'.format(len(data_bytes))
+        size_width = len(exact_size)
+        assert 0 < size_width <= 9
+        print(
+            ':vi3',
+            'send',
+            size_width,
+            exact_size,
+            _shortify_message(data_bytes)
+        )
+        yield str(size_width).encode()
         yield exact_size.encode()
-        yield msg_in_bytes
+        yield data_bytes
+
+
+# TEST
+def _shortify_message(msg_in_bytes: bytes) -> str:
+    if len(msg_in_bytes) < 40:
+        return msg_in_bytes.decode()
+    else:
+        return '{}...{}'.format(
+            msg_in_bytes[:40].decode(), msg_in_bytes[-40:].decode()
+        )
 
 
 class SocketClosed(Exception):

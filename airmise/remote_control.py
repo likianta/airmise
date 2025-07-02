@@ -19,7 +19,7 @@ def delegate(obj: T.Object, *args, **kwargs) -> T.Object:
     if str(type(obj)) == "<class 'type'>":
         # obj is a class
         _references[obj.__qualname__] = obj
-        remote_obj_id = client.run(
+        remote_obj_id = client.exec(
             '''
             import airmise as air
             from uuid import uuid1
@@ -46,7 +46,7 @@ def wrap(obj: T.Object) -> T.Object:
         
         def _instantiate_class(*args, **kwargs):
             if environment.working_mode == 'client':
-                remote_obj_id = client.run(
+                remote_obj_id = client.exec(
                     '''
                     import airmise as air
                     from uuid import uuid1
@@ -90,7 +90,7 @@ class RemoteCall:
         return partial(self._call, item)
     
     def _call(self, funcname: str, *args, **kwargs):
-        return client.run(
+        return client.exec(
             '''
             import airmise as air
             obj = air.remote_control.fetch_object(uid)
