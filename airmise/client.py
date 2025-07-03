@@ -35,12 +35,14 @@ class Client:
     def url(self) -> str:
         return 'tcp://{}:{}'.format(self.host, self.port)
     
-    def config(self, host: str, port: int) -> t.Self:
+    def config(self, host: str, port: int, verbose: bool = None) -> t.Self:
         if (self.host, self.port) != (host, port):
             self.host, self.port = host, port
             if self.is_opened:
                 print('restart client to apply new config', ':pv')
                 self.reopen()
+                if verbose is not None:
+                    self._socket.verbose = verbose
         return self
     
     def open(self) -> None:

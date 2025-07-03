@@ -43,11 +43,21 @@ class Server:
         /,
         host: str = None,
         port: int = None,
-        verbose: bool = False,
+        verbose: t.Union[bool, int] = 0,
     ) -> None:
+        """
+        verbose:
+            0 (also False): disabled
+            1 (also True): enable socket verbose
+                see also `./socket_wrapper.py : Socket`
+            2: enable both socket and server verbose
+                see also `self._mainloop : [code] if self.verbose...`
+            usually we use 0/1, i.e. the False/True.
+        """
         if user_namespace:
             self._default_user_namespace.update(user_namespace)
-        self.verbose = verbose
+        self.verbose = bool(verbose == 2)
+        self._socket.verbose = bool(verbose)
         self._socket.bind(host or self.host, port or self.port)
         self._socket.listen(1)
         self._mainloop(self._socket.accept())
