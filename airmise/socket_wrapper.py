@@ -97,12 +97,11 @@ class Socket:
     def send_close_event(self) -> None:
         self._socket.sendall(b'0')
     
-    def sendall(self, msg: str) -> None:
+    def sendall(self, msg: bytes) -> None:
         for datum in self._encode_message(msg):
             self._socket.sendall(datum)
     
-    def _encode_message(self, msg: str) -> t.Iterator[bytes]:
-        data_bytes = msg.encode()
+    def _encode_message(self, data_bytes: bytes) -> t.Iterator[bytes]:
         exact_size = '{:X}'.format(len(data_bytes))
         size_width = len(exact_size)
         assert 0 < size_width <= 9

@@ -7,9 +7,9 @@ from types import GeneratorType
 from lk_utils import timestamp
 
 from . import const
+from .codec2 import decode
+from .codec2 import encode
 from .remote_control import store_object
-from .serdes import dump
-from .serdes import load
 from .socket_wrapper import Socket
 from .socket_wrapper import SocketClosed
 from .util import get_local_ip_address
@@ -80,7 +80,7 @@ class Server:
             except SocketClosed:
                 return
             
-            code, kwargs, options = load(data_bytes.decode())
+            code, kwargs, options = decode(data_bytes)
             
             if self.verbose and code:
                 print(
@@ -114,44 +114,42 @@ class Server:
                         try:
                             session_data[iter_id] = exec_()
                         except Exception as e:
-                            response = dump(
-                                (const.ERROR, ''.join(format_exception(e)))
-                            )
+                            response = (
+                                const.ERROR, ''.join(format_exception(e)))
                         else:
-                            response = dump((const.NORMAL_OBJECT, 'ready'))
+                            response = (const.NORMAL_OBJECT, 'ready')
                     else:
                         try:
                             datum = next(session_data[iter_id])
-                            response = dump((const.YIELD, datum))
+                            response = (const.YIELD, datum)
                         except StopIteration:
-                            response = dump((const.YIELD_OVER, None))
+                            response = (const.YIELD_OVER, None)
                             session_data.pop(iter_id)
                         except Exception as e:
-                            response = dump(
-                                (const.ERROR, ''.join(format_exception(e)))
-                            )
+                            response = (
+                                const.ERROR, ''.join(format_exception(e)))
                 else:
                     raise NotImplementedError(options)
             else:
                 try:
                     result = exec_()
                 except Exception as e:
-                    response = dump((const.ERROR, ''.join(format_exception(e))))
+                    response = (const.ERROR, ''.join(format_exception(e)))
                 else:
                     if isinstance(result, GeneratorType):
                         # uid = uuid1().hex
                         # session_data[uid] = result
                         # response = dump((const.ITERATOR, uid))
-                        response = dump((const.NORMAL_OBJECT, tuple(result)))
+                        response = (const.NORMAL_OBJECT, tuple(result))
                     else:
                         try:
-                            response = dump((const.NORMAL_OBJECT, result))
+                            response = (const.NORMAL_OBJECT, result)
                         except Exception:
                             store_object(x := str(id(result)), result)
-                            response = dump((const.SPECIAL_OBJECT, x))
+                            response = (const.SPECIAL_OBJECT, x)
             
             # assert response
-            socket.sendall(response)
+            socket.sendall(encode(response))
 
 
 def run_server(

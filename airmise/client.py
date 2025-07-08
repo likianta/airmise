@@ -7,8 +7,8 @@ from types import FunctionType
 from uuid import uuid1
 
 from . import const
-from .serdes import dump
-from .serdes import load
+from .codec2 import decode
+from .codec2 import encode
 from .socket_wrapper import Socket
 
 
@@ -82,7 +82,7 @@ class Client:
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         
         def iterate(id: str) -> t.Iterator:
-            encoded_data = dump((
+            encoded_data = encode((
                 '', None, {'is_iterator': True, 'id': id}
             ))
             while True:
@@ -97,14 +97,14 @@ class Client:
         
         if _iter:
             uid = uuid1().hex
-            self._socket.sendall(dump((
+            self._socket.sendall(encode((
                 code, kwargs or None, {'is_iterator': True, 'id': uid})
             ))
             code, result = self._recv()
             assert result == 'ready'
             return iterate(uid)
         else:
-            self._socket.sendall(dump((code, kwargs or None, None)))
+            self._socket.sendall(encode((code, kwargs or None, None)))
         
         code, result = self._recv()
         if code == const.NORMAL_OBJECT:
@@ -146,7 +146,7 @@ class Client:
             )
     
     def _recv(self) -> t.Tuple[int, t.Any]:
-        code, result = load(self._socket.recvall().decode())
+        code, result = decode(self._socket.recvall())
         if code == const.ERROR:
             raise Exception(result)
         else:

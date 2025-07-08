@@ -4,7 +4,7 @@ import typing as t
 _re_escape = re.compile(r'[\\"]')
 
 
-def dump(data: t.Any, strict: bool = True) -> str:
+def encode(data: t.Any, strict: bool = True) -> str:
     """
     warning: very limited support!
     """
@@ -45,7 +45,7 @@ def dump(data: t.Any, strict: bool = True) -> str:
     return str(out)
 
 
-def load(data: str) -> t.Any:
+def decode(data: str) -> t.Any:
     if data.startswith('\\'):  # fast recognize pure str type.
         return data[1:]
     try:

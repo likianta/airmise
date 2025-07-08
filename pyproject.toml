@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "0.4.0a10"
+version = "0.4.0b0"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]
@@ -56,8 +56,3 @@ priority = "supplemental"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-# ---
-
-[tool.ruff]
-line-length = 80
