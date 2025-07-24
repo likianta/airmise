@@ -1,6 +1,6 @@
 # Airmise Changelog
 
-### 0.4.0 (wip)
+### 0.4.0 (2025-07-24)
 
 - use built-in socket library
 
