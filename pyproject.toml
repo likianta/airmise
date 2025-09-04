@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "0.4.1a0"
+version = "0.4.1"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]
@@ -13,7 +13,7 @@ homepage = "https://github.com/likianta/airmise"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-argsense = "^1.0.0"
+argsense = "^1.1.0"
 lk-logger = "^6.0.6"
 lk-utils = "^3.2.1"
 
@@ -28,7 +28,7 @@ argsense = { version = "^1.1.1a0", source = "likianta" }
 ipython = { version = "^9.4.0", python = "^3.12" }
 # line-profiler = "^4.1.3"
 lk-logger = { version = "^6.1.0a0", source = "likianta" }
-lk-utils = { version = "^3.3.0a23", source = "likianta" }
+lk-utils = { version = "^3.3.0a24", source = "likianta" }
 # nuitka = { version = "^2.6.8", python = ">=3.12,<3.13" }
 # pinkrain = { version = "^0.0.0a28", source = "likianta", python = "^3.12" }
 # pyinstaller = { version = "^6.12.0", python = ">=3.12,<3.13" }

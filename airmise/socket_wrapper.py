@@ -38,7 +38,11 @@ class Socket:
     
     def connect(self, host: str, port: int) -> None:
         try:
-            self._socket.connect((host, port))
+            self._socket.connect(
+                ('localhost' if host == '0.0.0.0' else host, port)
+                #   '0.0.0.0' is not a routable address, we use 'localhost' -
+                #   instead.
+            )
         except Exception as e:
             print(
                 ':v8p',

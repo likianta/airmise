@@ -1,5 +1,9 @@
 # Airmise Changelog
 
+### 0.4.1 (2025-09-05)
+
+- fix socket connection to a routable address.
+
 ### 0.4.0 (2025-07-24)
 
 - use built-in socket library
