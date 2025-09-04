@@ -59,7 +59,10 @@ class Client:
     def close(self) -> None:
         if self.is_opened:
             print('close connection', ':v')
-            self._socket.send_close_event()
+            try:
+                self._socket.send_close_event()
+            except OSError:
+                pass
             self._socket.close()
             self._socket = None
     

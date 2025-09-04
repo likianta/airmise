@@ -2,18 +2,18 @@
 
 [[package]]
 name = "argsense"
-version = "1.0.1b2"
+version = "1.1.1a0"
 description = "New command line interface based on Rich library."
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "argsense-1.0.1b2-py3-none-any.whl", hash = "sha256:723a61a6a7f253e48070498d72b2ea9dc95b25b06255c9362b63e8eca6b3465b"},
+    {file = "argsense-1.1.1a0-py3-none-any.whl", hash = "sha256:534439de69a72792c4623d3b813536c0d718d9b2376371cf8068f5faf8503a6a"},
 ]
 
 [package.dependencies]
 lk-logger = ">=6.0.6,<7.0.0"
-rich = ">=13.9.0,<14.0.0"
+rich = ">=13.9.0"
 
 [package.extras]
 gui = ["pysimplegui"]
@@ -189,20 +189,20 @@ reference = "tsinghua"
 
 [[package]]
 name = "lk-logger"
-version = "6.0.7a1"
+version = "6.1.0a0"
 description = "Python print with source map and varnames."
 optional = false
-python-versions = ">=3.8,<4.0"
+python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "lk_logger-6.0.7a1-py3-none-any.whl", hash = "sha256:6ee223f5092cd80d679452e22dd54a6428504b4d851d92d664ae4ff552ceb3a5"},
+    {file = "lk_logger-6.1.0a0-py3-none-any.whl", hash = "sha256:8c1bab8f81a7ec05d8df8fe5891b838a3f98bb2cf9ae60d4176298118b94e943"},
 ]
 
 [package.dependencies]
 rich = ">=13.9.0"
 
 [package.extras]
-ext = ["svg-ultralight (>=0.34.0,<0.35.0) ; python_version >= \"3.9\" and python_version < \"4.0\""]
+ext = ["svg-ultralight"]
 
 [package.source]
 type = "legacy"
@@ -211,13 +211,13 @@ reference = "likianta"
 
 [[package]]
 name = "lk-utils"
-version = "3.3.0a17"
+version = "3.3.0a23"
 description = "LK Utils is a set of utility wrappers made for data processing."
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "lk_utils-3.3.0a17-py3-none-any.whl", hash = "sha256:99757ec3df5174bd3166dd00156d2170c41df5000b5c78f95f5d930872101f1a"},
+    {file = "lk_utils-3.3.0a23-py3-none-any.whl", hash = "sha256:412dcd0cefc6924117f72eb32d00ad0606750cbd231458752178ce321b807f9f"},
 ]
 
 [package.dependencies]
@@ -644,4 +644,4 @@ reference = "tsinghua"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.8"
-content-hash = "0d7659e3eb3b8209f888ff02d9c2a6796eff5382444fb593c0a4dbfb880758e9"
+content-hash = "fba9e4489c543aca099263a0521be3a434111db7559a52f0ddcbc60d46595c77"

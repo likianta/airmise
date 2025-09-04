@@ -43,7 +43,9 @@ class Socket:
             print(
                 ':v8p',
                 'cannot connect to server via "{}"! '
-                'please check if server online.'.format(self.url)
+                'please check if server online.'.format(
+                    'tcp://{}:{}'.format(host, port)
+                )
             )
             raise e
         else:

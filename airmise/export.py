@@ -19,9 +19,8 @@ from inspect import getfullargspec
 from types import FunctionType
 
 from lk_utils import fs
-from lk_utils.textwrap import dedent
-from lk_utils.textwrap import indent
 from lk_utils.textwrap import join
+from lk_utils.textwrap import wrap
 
 
 class T:
@@ -161,7 +160,7 @@ def _export_functions_to_file(
             defined_funcnames.append(func_name)
     
     out_rows.append(
-        dedent(
+        wrap(
             """
             globals().update({{
                 {}
