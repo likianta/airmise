@@ -1,9 +1,13 @@
 import json
+import os
+import signal
 import typing as t
 from textwrap import dedent
+from time import sleep
 from traceback import format_exception
 from types import GeneratorType
 
+from lk_utils import new_thread
 from lk_utils import timestamp
 
 from . import const
@@ -59,10 +63,19 @@ class Server:
         self.verbose = bool(verbose == 2)
         self._socket.verbose = bool(verbose)
         self._socket.bind(host or self.host, port or self.port)
-        self._socket.listen(1)
-        self._mainloop(self._socket.accept())
+        self._socket.listen(20)
+        
+        # fix ctrl + c
+        if os.name == 'nt':
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+        
+        while True:
+            s = self._socket.accept()  # blocking
+            self._handle_connection(s)
+            sleep(0.1)
     
-    def _mainloop(self, socket: Socket) -> None:
+    @new_thread()
+    def _handle_connection(self, socket: Socket) -> None:
         ctx = {
             **self._default_user_namespace,
             '__ref__': {'__result__': None},

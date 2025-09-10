@@ -1,5 +1,9 @@
 # Airmise Changelog
 
+### 1.0.0 (2025-09-10)
+
+- allow multiple connections.
+
 ### 0.4.1 (2025-09-05)
 
 - fix socket connection to a routable address.
