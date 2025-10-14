@@ -65,7 +65,7 @@ class Server:
         
         while True:
             s = self._socket.accept()  # blocking
-            self.connections[s] = s
+            self.connections[s.port] = s
             self._handle_connection(s)
             sleep(0.1)
     

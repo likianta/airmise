@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "1.1.0a0"
+version = "1.1.0a2"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]
@@ -19,14 +19,19 @@ lk-utils = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
 argsense = { version = "^1.1.1a0", source = "likianta" }
-ipython = { version = "^9.4.0", python = "^3.12" }
-lk-logger = { version = "^6.1.0a0", source = "likianta" }
-lk-utils = { version = "^3.3.0", source = "likianta" }
+ipython = { version = "^9.6.0", python = "^3.12" }
+lk-logger = { version = "^6.1.0a1", source = "likianta" }
+lk-utils = { version = "^3.3.1a3", source = "likianta" }
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+priority = "primary"
 
 [[tool.poetry.source]]
 name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "primary"
+# url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+url = "https://mirrors.aliyun.com/pypi/simple/"
 
 [[tool.poetry.source]]
 name = "likianta"

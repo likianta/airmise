@@ -3,25 +3,30 @@ import typing as t
 
 
 class Socket:
-    # address: t.Tuple[str, int]
+    host: str
+    port: int
     verbose: bool
-    url: str
     _socket: socket.socket
     
     def __init__(self, verbose: bool = False, **kwargs) -> None:
         self.verbose = verbose
         if '_socket' in kwargs:
             self._socket = kwargs['_socket']
-            self.url = kwargs['_url']
+            self.host = kwargs['host']
+            self.port = kwargs['port']
             # del self.accept
             # del self.bind
             # del self.connect
         else:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
+    @property
+    def url(self) -> str:
+        return 'tcp://{}:{}'.format(self.host, self.port)
+    
     def accept(self) -> 'Socket':
         conn, addr = self._socket.accept()
-        new_socket = Socket(_socket=conn, _url='tcp://{}:{}'.format(*addr))
+        new_socket = Socket(_socket=conn, host=addr[0], port=addr[1])
         print(
             'new connection accepted',
             '{} <- {}'.format(self.url, new_socket.url),
@@ -30,8 +35,9 @@ class Socket:
         return new_socket
     
     def bind(self, host: str, port: int) -> None:
+        self.host = host
+        self.port = port
         self._socket.bind((host, port))
-        self.url = 'tcp://{}:{}'.format(host, port)
     
     def close(self) -> None:
         self._socket.close()
@@ -47,14 +53,15 @@ class Socket:
             print(
                 ':v8p',
                 'cannot connect to server via "{}"! '
-                'please check if server online.'.format(
-                    'tcp://{}:{}'.format(host, port)
-                )
+                'please check if server online.'
+                .format('tcp://{}:{}'.format(host, port))
             )
             raise e
         else:
-            self.url = 'tcp://{}:{}'.format(host, port)
-            print(':pv4', 'connected to server: {}'.format(self.url))
+            self.host, self.port = self._socket.getsockname()
+            print(':pv4', 'connected to server: {} <- {}'.format(
+                'tcp://{}:{}'.format(host, port), self.url
+            ))
     
     def listen(self, backlog: int = 1) -> None:
         self._socket.listen(backlog)

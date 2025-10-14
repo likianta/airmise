@@ -26,11 +26,13 @@ from .const import SERVER_DEFAULT_PORT
 from .const import WEBAPP_DEFAULT_PORT
 from .environment import non_native
 from .export import export_functions
+from .master import Master
 from .remote_control import delegate
 from .remote_control import register
 from .remote_control import wrap
 from .server import Server
 from .server import run_server
+from .slave import Slave
 from .socket_wrapper import Socket
 from .util import get_local_ip_address
 from .util import random_name

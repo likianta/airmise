@@ -72,9 +72,9 @@ class Master:
         else:
             raise Exception(code, result)
     
-    def set_passive(self) -> None:
+    def set_passive(self, user_namespace: dict = None) -> None:
         from .slave import Slave
-        s = Slave(self._socket)
+        s = Slave(self._socket, user_namespace)
         s.active = True
         s.mainloop()  # blocking
     
