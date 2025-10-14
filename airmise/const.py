@@ -56,6 +56,7 @@ DEFAULT_PORT = 2140
 SECONDARY_PORT = 2141
 
 # FLAG
+CALL_FUNCTION = _autoid()
 NORMAL_OBJECT = _autoid()
 SPECIAL_OBJECT = _autoid()
 INTERNAL = _autoid()

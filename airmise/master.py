@@ -15,25 +15,13 @@ class Master:
     def __init__(self, socket: Socket) -> None:
         self._socket = socket
     
-    # TODO: there should be a better way
     def call(self, func_name: str, *args, **kwargs) -> t.Any:
-        if args and kwargs:
-            return self.exec(
-                'return {}(*args, **kwargs)'.format(func_name),
-                args=args, kwargs=kwargs
-            )
-        elif args:
-            return self.exec(
-                'return {}(*args)'.format(func_name), args=args
-            )
-        elif kwargs:
-            return self.exec(
-                'return {}(**kwargs)'.format(func_name), kwargs=kwargs
-            )
-        else:
-            return self.exec(
-                'return {}()'.format(func_name)
-            )
+        self._send(
+            const.CALL_FUNCTION,
+            func_name,
+            {'args': args, 'kwargs': kwargs} if args or kwargs else None,
+        )
+        return self._recv()
     
     def exec(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
         # TODO: check if source is a file path.
@@ -46,31 +34,8 @@ class Master:
         
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         
-        def iterate(id: str) -> t.Iterator:
-            _args = {'is_iterator': True, 'id': id}
-            while True:
-                self._send(const.ITERATOR, None, _args)
-                code, result = self._recv()
-                if code == const.YIELD:
-                    yield result
-                elif code == const.YIELD_OVER:
-                    break
-                else:
-                    raise Exception(code, result)
-        
         self._send(const.NORMAL_OBJECT, code, kwargs or None)
-        
-        code, result = self._recv()
-        if code == const.NORMAL_OBJECT:
-            return result
-        elif code == const.SPECIAL_OBJECT:
-            from .remote_control import RemoteCall
-            return RemoteCall(remote_object_id=result)
-        elif code == const.ITERATOR:
-            # result is an id.
-            return iterate(result)
-        else:
-            raise Exception(code, result)
+        return self._recv()
     
     def set_passive(self, user_namespace: dict = None) -> None:
         from .slave import Slave
@@ -78,15 +43,37 @@ class Master:
         s.active = True
         s.mainloop()  # blocking
     
-    def _recv(self) -> t.Tuple[int, t.Any]:
+    def _recv(self) -> t.Any:
         code, result = decode(self._socket.recvall())
-        if code == const.ERROR:
-            raise Exception(result)
-        elif code == const.CLOSED:
+        if code == const.CLOSED:
             print(':v7', 'server closed connection')
             sys.exit()
-        else:
-            return code, result
+        elif code == const.ERROR:
+            raise Exception(result)
+        elif code == const.ITERATOR:
+            # result is an id.
+            return self._iterate(result)
+        elif code == const.NORMAL_OBJECT:
+            return result
+        elif code == const.SPECIAL_OBJECT:
+            from .remote_control import RemoteCall
+            return RemoteCall(remote_object_id=result)
+        elif code == const.YIELD:
+            return result
+        elif code == const.YIELD_OVER:
+            return StopIteration
+    
+    def _iterate(self, id: str) -> t.Iterator:
+        _args = {'is_iterator': True, 'id': id}
+        while True:
+            self._send(const.ITERATOR, None, _args)
+            code, result = decode(self._socket.recvall())
+            if code == const.YIELD:
+                yield result
+            elif code == const.YIELD_OVER:
+                break
+            else:
+                raise Exception(code, result)
     
     def _send(
         self,

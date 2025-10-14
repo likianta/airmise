@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "1.1.0a2"
+version = "1.1.0a3"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]

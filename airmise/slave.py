@@ -50,6 +50,8 @@ class Slave(Master):
         flag: int
         code: str
         args: t.Optional[dict]
+        resp: t.Tuple[int, t.Any]
+        
         while True:
             try:
                 data_bytes = socket.recvall()
@@ -57,10 +59,30 @@ class Slave(Master):
                 return
             
             flag, code, args = decode(data_bytes)
-            if args:
-                ctx.update(args)
             
-            if flag == const.INTERNAL:
+            if flag == const.CALL_FUNCTION:
+                try:
+                    func = t.cast(FunctionType, ctx[code])
+                    if args:
+                        result = func(*args['args'], **args['kwargs'])
+                    else:
+                        result = func()
+                except Exception as e:
+                    resp = (const.ERROR, ''.join(format_exception(e)))
+                else:
+                    if isinstance(result, GeneratorType):
+                        # uid = uuid1().hex
+                        # session_data[uid] = result
+                        # resp = dump((const.ITERATOR, uid))
+                        resp = (const.NORMAL_OBJECT, tuple(result))
+                    else:
+                        try:
+                            resp = (const.NORMAL_OBJECT, result)
+                        except Exception:
+                            store_object(x := str(id(result)), result)
+                            resp = (const.SPECIAL_OBJECT, x)
+            
+            elif flag == const.INTERNAL:
                 if code == 'exit_loop':
                     return
                 else:
@@ -72,20 +94,23 @@ class Slave(Master):
                     try:
                         session_data[iter_id] = exec_code()
                     except Exception as e:
-                        response = (const.ERROR, ''.join(format_exception(e)))
+                        resp = (const.ERROR, ''.join(format_exception(e)))
                     else:
-                        response = (const.NORMAL_OBJECT, 'ready')
+                        resp = (const.NORMAL_OBJECT, 'ready')
                 else:
                     try:
                         datum = next(session_data[iter_id])
-                        response = (const.YIELD, datum)
+                        resp = (const.YIELD, datum)
                     except StopIteration:
-                        response = (const.YIELD_OVER, None)
+                        resp = (const.YIELD_OVER, None)
                         session_data.pop(iter_id)
                     except Exception as e:
-                        response = (const.ERROR, ''.join(format_exception(e)))
+                        resp = (const.ERROR, ''.join(format_exception(e)))
             
             else:
+                if args:
+                    ctx.update(args)
+                    
                 if self.verbose and code:
                     print(
                         ':vr2',
@@ -111,27 +136,27 @@ class Slave(Master):
                 try:
                     result = exec_code()
                 except Exception as e:
-                    response = (const.ERROR, ''.join(format_exception(e)))
+                    resp = (const.ERROR, ''.join(format_exception(e)))
                 else:
                     if isinstance(result, GeneratorType):
                         # uid = uuid1().hex
                         # session_data[uid] = result
-                        # response = dump((const.ITERATOR, uid))
-                        response = (const.NORMAL_OBJECT, tuple(result))
+                        # resp = dump((const.ITERATOR, uid))
+                        resp = (const.NORMAL_OBJECT, tuple(result))
                     else:
                         try:
-                            response = (const.NORMAL_OBJECT, result)
+                            resp = (const.NORMAL_OBJECT, result)
                         except Exception:
                             store_object(x := str(id(result)), result)
-                            response = (const.SPECIAL_OBJECT, x)
+                            resp = (const.SPECIAL_OBJECT, x)
             
-            # assert response
-            socket.sendall(encode(response))
+            # assert resp
+            socket.sendall(encode(resp))
     
     def set_active(self) -> None:
         self.active = True
     
-    def set_passive(self) -> None:
+    def set_passive(self, _=None) -> None:
         if self.active:
             self.active = False
             # self._socket.sendall(encode((const.INTERNAL, 'exit_loop', None)))

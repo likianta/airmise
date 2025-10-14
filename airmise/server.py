@@ -1,5 +1,6 @@
 import os
 import signal
+import threading
 import typing as t
 from time import sleep
 
@@ -60,7 +61,10 @@ class Server:
         self._socket.listen(20)
         
         # fix ctrl + c
-        if os.name == 'nt':
+        if (
+            os.name == 'nt' and
+            threading.current_thread() is threading.main_thread()
+        ):
             signal.signal(signal.SIGINT, signal.SIG_DFL)
         
         while True:
