@@ -58,11 +58,20 @@ SECONDARY_PORT = 2141
 # FLAG
 NORMAL_OBJECT = _autoid()
 SPECIAL_OBJECT = _autoid()
+INTERNAL = _autoid()
 ITERATOR = _autoid()
 YIELD = _autoid()
 YIELD_OVER = _autoid()
 ERROR = _autoid()
 CLOSED = _autoid()
+
+
+# class InternalCommand:
+#     EXIT_ROLEPLAY = _autoid()
+#     NOHTING = _autoid()
+#     SWITCH_ROLEPLAY = _autoid()
+#     WHAT_DO_YOU_WANT = _autoid()
+
 
 # DELETE BELOW
 SERVER_DEFAULT_PORT = int(os.getenv('AIRCONTROL_SERVER_PORT', '2140'))
