@@ -4,7 +4,8 @@ import threading
 import typing as t
 from time import sleep
 
-from lk_utils import new_thread
+from lk_utils import run_new_thread
+from lk_utils.subproc import ThreadBroker
 
 from . import const
 from .slave import Slave
@@ -12,17 +13,33 @@ from .socket_wrapper import Socket
 from .util import get_local_ip_address
 
 
+class NonblockingSlave(Slave):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._mainloop_thread: t.Optional[ThreadBroker] = None
+    
+    def mainloop(self) -> None:
+        assert not self._mainloop_thread
+        self._mainloop_thread = run_new_thread(
+            self._mainloop,
+            self.socket,
+            self._user_namespace,
+            interruptible=True,
+        )
+    
+    def set_active(self) -> None:
+        if self._mainloop_thread:
+            self._mainloop_thread.stop()
+        self.active = True
+
+
 class Server:
-    connections: t.Dict[int, Socket]
+    connections: t.Dict[int, NonblockingSlave]
     host: str
     port: int
     verbose: bool
     _default_user_namespace: dict
     _socket: Socket
-    
-    # @property
-    # def url(self) -> str:
-    #     return 'tcp://{}:{}'.format(self.host, self.port)
     
     def __init__(
         self,
@@ -68,14 +85,12 @@ class Server:
             signal.signal(signal.SIGINT, signal.SIG_DFL)
         
         while True:
-            s = self._socket.accept()  # blocking
-            self.connections[s.port] = s
-            self._handle_connection(s)
+            socket = self._socket.accept()  # blocking
+            slave = self.connections[socket.port] = NonblockingSlave(
+                socket, self._default_user_namespace
+            )
+            slave.mainloop()  # nonblocking
             sleep(0.1)
-    
-    @new_thread()
-    def _handle_connection(self, socket: Socket) -> None:
-        Slave(socket, self._default_user_namespace).mainloop()
 
 
 def run_server(

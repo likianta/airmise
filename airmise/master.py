@@ -13,7 +13,7 @@ from .socket_wrapper import Socket
 
 class Master:
     def __init__(self, socket: Socket) -> None:
-        self._socket = socket
+        self.socket = socket
     
     def call(self, func_name: str, *args, **kwargs) -> t.Any:
         self._send(
@@ -39,12 +39,12 @@ class Master:
     
     def set_passive(self, user_namespace: dict = None) -> None:
         from .slave import Slave
-        s = Slave(self._socket, user_namespace)
+        s = Slave(self.socket, user_namespace)
         s.active = True
         s.mainloop()  # blocking
     
     def _recv(self) -> t.Any:
-        code, result = decode(self._socket.recvall())
+        code, result = decode(self.socket.recvall())
         if code == const.CLOSED:
             print(':v7', 'server closed connection')
             sys.exit()
@@ -67,7 +67,7 @@ class Master:
         _args = {'is_iterator': True, 'id': id}
         while True:
             self._send(const.ITERATOR, None, _args)
-            code, result = decode(self._socket.recvall())
+            code, result = decode(self.socket.recvall())
             if code == const.YIELD:
                 yield result
             elif code == const.YIELD_OVER:
@@ -81,7 +81,7 @@ class Master:
         code: t.Optional[str],
         args: t.Optional[dict] = None
     ) -> None:
-        self._socket.sendall(encode((flag, code, args)))
+        self.socket.sendall(encode((flag, code, args)))
     
 
 # -----------------------------------------------------------------------------

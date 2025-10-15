@@ -1,9 +1,9 @@
 # Airmise Changelog
 
-### 1.1.0 (wip)
+### 2.0.0 (wip)
 
-- Half-duplex.
-- Non-inductive iterator.
+- Two-way communication.
+- Native-like calls.
 
 ### 1.0.0 (2025-09-10)
 

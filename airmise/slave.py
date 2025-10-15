@@ -25,7 +25,8 @@ class Slave(Master):
         super().__init__(socket)
         self.active = False
         self.verbose = False
-        self._user_namespace = user_namespace
+        self._mainloop_running = False
+        self._user_namespace = user_namespace or {}
     
     def call(self, func_name: str, *args, **kwargs) -> t.Any:
         assert self.active
@@ -36,11 +37,20 @@ class Slave(Master):
         return super().exec(source, **kwargs)
     
     def mainloop(self) -> None:
-        ctx = {'__ref__': {'__result__': None}}
-        if self._user_namespace:
-            ctx.update(self._user_namespace)
+        # design thinking:
+        #   we decouple mainloop into an interator method (`_mainloop`) and a
+        #   shell method (`mainloop`), the former one is good for subclass to
+        #   operate on it more flexible, while later is good for general caller
+        #   to use, which is intuitive and simple (simply blocking).
+        #   see also `./server.py : NonblockingSlave`.
+        self._mainloop_running = True
+        for _ in self._mainloop(self.socket, self._user_namespace):
+            if not self._mainloop_running:
+                break
+    
+    def _mainloop(self, socket: Socket, namespace: dict) -> t.Iterator:
+        ctx = {**namespace, '__ref__': {'__result__': None}}
         session_data = {}
-        socket = self._socket
         
         def exec_code() -> t.Any:
             ctx['__ref__']['__result__'] = None
@@ -53,6 +63,7 @@ class Slave(Master):
         resp: t.Tuple[int, t.Any]
         
         while True:
+            yield
             try:
                 data_bytes = socket.recvall()
             except SocketClosed:
@@ -107,7 +118,7 @@ class Slave(Master):
                     except Exception as e:
                         resp = (const.ERROR, ''.join(format_exception(e)))
             
-            else:
+            else:  # flag could be: const.NORMAL_OBJECT
                 if args:
                     ctx.update(args)
                     
@@ -154,7 +165,9 @@ class Slave(Master):
             socket.sendall(encode(resp))
     
     def set_active(self) -> None:
-        self.active = True
+        if not self.active:
+            self._mainloop_running = False
+            self.active = True
     
     def set_passive(self, _=None) -> None:
         if self.active:
