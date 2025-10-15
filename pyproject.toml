@@ -21,7 +21,7 @@ lk-utils = "^3.3.0"
 argsense = { version = "^1.1.1a0", source = "likianta" }
 ipython = { version = "^9.6.0", python = "^3.12" }
 lk-logger = { version = "^6.1.0a1", source = "likianta" }
-lk-utils = { version = "^3.4.0a0", source = "likianta" }
+lk-utils = { version = "^3.4.0a1", source = "likianta" }
 
 [[tool.poetry.source]]
 name = "aliyun"

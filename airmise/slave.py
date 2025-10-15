@@ -96,9 +96,13 @@ class Slave(Master):
             elif flag == const.INTERNAL:
                 if code == 'exit_loop':
                     return
+                elif code == 'switch_roleplay':
+                    self.set_active()
+                    print('change role from "slave" to "master"', ':v')
+                    return
                 else:
                     raise Exception(flag, code, args)
-                
+            
             elif flag == const.ITERATOR:
                 iter_id = args['id']
                 if iter_id not in session_data:

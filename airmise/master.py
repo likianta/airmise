@@ -39,6 +39,7 @@ class Master:
     
     def set_passive(self, user_namespace: dict = None) -> None:
         from .slave import Slave
+        self._send(const.INTERNAL, 'switch_roleplay')
         s = Slave(self.socket, user_namespace)
         s.active = True
         s.mainloop()  # blocking
