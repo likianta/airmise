@@ -96,6 +96,8 @@ class Slave(Master):
             elif flag == const.INTERNAL:
                 if code == 'exit_loop':
                     return
+                elif code == 'get_socket_port':
+                    resp = (const.NORMAL_OBJECT, socket.port)
                 elif code == 'switch_roleplay':
                     self.set_active()
                     print('change role from "slave" to "master"', ':v')

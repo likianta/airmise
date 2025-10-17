@@ -8,6 +8,7 @@ from .socket_wrapper import Socket
 
 
 class Client:
+    # FIXME: should we distinguish server_host, server_port from host and port?
     host: str
     master: t.Optional[Master]
     port: int
@@ -25,11 +26,15 @@ class Client:
         atexit.register(self.close)
     
     @property
+    def id(self) -> int:
+        return self._socket.port
+    
+    @property
     def is_opened(self) -> bool:
         return bool(self._socket)
     
     @property
-    def url(self) -> str:
+    def url(self) -> str:  # DELETE?
         return 'tcp://{}:{}'.format(self.host, self.port)
     
     def config(self, host: str, port: int, verbose: bool = None) -> t.Self:

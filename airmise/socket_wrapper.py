@@ -42,25 +42,28 @@ class Socket:
     def close(self) -> None:
         self._socket.close()
     
-    def connect(self, host: str, port: int) -> None:
+    def connect(self, server_host: str, server_port: int) -> None:
+        if server_host == '0.0.0.0':
+            # '0.0.0.0' is not a routable address, we convert it to 'localhost'.
+            server_host = 'localhost'
         try:
-            self._socket.connect(
-                ('localhost' if host == '0.0.0.0' else host, port)
-                #   '0.0.0.0' is not a routable address, we use 'localhost' -
-                #   instead.
-            )
+            self._socket.connect((server_host, server_port))
         except Exception as e:
             print(
                 ':v8p',
                 'cannot connect to server via "{}"! '
                 'please check if server online.'
-                .format('tcp://{}:{}'.format(host, port))
+                .format('tcp://{}:{}'.format(server_host, server_port))
             )
             raise e
         else:
+            # notice: the port from `getsockname` may be wrong if server is
+            # bridged via frp service.
+            # see a workaround in `build/build_standalone/airclient_standalone/
+            # src/client.py`.
             self.host, self.port = self._socket.getsockname()
             print(':pv4', 'connected to server: {} <- {}'.format(
-                'tcp://{}:{}'.format(host, port), self.url
+                'tcp://{}:{}'.format(server_host, server_port), self.url
             ))
     
     def listen(self, backlog: int = 1) -> None:

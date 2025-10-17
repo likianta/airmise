@@ -1,7 +1,7 @@
 /.idea/
 /abandoned/
 /build/build_standalone/.idea/
-/build/build_standalone/airclient_standalone/
+/build/build_standalone/airclient_standalone/**
 /build/build_standalone/build/.venv
 /build/build_standalone/build/rcedit.exe
 /build/build_standalone/client.build/
@@ -26,3 +26,5 @@
 /test/_*
 __pycache__/
 !**/.gitkeep
+!/build/build_standalone/airclient_standalone/src/
+!/build/build_standalone/airclient_standalone/src/*
