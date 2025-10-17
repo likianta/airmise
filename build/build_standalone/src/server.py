@@ -18,11 +18,8 @@ state = sc.get_state(lambda: {
 })
 
 
-def main():
-    st.title('Depsland AirTest')
-    
-    # if st.button('Refresh'):
-    #     st.rerun()
+def main() -> None:
+    st.title('Air Client Test')
     
     print(st.context.url, st.query_params)
     #   e.g.
@@ -48,4 +45,18 @@ def main():
 
 
 if __name__ == '__main__':
+    """
+    dufs -p 2143 dist
+    
+    cd <airmise_project>
+    strun 3001 build/build_standalone/src/server.py
+    # open http://localhost:3001 once to activate airmise server.
+    
+    ./dist/AirClient.exe debug -h
+    ./dist/AirClient.exe debug
+    
+    bore ... 3001
+    bore ... 3002
+    ./dist/AirClient.exe debug 47.102.108.149
+    """
     main()

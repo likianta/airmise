@@ -10,20 +10,21 @@ struct Config {
 }
 
 // v run src/client.v debug
-// v src/client.v
+// v run src/client.v debug -h
+// v run src/client.v
 fn main() {
 	println(os.args)
-	// os.args.len can be 1, 2 or 4.
-	if os.args.len > 1 {
-		assert os.args[1] == 'debug'
-	}
-	debug := if os.args.len > 1 { true } else { false }
+	debug := if os.args.len > 1 { os.args[1] == 'debug' } else { false }
+	// debug := (
+	// 	if os.args.len > 1 { true }
+	// 	else { if os.args[1] == 'debug' { true } else { false } }
+	// )
 
 	root := detect_airclient(debug)!
 	os.chdir(root)!
 
 	println('execute python script')
-	if os.args.len > 2 && os.args[2] == '-h' {
+	if os.args[os.args.len - 1] == '-h' {
 		os.execvp('python/python.exe', ['src/client.py', '-h'])!
 	} else {
 		conf := get_config(debug)!
@@ -67,7 +68,8 @@ fn detect_airclient(debug bool) !string {
 
 fn download(root string, debug bool) !string {
 	host := if debug { 'localhost' } else { '47.102.108.149' }
-	url := 'http://${host}:2184/airclient_standalone.zip'
+	url := 'http://${host}:2143/airclient_standalone.zip'
+	//	server side should make sure dufs & bore are running at port 2143.
 	zip := '${root}/airclient_standalone.zip'
 	dir := '${root}/airclient_standalone'
 	http.download_file(url, zip)!
@@ -78,11 +80,22 @@ fn download(root string, debug bool) !string {
 }
 
 fn get_config(debug bool) !Config {
-	if os.args.len == 4 {
-		return Config{
-			if debug {'localhost'} else {'47.102.108.149'},
-			os.args[2].int(),
-			os.args[3].int()
+	// if debug mode, try to get config from os.args; else from embed file.
+	if debug {
+		if os.args.len == 2 {
+			return Config{'localhost', 3001, 3002}
+		}
+		else if os.args.len == 3 {
+			return Config{os.args[2], 3001, 3002}
+		}
+		else if os.args.len == 4 {
+			return Config{'localhost', os.args[2].int(), os.args[3].int()}
+		}
+		else if os.args.len == 5 {
+			return Config{os.args[2], os.args[3].int(), os.args[4].int()}
+		}
+		else {
+			panic(os.args)
 		}
 	} else {
 		return json.decode(

@@ -44,8 +44,12 @@ def build_airclient_standalone() -> None:
     import tree_shaking
     tree_shaking.build_module_graphs('build/tree_shaking.yaml')
     tree_shaking.dump_tree('build/tree_shaking.yaml')
-    fs.zip_dir('airclient_standalone', overwrite=True)
-    print('next: dufs -p 2184')
+    fs.zip_dir(
+        'airclient_standalone',
+        'dist/airclient_standalone.zip',
+        overwrite=True
+    )
+    print('next: dufs -p 2143')
 
 
 @cli

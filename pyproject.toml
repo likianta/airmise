@@ -20,8 +20,10 @@ lk-utils = "^3.3.0"
 [tool.poetry.group.dev.dependencies]
 argsense = { version = "^1.1.1a0", source = "likianta" }
 ipython = { version = "^9.6.0", python = "^3.12" }
-lk-logger = { version = "^6.1.0a1", source = "likianta" }
-lk-utils = { version = "^3.4.0a1", source = "likianta" }
+lk-logger = { version = "^6.1.0a2", source = "likianta" }
+lk-utils = { version = "^3.4.0b1", source = "likianta" }
+streamlit = { version = "^1.50.0", python = "^3.12" }
+streamlit-canary = { version = "^0.1.1a3", python = "^3.12", source = "likianta" }
 
 [[tool.poetry.source]]
 name = "aliyun"
