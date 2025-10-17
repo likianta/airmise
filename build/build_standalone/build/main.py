@@ -13,7 +13,13 @@ def init_project() -> None:
             sys.exec_prefix.replace('\\', '/')
         )
         fs.make_link(site_dir, 'build/.venv')
-        
+    
+    if not fs.exist('build/client_config.yaml'):
+        fs.dump(
+            {'host': 'localhost', 'frontend_port': 3001, 'backend_port': 3002},
+            'build/client_config.yaml'
+        )
+    
     dir_i = 'C:/Likianta/workspace/dev.master.likianta'
     if not fs.exist('lib'):
         fs.make_dir('lib')
