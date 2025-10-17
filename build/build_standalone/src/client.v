@@ -23,17 +23,20 @@ fn main() {
 	os.chdir(root)!
 
 	println('execute python script')
-	// os.execvp('python/python.exe', ['src/client.py', '-h'])!
-	conf := get_config(debug)!
-	println(conf)
-	os.execvp(
-		'python/python.exe',
-		[
-			'src/client.py', conf.host,
-			'-f', conf.frontend_port.str(),
-			'-b', conf.backend_port.str()
-		]
-	)!
+	if os.args.len > 2 && os.args[2] == '-h' {
+		os.execvp('python/python.exe', ['src/client.py', '-h'])!
+	} else {
+		conf := get_config(debug)!
+		println(conf)
+		os.execvp(
+			'python/python.exe',
+			[
+				'src/client.py', conf.host,
+				'-f', conf.frontend_port.str(),
+				'-b', conf.backend_port.str()
+			]
+		)!
+	}
 }
 
 fn detect_airclient(debug bool) !string {
@@ -46,17 +49,17 @@ fn detect_airclient(debug bool) !string {
 			assert airclient_root == x
 		}
 	} else {
-		airclient_root = os.environ()['AIRCLIENT_ROOT']
+		airclient_root = os.getenv('AIRCLIENT_ROOT')
 		if airclient_root == '' {
 			println('airclient not found, now download the binary from server')
-			airmise_root := string_interp('{}/airmise', [
+			parent_folder := string_interp('{}/airmise', [
 				os.environ()['APPDATA'].replace('\\', '/')
 			])
-			os.mkdir(airmise_root)!
-			airclient_root = download(airmise_root, debug)!
-			println([airmise_root, airclient_root])
-			// assert airclient_root.startswith(airmise_root)
-			// TODO: set environment
+			os.mkdir(parent_folder)!
+			airclient_root = download(parent_folder, debug)!
+			println([parent_folder, airclient_root])
+			// assert airclient_root.startswith(parent_folder)
+			os.execute_or_panic('setx AIRCLIENT_ROOT "${airclient_root}"')
 		}
 	}
 	return airclient_root
@@ -83,7 +86,7 @@ fn get_config(debug bool) !Config {
 		}
 	} else {
 		return json.decode(
-			Metadata,
+			Config,
 			$embed_file('../build/client_config.yaml').to_string()
 		)!
 	}
