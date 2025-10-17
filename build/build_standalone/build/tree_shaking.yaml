@@ -1,0 +1,9 @@
+root: ..
+search_paths:
+  - build/.venv
+  - airclient_standalone/src
+entries:
+  - airclient_standalone/src/client.py
+sole_export:
+  source: build/.venv
+  target: airclient_standalone/lib

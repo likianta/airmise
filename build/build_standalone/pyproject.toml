@@ -1,0 +1,33 @@
+[project]
+name = "airclient-standalone"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
+packages = [{ include = "src" }]
+requires-python = ">=3.12"
+dynamic = ["dependencies"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+airmise = { version = "^2.0.0a2", source = "likianta" }
+argsense = { version = "^1.1.1a0", source = "likianta" }
+lk-utils = { version = "^3.4.0b1", source = "likianta" }
+
+[tool.poetry.group.dev.dependencies]
+lk-logger = { version = "^6.1.0a2", source = "likianta" }
+nuitka = "^2.8.1"
+# streamlit = "^1.50.0"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "likianta"
+url = "http://localhost:2131/"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

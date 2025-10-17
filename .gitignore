@@ -1,5 +1,15 @@
 /.idea/
 /abandoned/
+/build/build_standalone/.idea/
+/build/build_standalone/airclient_standalone/
+/build/build_standalone/build/.venv
+/build/build_standalone/client.build/
+/build/build_standalone/client.dist/
+/build/build_standalone/client.onefile-build/
+/build/build_standalone/lib/
+/build/build_standalone/src/*.exe
+/build/build_standalone/*.exe
+/build/build_standalone/*.zip
 /build/mini_deps/
 /build/python/
 /build/venv
