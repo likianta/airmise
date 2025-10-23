@@ -18,12 +18,7 @@
 /build/venv
 /dist/
 /lib/
-/nuitka-crash-report.xml
-/profile_*
-/run_local_server.build/
-/run_local_server.dist/
-/run_local_server.onefine-build/
-/run_local_server.exe
+/resources/
 /test/_*
 __pycache__/
 !**/.gitkeep

@@ -56,7 +56,12 @@ class Client:
             # )
             return
         self._socket = Socket()
-        self._socket.connect(self.host, self.port)
+        try:
+            self._socket.connect(self.host, self.port)
+        except Exception as e:
+            self._socket.close()
+            self._socket = None
+            raise e
         self.master = Master(self._socket)
     
     def close(self) -> None:
