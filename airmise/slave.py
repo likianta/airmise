@@ -71,33 +71,11 @@ class Slave(Master):
             
             flag, code, args = decode(data_bytes)
             
-            if flag == const.CALL_FUNCTION:
-                try:
-                    func = t.cast(FunctionType, ctx[code])
-                    if args:
-                        result = func(*args['args'], **args['kwargs'])
-                    else:
-                        result = func()
-                except Exception as e:
-                    resp = (const.ERROR, ''.join(format_exception(e)))
-                else:
-                    if isinstance(result, GeneratorType):
-                        # uid = uuid1().hex
-                        # session_data[uid] = result
-                        # resp = dump((const.ITERATOR, uid))
-                        resp = (const.NORMAL_OBJECT, tuple(result))
-                    else:
-                        try:
-                            resp = (const.NORMAL_OBJECT, result)
-                        except Exception:
-                            store_object(x := str(id(result)), result)
-                            resp = (const.SPECIAL_OBJECT, x)
-            
-            elif flag == const.INTERNAL:
+            if flag == const.INTERNAL:
                 if code == 'exit_loop':
                     return
                 elif code == 'get_socket_port':
-                    resp = (const.NORMAL_OBJECT, socket.port)
+                    resp = (const.NORMAL, socket.port)
                 elif code == 'switch_roleplay':
                     self.set_active()
                     print('change role from "slave" to "master"', ':v')
@@ -113,7 +91,7 @@ class Slave(Master):
                     except Exception as e:
                         resp = (const.ERROR, ''.join(format_exception(e)))
                     else:
-                        resp = (const.NORMAL_OBJECT, 'ready')
+                        resp = (const.NORMAL, 'ready')
                 else:
                     try:
                         datum = next(session_data[iter_id])
@@ -124,10 +102,7 @@ class Slave(Master):
                     except Exception as e:
                         resp = (const.ERROR, ''.join(format_exception(e)))
             
-            else:  # flag could be: const.NORMAL_OBJECT
-                if args:
-                    ctx.update(args)
-                    
+            else:  # CALL_FUNCTION | DELEGATE | NORMAL
                 if self.verbose and code:
                     print(
                         ':vr2',
@@ -151,21 +126,31 @@ class Slave(Master):
                     )
                 
                 try:
-                    result = exec_code()
+                    if flag == const.CALL_FUNCTION:
+                        func = t.cast(FunctionType, ctx[code])
+                        if args:
+                            result = func(*args['args'], **args['kwargs'])
+                        else:
+                            result = func()
+                    else:
+                        if args:
+                            ctx.update(args)
+                        result = exec_code()
                 except Exception as e:
                     resp = (const.ERROR, ''.join(format_exception(e)))
                 else:
-                    if isinstance(result, GeneratorType):
-                        # uid = uuid1().hex
-                        # session_data[uid] = result
-                        # resp = dump((const.ITERATOR, uid))
-                        resp = (const.NORMAL_OBJECT, tuple(result))
+                    if flag == const.DELEGATE:
+                        store_object(x := str(id(result)), result)
+                        resp = (const.DELEGATE, x)
                     else:
-                        try:
-                            resp = (const.NORMAL_OBJECT, result)
-                        except Exception:
-                            store_object(x := str(id(result)), result)
-                            resp = (const.SPECIAL_OBJECT, x)
+                        if isinstance(result, GeneratorType):
+                            # TODO
+                            # uid = uuid1().hex
+                            # session_data[uid] = result
+                            # resp = dump((const.ITERATOR, uid))
+                            resp = (const.NORMAL, tuple(result))
+                        else:
+                            resp = (const.NORMAL, result)
             
             # assert resp
             socket.sendall(encode(resp))

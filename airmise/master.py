@@ -23,7 +23,12 @@ class Master:
         )
         return self._recv()
     
-    def exec(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
+    def exec(
+        self,
+        source: t.Union[str, FunctionType],
+        delegate: bool = False,
+        **kwargs
+    ) -> t.Any:
         # TODO: check if source is a file path.
         if isinstance(source, str):
             # print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
@@ -34,7 +39,11 @@ class Master:
         
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
         
-        self._send(const.NORMAL_OBJECT, code, kwargs or None)
+        self._send(
+            const.DELEGATE if delegate else const.NORMAL,
+            code,
+            kwargs or None
+        )
         return self._recv()
     
     def set_passive(self, user_namespace: dict = None) -> None:
@@ -49,16 +58,16 @@ class Master:
         if code == const.CLOSED:
             print(':v7', 'server closed connection')
             sys.exit()
+        elif code == const.DELEGATE:
+            from .remote_control import RemoteCall
+            return RemoteCall(remote_object_id=result)
         elif code == const.ERROR:
             raise Exception(result)
         elif code == const.ITERATOR:
             # result is an id.
             return self._iterate(result)
-        elif code == const.NORMAL_OBJECT:
+        elif code == const.NORMAL:
             return result
-        elif code == const.SPECIAL_OBJECT:
-            from .remote_control import RemoteCall
-            return RemoteCall(remote_object_id=result)
         elif code == const.YIELD:
             return result
         elif code == const.YIELD_OVER:

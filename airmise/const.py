@@ -57,14 +57,14 @@ SECONDARY_PORT = 2141
 
 # FLAG
 CALL_FUNCTION = _autoid()
-NORMAL_OBJECT = _autoid()
-SPECIAL_OBJECT = _autoid()
+CLOSED = _autoid()
+DELEGATE = _autoid()
+ERROR = _autoid()
 INTERNAL = _autoid()
 ITERATOR = _autoid()
+NORMAL = _autoid()
 YIELD = _autoid()
 YIELD_OVER = _autoid()
-ERROR = _autoid()
-CLOSED = _autoid()
 
 
 # class InternalCommand:

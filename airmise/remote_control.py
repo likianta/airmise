@@ -84,20 +84,20 @@ def seek_reference(qualname: str) -> object:
 class RemoteCall:
     
     def __init__(self, remote_object_id: str):
-        self._id = remote_object_id
+        self.id = remote_object_id
     
     def __getattr__(self, item):
         return partial(self._call, item)
     
-    def _call(self, funcname: str, *args, **kwargs):
+    def _call(self, attr_name: str, *args, **kwargs):
         return client.exec(
             '''
             import airmise as air
             obj = air.remote_control.fetch_object(uid)
-            return getattr(obj, funcname)(*args, **kwargs)
+            return getattr(obj, attr)(*args, **kwargs)
             ''',
-            uid=self._id,
-            funcname=funcname,
+            uid=self.id,
+            attr=attr_name,
             args=args,
             kwargs=kwargs,
         )
