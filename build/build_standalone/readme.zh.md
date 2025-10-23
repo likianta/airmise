@@ -7,7 +7,7 @@
 po env use C:/Likianta/apps/python/3.12/python.exe
 
 # 编译
-por nuitka --standalone --onefile src/client.py
+por nuitka --standalone --onefile airclient_standalone/src/client.py
 
 # 生成结果
 #   .
@@ -82,7 +82,7 @@ v -o client.exe src/client.v
 
 ### 编译 `airclient_standalone`
 
-由 V 生成的 "client.exe" (400KB) 是一级启动器, 它的目的是寻找或下载二级启动器然后启动. 这里的二级启动器指的就是 "airclient_standalone", 它包含了一个 Python Embed 解释器和 airclient 源代码以及所需的所有依赖, 压缩后的体积为 10MB.
+由 V 生成的 "client.exe" (400KB) 是一级启动器, 它的目的是寻找或下载二级启动器然后启动. 这里的二级启动器指的就是 "airclient_standalone", 它包含了一个 Python Embed 解释器和 airclient 源代码以及所需的所有依赖, 压缩后的体积约 12MB.
 
 - Python Embed 解释器
 
@@ -114,26 +114,19 @@ v -o client.exe src/client.v
   这里指的是运行 airclient 所需的依赖. 不是很多, 为了确保体积小巧, 我们还用了依赖裁剪技术, 如下实施:
 
   ```sh
-  cd <python_tree_shaking_project>
-  pox -m tree_shaking build-module-graphs <this_project>/build/tree_shaking.yaml
-  pox -m tree_shaking dump-tree <this_project>/build/tree_shaking.yaml
-  # 生成结果: ./airclient_standalone/lib/*
+  pox build/main.py build_airclient_standalone
+  # 生成结果:
+  #   ./airclient_standalone/lib/*
+  #   ./dist/airclient_standalone.zip
   ```
-
-将 "./airclient_standalone" 整个目录压缩成 7z 文件, 得到 "airclient_standalone.7z", **体积为 10MB**.
-
-然后将压缩包放在 `<depsland_project>/chore/airclient_standalone.7z`.
 
 ### 提供下载链接
 
-将上一节所说的压缩包放在 `<depsland_project>/chore/airclient_standalone.7z` 后, 运行以下命令:
-
 ```sh
-cd <depsland_project>
-dufs -p 2184 chore
+dufs -p 2143 dist
 ```
 
-这样, client.exe 就能通过 `http://<host>:2184/airclient_standalone.7z` 下载到这个文件了.
+这样, 通过 http://localhost:2143/airclient_standalone.zip 就能下载到文件.
 
-
+如果要部署到公网, 使用 Bore FRP.
 

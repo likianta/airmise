@@ -6,4 +6,4 @@ entries:
   - airclient_standalone/src/client.py
 sole_export:
   source: build/.venv
-  target: airclient_standalone/lib
+  target: airclient_standalone/lib_system

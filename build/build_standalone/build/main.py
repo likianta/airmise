@@ -25,6 +25,7 @@ def init_project() -> None:
         fs.make_dir('lib')
     for k, v in {
         f'{dir_i}/python-tree-shaking/tree_shaking': 'lib/tree_shaking',
+        # f'{dir_i}/airmise/airmise': 'lib/airmise',
     }.items():
         if not fs.exist(v):
             fs.make_link(k, v)
@@ -49,7 +50,6 @@ def build_airclient_standalone() -> None:
         'dist/airclient_standalone.zip',
         overwrite=True
     )
-    print('next: dufs -p 2143')
 
 
 @cli
@@ -87,5 +87,6 @@ def vcompile_client(
 if __name__ == '__main__':
     # pox build/main.py -h
     # pox build/main.py init_project
+    # pox build/main.py build_airclient_standalone
     # pox build/main.py vcompile_client
     cli.run()
