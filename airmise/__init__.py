@@ -1,13 +1,6 @@
 if 1:
     import lk_logger
     lk_logger.setup(quiet=True)
-# if 2:
-#     import signal
-#     import sys
-#     if sys.platform == 'win32':
-#         # fix `ctrl+c` to correctly kill process on windows.
-#         # https://stackoverflow.com/a/37420223/9695911
-#         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from . import const
 from . import remote_control

@@ -1,9 +1,12 @@
 # Airmise Changelog
 
-### 2.0.0 (wip)
+### 2.0.0 (2025-10-24)
 
 - Two-way communication.
-- Native-like calls.
+- Standalone airclient (experimental).
+- Improve native feeling of remote instances.
+
+---
 
 ### 1.0.0 (2025-09-10)
 

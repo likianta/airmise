@@ -7,12 +7,12 @@ from .server import Server
 from .util import get_local_ip_address
 
 
-@cli.cmd()
+@cli
 def show_my_ip() -> None:
     print(get_local_ip_address(), ':v2s1')
 
 
-@cli.cmd()
+@cli
 def run_server(
     host: str = '0.0.0.0',
     port: int = const.DEFAULT_PORT,
@@ -26,7 +26,7 @@ def run_server(
     server.run(kwargs, host=host, port=port)
 
 
-@cli.cmd()
+@cli
 def run_client(
     host: str = 'localhost',
     port: int = const.SERVER_DEFAULT_PORT,
@@ -38,7 +38,7 @@ def run_client(
     start_ipython({'air': air})
 
 
-@cli.cmd()
+@cli
 def remote_call(
     host: str,
     func_name: str,
