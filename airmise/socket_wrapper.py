@@ -42,12 +42,18 @@ class Socket:
     def close(self) -> None:
         self._socket.close()
     
-    def connect(self, server_host: str, server_port: int) -> None:
+    def connect(
+        self, server_host: str, server_port: int, timeout: int = 0
+    ) -> None:
         if server_host == '0.0.0.0':
             # '0.0.0.0' is not a routable address, we convert it to 'localhost'.
             server_host = 'localhost'
         try:
+            if timeout:
+                self._socket.settimeout(timeout)
             self._socket.connect((server_host, server_port))
+            if timeout:
+                self._socket.settimeout(None)
         except Exception as e:
             print(
                 ':v8p',

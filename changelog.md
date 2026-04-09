@@ -1,10 +1,14 @@
 # Airmise Changelog
 
+### 2.0.1 (2026-04-09)
+
+- Set timeout in socket connection.
+
 ### 2.0.0 (2025-10-24)
 
 - Two-way communication.
 - Standalone airclient (experimental).
-- Improve native feeling of remote instances.
+- Improve native feeling of calls in remote instances.
 
 ---
 

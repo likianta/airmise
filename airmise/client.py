@@ -47,7 +47,7 @@ class Client:
                     self._socket.verbose = verbose
         return self
     
-    def open(self) -> None:
+    def open(self, timeout: int = 0) -> None:
         if self.is_opened:
             # print(
             #     ':v6p',
@@ -57,7 +57,7 @@ class Client:
             return
         self._socket = Socket()
         try:
-            self._socket.connect(self.host, self.port)
+            self._socket.connect(self.host, self.port, timeout)
         except Exception as e:
             self._socket.close()
             self._socket = None
@@ -94,8 +94,10 @@ config = default_client.config
 # connect = _default_client.open
 
 
-def connect(host: str = None, port: int = None, path: str = None) -> None:
+def connect(
+    host: str = None, port: int = None, path: str = None, timeout: int = 0
+) -> None:
     if host: default_client.host = host
     if port: default_client.port = port
     if path: default_client.path = path
-    default_client.open()
+    default_client.open(timeout)
