@@ -1,5 +1,11 @@
 # Airmise Changelog
 
+### 3.0.0 (wip)
+
+- Airmise-flavored fast reverse proxy function.
+
+---
+
 ### 2.0.1 (2026-04-09)
 
 - Set timeout in socket connection.

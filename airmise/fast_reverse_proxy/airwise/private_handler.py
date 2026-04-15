@@ -6,6 +6,7 @@ from ...const import DEFAULT_PORT
 from ...const import FRP_TRANSCEIVER_PORT
 from ...codec import decode
 from ...codec import encode
+from ...util import fix_ctrl_c_keystroke
 
 def connect_to_public_transport(
     namespace: dict,
@@ -37,6 +38,8 @@ def connect_to_public_transport(
         raise NotImplementedError
     else:
         raise Exception(type, data)
+    
+    fix_ctrl_c_keystroke()
     
     slave = Slave(sock, namespace)
     slave.mainloop()
