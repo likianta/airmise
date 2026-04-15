@@ -64,7 +64,7 @@ class Master:
         elif code == const.ERROR:
             raise Exception(result)
         elif code == const.ITERATOR:
-            # result is an id.
+            # result is an iter_id.
             return self._iterate(result)
         elif code == const.NORMAL:
             return result

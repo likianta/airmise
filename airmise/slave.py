@@ -4,6 +4,7 @@ from textwrap import dedent
 from traceback import format_exception
 from types import FunctionType
 from types import GeneratorType
+from uuid import uuid1
 
 from lk_utils import timestamp
 
@@ -84,15 +85,8 @@ class Slave(Master):
                     raise Exception(flag, code, args)
             
             elif flag == const.ITERATOR:
-                iter_id = args['id']
-                if iter_id not in session_data:
-                    try:
-                        session_data[iter_id] = exec_code()
-                    except Exception as e:
-                        resp = (const.ERROR, ''.join(format_exception(e)))
-                    else:
-                        resp = (const.NORMAL, 'ready')
-                else:
+                iter_id = args['id']  # noqa
+                if iter_id in session_data:
                     try:
                         datum = next(session_data[iter_id])
                         resp = (const.YIELD, datum)
@@ -101,6 +95,14 @@ class Slave(Master):
                         session_data.pop(iter_id)
                     except Exception as e:
                         resp = (const.ERROR, ''.join(format_exception(e)))
+                else:
+                    raise Exception
+                    # try:
+                    #     session_data[iter_id] = exec_code()
+                    # except Exception as e:
+                    #     resp = (const.ERROR, ''.join(format_exception(e)))
+                    # else:
+                    #     resp = (const.NORMAL, 'ready')
             
             else:  # CALL_FUNCTION | DELEGATE | NORMAL
                 if self.verbose and code:
@@ -144,11 +146,10 @@ class Slave(Master):
                         resp = (const.DELEGATE, x)
                     else:
                         if isinstance(result, GeneratorType):
-                            # TODO
-                            # uid = uuid1().hex
-                            # session_data[uid] = result
-                            # resp = dump((const.ITERATOR, uid))
-                            resp = (const.NORMAL, tuple(result))
+                            # resp = (const.NORMAL, tuple(result))
+                            iter_id = uuid1().hex
+                            session_data[iter_id] = result
+                            resp = (const.ITERATOR, iter_id)
                         else:
                             resp = (const.NORMAL, result)
             
