@@ -6,8 +6,8 @@ from textwrap import dedent
 from types import FunctionType
 
 from . import const
-from .codec2 import decode
-from .codec2 import encode
+from .codec import decode
+from .codec import encode
 from .socket_wrapper import Socket
 
 

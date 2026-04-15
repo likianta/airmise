@@ -8,8 +8,8 @@ from types import GeneratorType
 from lk_utils import timestamp
 
 from . import const
-from .codec2 import decode
-from .codec2 import encode
+from .codec import decode
+from .codec import encode
 from .master import Master
 from .remote_control import store_object
 from .socket_wrapper import Socket

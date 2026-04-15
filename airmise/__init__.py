@@ -11,8 +11,8 @@ from .client import config
 from .client import connect
 from .client import default_client
 from .client import exec
-from .codec2 import decode
-from .codec2 import encode
+from .codec import decode
+from .codec import encode
 from .const import DEFAULT_HOST
 from .const import DEFAULT_PORT
 from .environment import non_native

@@ -4,8 +4,8 @@ from ...slave import Slave
 from ...socket_wrapper import Socket
 from ...const import DEFAULT_PORT
 from ...const import FRP_TRANSCEIVER_PORT
-from ...codec2 import decode
-from ...codec2 import encode
+from ...codec import decode
+from ...codec import encode
 
 def connect_to_public_transport(
     namespace: dict,
