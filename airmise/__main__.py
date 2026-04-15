@@ -1,16 +1,13 @@
 from argsense import cli
 from lk_utils import run_new_thread
-
 from . import const
+from . import util
 from .client import Client
 from .server import Server
-from .util import get_local_ip_address
-
 
 @cli
 def show_my_ip() -> None:
-    print(get_local_ip_address(), ':v2s1')
-
+    print(util.get_local_ip_address(), ':v2s1')
 
 @cli
 def run_server(
@@ -25,18 +22,16 @@ def run_server(
     server = Server()
     server.run(kwargs, host=host, port=port)
 
-
 @cli
 def run_client(
     host: str = 'localhost',
-    port: int = const.SERVER_DEFAULT_PORT,
+    port: int = const.ALTER_PORT,
     path: str = '/',
 ) -> None:
     import airmise as air
     from lk_utils import start_ipython
     air.connect(host, port, path)
     start_ipython({'air': air})
-
 
 @cli
 def remote_call(
@@ -48,7 +43,7 @@ def remote_call(
     **kwargs
 ) -> None:
     if backdoor:
-        back_host, back_port = get_local_ip_address(), const.SECONDARY_PORT
+        back_host, back_port = util.get_local_ip_address(), const.ALTER_PORT
         # run_server(back_host, back_port)
         run_new_thread(run_server, (back_host, back_port))
         kwargs['client_backdoor'] = (back_host, back_port)
@@ -57,6 +52,15 @@ def remote_call(
     client.open()
     client.call(func_name, *args, **kwargs)
 
+@cli
+def is_port_occupied(port: int) -> None:
+    # from lk_utils.time import timeit
+    # from functools import partial
+    # if timeit(partial(util.is_port_occupied, port), 'callable'):
+    if util.is_port_occupied(port):
+        print(f'port {port} is occupied', ':v8')
+    else:
+        print(f'port {port} is free to use', ':v4')
 
 if __name__ == '__main__':
     # pox -m airmise show-my-ip

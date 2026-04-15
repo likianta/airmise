@@ -37,8 +37,13 @@ scenario (2):
         client_connector: http://localhost:2142
 """
 
-import os
-
+DEFAULT_HOST = '0.0.0.0'
+DEFAULT_PORT = 2140
+ALTER_PORT = 2141
+FRP_PUBLIC_PORT = 2142
+FRP_PRIVATE_PORT = 2143
+FRP_TRANSCEIVER_PORT = 2144
+STANDALONE_UI_PORT = 2145
 
 class AutoId:
     def __init__(self) -> None:
@@ -48,12 +53,7 @@ class AutoId:
         self._number += 1
         return self._number
 
-
 _autoid = AutoId()
-
-DEFAULT_HOST = '0.0.0.0'
-DEFAULT_PORT = 2140
-SECONDARY_PORT = 2141
 
 # FLAG
 CALL_FUNCTION = _autoid()
@@ -66,15 +66,8 @@ NORMAL = _autoid()
 YIELD = _autoid()
 YIELD_OVER = _autoid()
 
-
 # class InternalCommand:
 #     EXIT_ROLEPLAY = _autoid()
 #     NOHTING = _autoid()
 #     SWITCH_ROLEPLAY = _autoid()
 #     WHAT_DO_YOU_WANT = _autoid()
-
-
-# DELETE BELOW
-SERVER_DEFAULT_PORT = int(os.getenv('AIRCONTROL_SERVER_PORT', '2140'))
-WEBAPP_DEFAULT_PORT = int(os.getenv('AIRCONTROL_WEBAPP_PORT', '2141'))
-CLIENT_DEFAULT_PORT = int(os.getenv('AIRCONTROL_CLIENT_PORT', '2142'))

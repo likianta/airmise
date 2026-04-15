@@ -1,6 +1,3 @@
-import os
-import signal
-import threading
 import typing as t
 from time import sleep
 
@@ -10,6 +7,7 @@ from lk_utils.subproc import ThreadBroker
 from . import const
 from .slave import Slave
 from .socket_wrapper import Socket
+from .util import fix_ctrl_c_keystroke
 from .util import get_local_ip_address
 
 
@@ -77,17 +75,12 @@ class Server:
         self._socket.bind(host or self.host, port or self.port)
         self._socket.listen(20)
         
-        # fix ctrl + c
-        if (
-            os.name == 'nt' and
-            threading.current_thread() is threading.main_thread()
-        ):
-            signal.signal(signal.SIGINT, signal.SIG_DFL)
+        fix_ctrl_c_keystroke()
         
         while True:
-            socket = self._socket.accept()  # blocking
-            slave = self.connections[socket.port] = NonblockingSlave(
-                socket, self._default_user_namespace
+            conn = self._socket.accept()  # blocking
+            slave = self.connections[conn.port] = NonblockingSlave(
+                conn, self._default_user_namespace
             )
             slave.mainloop()  # nonblocking
             sleep(0.1)

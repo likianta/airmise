@@ -66,7 +66,7 @@ class Slave(Master):
             yield
             try:
                 data_bytes = socket.recvall()
-            except SocketClosed:
+            except (SocketClosed, ConnectionResetError):
                 return
             
             flag, code, args = decode(data_bytes)
