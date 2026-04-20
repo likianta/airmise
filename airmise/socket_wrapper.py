@@ -1,6 +1,8 @@
 import socket
 import typing as t
 
+class SocketClosed(Exception):
+    pass
 
 class Socket:
     host: str
@@ -93,7 +95,8 @@ class Socket:
             9       FFFFFFFFF   64GB
         '''
         if size_width == 0:
-            print(':pv7', 'connection closed by client', self.url)
+            print(':pv7', 'remote request closing this connection', self.url)
+            self.sendall(b'ok')
             self._socket.close()
             raise SocketClosed
         
@@ -114,10 +117,11 @@ class Socket:
                 '{:X} ({})'.format(exact_size, _pretty_size(exact_size)),
                 _shortify_message(data_bytes)
             )
-        return data_bytes
+        return bytes(data_bytes)
     
     def send_close_event(self) -> None:
         self._socket.sendall(b'0')
+        assert self.recvall() == b'ok'
     
     def sendall(self, msg: bytes) -> None:
         for datum in self._encode_message(msg):
@@ -139,8 +143,7 @@ class Socket:
         yield exact_size.encode()
         yield data_bytes
 
-
-def _pretty_size(size: int) -> str:
+def _pretty_size(size: t.Union[int, float]) -> str:
     for unit in ('B', 'KB', 'MB', 'GB'):
         if size < 1024:
             return f'{size:.2f}{unit}'
@@ -148,8 +151,9 @@ def _pretty_size(size: int) -> str:
     else:
         return f'{size:.2f}TB'
 
-
-def _shortify_message(msg_in_bytes: bytes, chunk_size: int = 10) -> str:
+def _shortify_message(
+    msg_in_bytes: t.Union[bytes, bytearray], chunk_size: int = 10
+) -> str:
     if len(msg_in_bytes) < chunk_size * 2:
         return msg_in_bytes.decode()
     else:
@@ -157,7 +161,3 @@ def _shortify_message(msg_in_bytes: bytes, chunk_size: int = 10) -> str:
             msg_in_bytes[:chunk_size].decode(),
             msg_in_bytes[-chunk_size:].decode(),
         )
-
-
-class SocketClosed(Exception):
-    pass

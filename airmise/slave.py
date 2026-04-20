@@ -48,6 +48,7 @@ class Slave(Master):
         for _ in self._mainloop(self.socket, self._user_namespace):
             if not self._mainloop_running:
                 break
+        print('mainloop exited', ':pv7')
     
     def _mainloop(self, socket: Socket, namespace: dict) -> t.Iterator:
         ctx = {**namespace, '__ref__': {'__result__': None}}

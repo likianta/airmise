@@ -5,10 +5,14 @@ from ...codec import encode
 from ...const import DEFAULT_HOST
 from ...const import FRP_TRANSCEIVER_PORT
 from ...socket_wrapper import Socket
+from ...socket_wrapper import SocketClosed
 from ...util import fix_ctrl_c_keystroke
 from ...util import get_free_port
 
-def run_transceiver(host: str = DEFAULT_HOST, port: int = FRP_TRANSCEIVER_PORT):
+def run_transceiver(
+    host: str = DEFAULT_HOST, 
+    port: int = FRP_TRANSCEIVER_PORT
+) -> None:
     sock = Socket()
     sock.bind(host, port)
     sock.listen(100)
@@ -27,7 +31,7 @@ def run_transceiver(host: str = DEFAULT_HOST, port: int = FRP_TRANSCEIVER_PORT):
         conn.sendall(encode(('connection_established', proxy_port)))
         sleep(0.1)
 
-def _allocate_sub_runner(main_connection: Socket, sub_port: int):
+def _allocate_sub_runner(main_connection: Socket, sub_port: int) -> None:
     sock = Socket()
     sock.bind('0.0.0.0', sub_port)
     sock.listen(100)
@@ -37,10 +41,16 @@ def _allocate_sub_runner(main_connection: Socket, sub_port: int):
         run_new_thread(_handle_io, conn, main_connection)
         sleep(0.1)
 
-def _handle_io(public_channel: Socket, private_channel: Socket):
+def _handle_io(public_channel: Socket, private_channel: Socket) -> None:
     while True:
-        raw_data = public_channel.recvall()  # blocking
-        private_channel.sendall(raw_data)
-        response = private_channel.recvall()  # blocking
-        public_channel.sendall(response)
-        sleep(0.1)
+        try:
+            raw_data = public_channel.recvall()  # blocking
+        except SocketClosed:
+            private_channel.send_close_event()
+            private_channel.close()
+            break
+        else:
+            private_channel.sendall(raw_data)
+            response = private_channel.recvall()  # blocking
+            public_channel.sendall(response)
+            sleep(0.1)

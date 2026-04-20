@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "3.0.0a4"
+version = "3.0.0b0"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 dynamic = ["dependencies"]
@@ -25,13 +25,13 @@ frp = ["aiohttp>=3.13.3"]
 aiohttp = "^3.13.3"
 argsense = { version = "^1.1.1", source = "likianta" }
 ipython = { version = "^9.12.0", python = "^3.12" }
-lk-utils = { version = "^3.6.0a7", source = "likianta" }
+lk-utils = { version = "^3.6.0a12", source = "likianta" }
 
 # --- for build/build_standalone
 nuitka = "^4.0.8"
 streamlit = { version = "^1.56.0", python = "^3.12" }
-streamlit-canary = { version = "^0.2.2b0", python = "^3.12", source = "likianta" }
-tree-shaking = { version = "^0.2.5a4", python = "^3.12", source = "likianta" }
+streamlit-canary = { version = "^0.2.2b1", python = "^3.12", source = "likianta" }
+tree-shaking = { version = "^0.2.5a6", python = "^3.12", source = "likianta" }
 
 [[tool.poetry.source]]
 name = "aliyun"
@@ -42,6 +42,9 @@ priority = "primary"
 name = "likianta"
 url = "http://localhost:2191/"
 priority = "supplemental"
+
+[tool.ty.rules]
+invalid-type-form = "ignore"
 
 [build-system]
 requires = ["poetry-core"]
