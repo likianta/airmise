@@ -1,6 +1,7 @@
 from argsense import cli
 from lk_utils import run_new_thread
 from . import const
+from . import fast_reverse_proxy
 from . import util
 from .client import Client
 from .server import Server
@@ -21,6 +22,8 @@ def run_server(
     """
     server = Server()
     server.run(kwargs, host=host, port=port)
+
+cli.add_cmd(fast_reverse_proxy.run_transceiver, 'run-proxy-server')
 
 @cli
 def run_client(

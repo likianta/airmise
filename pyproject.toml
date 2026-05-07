@@ -1,51 +1,55 @@
 [project]
 name = "airmise"
-version = "3.0.0b0"
+version = "3.0.0b4"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
-dynamic = ["dependencies"]
 readme = "readme.md"
 requires-python = ">=3.9"
-packages = [{ include = "airmise" }]
+dependencies = [
+    "aiohttp>=3.13.3",
+    "argsense>=1.2.0a2",
+    "lk-logger>=6.0.8a1",
+    "lk-utils>=3.6.0b3",
+]
+
+[dependency-groups]
+dev = [
+    "ipython>=9.13.0; python_version >= '3.12'",
+    # "streamlit>=1.57.0; python_version >= '3.12'",
+    # "streamlit-canary>=0.3.0a15; python_version >= '3.12'",
+]
 
 [project.urls]
 homepage = "https://github.com/likianta/airmise"
 
-[tool.poetry.dependencies]
-python = "^3.9"
-aiohttp = { version = "^3.13.3", optional = true }
-argsense = "^1.1.1"
-lk-logger = "^6.0.7"
-lk-utils = "^3.5.2"
+[tool.ruff]
+line-length = 80
 
-[project.optional-dependencies]
-frp = ["aiohttp>=3.13.3"]
+[tool.ruff.format]
+quote-style = "single"
 
-[tool.poetry.group.dev.dependencies]
-aiohttp = "^3.13.3"
-argsense = { version = "^1.1.1", source = "likianta" }
-ipython = { version = "^9.12.0", python = "^3.12" }
-lk-utils = { version = "^3.6.0a12", source = "likianta" }
+[tool.ruff.lint.isort]
+force-single-line = true
+no-sections = true
 
-# --- for build/build_standalone
-nuitka = "^4.0.8"
-streamlit = { version = "^1.56.0", python = "^3.12" }
-streamlit-canary = { version = "^0.2.2b1", python = "^3.12", source = "likianta" }
-tree-shaking = { version = "^0.2.5a6", python = "^3.12", source = "likianta" }
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
 
-[[tool.poetry.source]]
-name = "aliyun"
-url = "https://mirrors.aliyun.com/pypi/simple/"
-priority = "primary"
+[tool.setuptools]
+packages = ["airmise"]
 
-[[tool.poetry.source]]
+[[tool.uv.index]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+default = true
+
+[[tool.uv.index]]
 name = "likianta"
 url = "http://localhost:2191/"
-priority = "supplemental"
+explicit = true
 
-[tool.ty.rules]
-invalid-type-form = "ignore"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv.sources]
+argsense = { index = "likianta" }
+lk-logger = { index = "likianta" }
+lk-utils = { index = "likianta" }
+streamlit-canary = { index = "likianta" }
