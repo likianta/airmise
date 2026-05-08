@@ -46,7 +46,7 @@ class Master:
         )
         return self._recv()
     
-    def set_passive(self, user_namespace: dict = None) -> None:
+    def set_passive(self, user_namespace: t.Optional[dict] = None) -> None:
         from .slave import Slave
         self._send(const.INTERNAL, 'switch_roleplay')
         s = Slave(self.socket, user_namespace)
@@ -79,8 +79,9 @@ class Master:
             self._send(const.ITERATOR, None, _args)
             code, result = decode(self.socket.recvall())
             if code == const.YIELD:
-                yield result
+                yield from result
             elif code == const.YIELD_OVER:
+                yield from result
                 break
             else:
                 raise Exception(code, result)

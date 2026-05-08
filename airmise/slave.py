@@ -1,13 +1,13 @@
 import json
 import typing as t
+from lk_utils import timestamp
 from textwrap import dedent
+from time import sleep
+from time import time
 from traceback import format_exception
 from types import FunctionType
 from types import GeneratorType
 from uuid import uuid1
-
-from lk_utils import timestamp
-
 from . import const
 from .codec import decode
 from .codec import encode
@@ -88,14 +88,32 @@ class Slave(Master):
             elif flag == const.ITERATOR:
                 iter_id = args['id']  # noqa
                 if iter_id in session_data:
-                    try:
-                        datum = next(session_data[iter_id])
-                        resp = (const.YIELD, datum)
-                    except StopIteration:
-                        resp = (const.YIELD_OVER, None)
-                        session_data.pop(iter_id)
-                    except Exception as e:
-                        resp = (const.ERROR, ''.join(format_exception(e)))
+                    # --- a.
+                    # try:
+                    #     datum = next(session_data[iter_id])
+                    #     resp = (const.YIELD, datum)
+                    # except StopIteration:
+                    #     resp = (const.YIELD_OVER, None)
+                    #     session_data.pop(iter_id)
+                    # except Exception as e:
+                    #     resp = (const.ERROR, ''.join(format_exception(e)))
+                    # --- b.
+                    buffer = []
+                    start_time = time()
+                    while True:
+                        try:
+                            datum = next(session_data[iter_id])
+                        except StopIteration:
+                            resp = (const.YIELD_OVER, buffer)
+                            break
+                        except Exception as e:
+                            resp = (const.ERROR, ''.join(format_exception(e)))
+                            break
+                        else:
+                            buffer.append(datum)
+                            if time() - start_time > 1:
+                                resp = (const.YIELD, buffer)
+                                break
                 else:
                     raise Exception
                     # try:

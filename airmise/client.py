@@ -37,7 +37,9 @@ class Client:
     def url(self) -> str:  # DELETE?
         return 'tcp://{}:{}'.format(self.host, self.port)
     
-    def config(self, host: str, port: int, verbose: bool = None) -> t.Self:
+    def config(
+        self, host: str, port: int, verbose: t.Optional[bool] = None
+    ) -> t.Self:
         if (self.host, self.port) != (host, port):
             self.host, self.port = host, port
             if self.is_opened:
@@ -95,7 +97,7 @@ config = default_client.config
 
 
 def connect(
-    host: str = None, port: int = None, path: str = None, timeout: int = 0
+    host: str = '', port: int = 0, path: str = '', timeout: int = 0
 ) -> None:
     if host: default_client.host = host
     if port: default_client.port = port

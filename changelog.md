@@ -3,6 +3,7 @@
 ### 3.0.0 (wip)
 
 - Airmise-flavored fast reverse proxy function.
+- Significantly reduce the communication latency.
 
 ---
 

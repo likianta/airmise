@@ -98,6 +98,7 @@ class Socket:
             print(':pv7', 'remote request closing this connection', self.url)
             self.sendall(b'ok')
             self._socket.close()
+            print(':pv3', 'port released', self.port)
             raise SocketClosed
         
         exact_size = int(self._socket.recv(size_width), 16)

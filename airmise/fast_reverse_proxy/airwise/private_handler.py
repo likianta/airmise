@@ -1,4 +1,3 @@
-from lk_utils import run_new_thread
 from time import sleep
 from ...slave import Slave
 from ...socket_wrapper import Socket
