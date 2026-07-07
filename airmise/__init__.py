@@ -1,6 +1,8 @@
+# fmt: off
 if 1:
-    import lk_logger
-    lk_logger.setup(quiet=True)
+    import neoprint as np
+    np.setup()
+# fmt: on
 
 from . import const
 from . import fast_reverse_proxy as frp
@@ -28,5 +30,6 @@ from .socket_wrapper import Socket
 from .socket_wrapper import SocketClosed
 from .util import get_local_ip_address
 from .util import random_name
+from .worker import Worker  # experimental
 
 __version__ = '3.0.0'

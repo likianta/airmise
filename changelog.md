@@ -1,8 +1,8 @@
 # Airmise Changelog
 
-### 3.0.0 (wip)
+### 3.0.0 (2026-07-07)
 
-- Airmise-flavored fast reverse proxy function.
+- Airmise-flavored fast reverse proxy.
 - Significantly reduce the communication latency.
 
 ---

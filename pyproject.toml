@@ -1,29 +1,50 @@
 [project]
 name = "airmise"
-version = "3.0.0b15"
+version = "3.0.0"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 readme = "readme.md"
 requires-python = ">=3.9"
 dependencies = [
     "aiohttp>=3.13.3",
-    "argsense>=1.2.0a2",
-    "lk-logger>=6.0.8a1",
-    "lk-utils>=3.6.0b3",
+    "argsense>=1.1.2",
+    "lk-utils>=3.6.1",
+    "neoprint>=0.1.6",
 ]
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling>=1.29.0"]
 
 [dependency-groups]
 dev = [
-    "ipython>=9.13.0; python_version >= '3.12'",
-    # "streamlit>=1.57.0; python_version >= '3.12'",
-    # "streamlit-canary>=0.3.0a15; python_version >= '3.12'",
+    "ipython>=9.15.0; python_version >= '3.12'",
+    # "streamlit>=1.58.0; python_version >= '3.12'",
+    # "streamlit-canary>=0.3.0b6; python_version >= '3.12'",
 ]
 
-[tool.uv.sources]
-argsense = { index = "likianta" }
-lk-logger = { index = "likianta" }
-lk-utils = { index = "likianta" }
-streamlit-canary = { index = "likianta" }
+[project.urls]
+homepage = "https://github.com/likianta/airmise"
+
+[tool.hatch.build.targets.wheel]
+packages = ["airmise"]
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.format]
+quote-style = "single"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint.isort]
+force-single-line = true
+relative-imports-order = "closest-to-furthest"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.uv]
+prerelease = "allow"
 
 [[tool.uv.index]]
 name = "tsinghua"
@@ -33,32 +54,10 @@ default = true
 [[tool.uv.index]]
 name = "likianta"
 url = "http://localhost:2191/"
-explicit = true
+# explicit = true
 
-# [tool.setuptools.packages.find]
-# packages = ["airmise"]
-# where = ["."]
-# include = ["airmise"]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["airmise"]
-
-[project.urls]
-homepage = "https://github.com/likianta/airmise"
-
-[tool.ruff]
-line-length = 80
-
-[tool.ruff.format]
-quote-style = "single"
-
-[tool.ruff.lint.isort]
-force-single-line = true
-no-sections = true
-
-[tool.ruff.per-file-ignores]
-"__init__.py" = ["F401", "F403"]
+[tool.uv.sources]
+argsense = { index = "likianta" }
+lk-utils = { index = "likianta" }
+neoprint = { index = "likianta" }
+streamlit-canary = { index = "likianta" }

@@ -7,6 +7,9 @@ resolution-markers = [
     "python_full_version < '3.10'",
 ]
 
+[options]
+prerelease-mode = "allow"
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
@@ -169,13 +172,13 @@ wheels = [
 
 [[package]]
 name = "airmise"
-version = "3.0.0b4"
-source = { virtual = "." }
+version = "3.0.0b17"
+source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "argsense" },
-    { name = "lk-logger" },
     { name = "lk-utils" },
+    { name = "neoprint" },
 ]
 
 [package.dev-dependencies]
@@ -186,24 +189,24 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.13.3" },
-    { name = "argsense", specifier = ">=1.2.0a2", index = "http://localhost:2191/" },
-    { name = "lk-logger", specifier = ">=6.0.8a1", index = "http://localhost:2191/" },
-    { name = "lk-utils", specifier = ">=3.6.0b3", index = "http://localhost:2191/" },
+    { name = "argsense", specifier = ">=1.1.2", index = "http://localhost:2191/" },
+    { name = "lk-utils", specifier = ">=3.6.1", index = "http://localhost:2191/" },
+    { name = "neoprint", specifier = ">=0.1.6", index = "http://localhost:2191/" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ipython", marker = "python_full_version >= '3.12'", specifier = ">=9.13.0" }]
+dev = [{ name = "ipython", marker = "python_full_version >= '3.12'", specifier = ">=9.15.0" }]
 
 [[package]]
 name = "argsense"
-version = "1.2.0a2"
+version = "1.2.0a6"
 source = { registry = "http://localhost:2191/" }
 dependencies = [
-    { name = "lk-logger" },
-    { name = "rich", marker = "python_full_version < '4'" },
+    { name = "neoprint" },
+    { name = "rich" },
 ]
 wheels = [
-    { url = "http://localhost:2191/argsense/argsense-1.2.0a2-py3-none-any.whl" },
+    { url = "http://localhost:2191/argsense/argsense-1.2.0a6-py3-none-any.whl" },
 ]
 
 [[package]]
@@ -408,7 +411,7 @@ wheels = [
 
 [[package]]
 name = "ipython"
-version = "9.13.0"
+version = "9.15.0"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
 dependencies = [
     { name = "colorama", marker = "python_full_version >= '3.12' and sys_platform == 'win32'" },
@@ -418,14 +421,14 @@ dependencies = [
     { name = "matplotlib-inline", marker = "python_full_version >= '3.12'" },
     { name = "pexpect", marker = "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'" },
     { name = "prompt-toolkit", marker = "python_full_version >= '3.12'" },
-    { name = "psutil", marker = "python_full_version >= '3.12'" },
+    { name = "psutil", marker = "python_full_version >= '3.12' and sys_platform != 'cygwin' and sys_platform != 'emscripten'" },
     { name = "pygments", marker = "python_full_version >= '3.12'" },
     { name = "stack-data", marker = "python_full_version >= '3.12'" },
     { name = "traitlets", marker = "python_full_version >= '3.12'" },
 ]
-sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/cd/c4/87cda5842cf5c31837c06ddb588e11c3c35d8ece89b7a0108c06b8c9b00a/ipython-9.13.0.tar.gz", hash = "sha256:7e834b6afc99f020e3f05966ced34792f40267d64cb1ea9043886dab0dde5967", size = 4430549, upload-time = "2026-04-24T12:24:55.221Z" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/53/59/165d3b4d75cc34add3122c4417ecb229085140ac573103c223cd01dde96f/ipython-9.15.0.tar.gz", hash = "sha256:da2819ce2aa83135257df830660b1176d986c3d2876db24df01974fa955b2756", size = 4442580, upload-time = "2026-06-26T11:03:35.913Z" }
 wheels = [
-    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/b9/86/3060e8029b7cc505cce9a0137431dda81d0a3fde93a8f0f50ee0bf37a795/ipython-9.13.0-py3-none-any.whl", hash = "sha256:57f9d4639e20818d328d287c7b549af3d05f12486ea8f2e7f73e52a36ec4d201", size = 627274, upload-time = "2026-04-24T12:24:53.038Z" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/40/3a/948263ca3b9d65bb2b1b0c521b3a49fad5d59ada58724bd87d2bd5ff3f36/ipython-9.15.0-py3-none-any.whl", hash = "sha256:515ad9c3cdf0c932a5a9f6245419e8aba706b7bd03c3e1d3a1c83d9351d6aa6e", size = 630895, upload-time = "2026-06-26T11:03:33.809Z" },
 ]
 
 [[package]]
@@ -453,30 +456,18 @@ wheels = [
 ]
 
 [[package]]
-name = "lk-logger"
-version = "6.0.8a1"
-source = { registry = "http://localhost:2191/" }
-dependencies = [
-    { name = "rich", marker = "python_full_version < '4'" },
-]
-wheels = [
-    { url = "http://localhost:2191/lk-logger/lk_logger-6.0.8a1-py3-none-any.whl" },
-]
-
-[[package]]
 name = "lk-utils"
-version = "3.6.0b3"
+version = "3.7.0a6"
 source = { registry = "http://localhost:2191/" }
 dependencies = [
     { name = "argsense" },
-    { name = "lk-logger" },
+    { name = "neoprint" },
     { name = "psutil" },
     { name = "pyyaml" },
-    { name = "rich", marker = "python_full_version < '4'" },
-    { name = "typing-extensions" },
+    { name = "rich" },
 ]
 wheels = [
-    { url = "http://localhost:2191/lk-utils/lk_utils-3.6.0b3-py3-none-any.whl" },
+    { url = "http://localhost:2191/lk-utils/lk_utils-3.7.0a6-py3-none-any.whl" },
 ]
 
 [[package]]
@@ -688,6 +679,17 @@ wheels = [
 ]
 
 [[package]]
+name = "neoprint"
+version = "0.1.7a0"
+source = { registry = "http://localhost:2191/" }
+dependencies = [
+    { name = "rich" },
+]
+wheels = [
+    { url = "http://localhost:2191/neoprint/neoprint-0.1.7a0-py3-none-any.whl" },
+]
+
+[[package]]
 name = "parso"
 version = "0.8.7"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
@@ -703,9 +705,9 @@ source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
 dependencies = [
     { name = "ptyprocess", marker = "python_full_version >= '3.12'" },
 ]
-sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
-    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/9e/c3/059298687310d527a58bb01f3b1965787ee3b40dce76752eda8b44e9a2c5/pexpect-4.9.0-py2.py3-none-any.whl", hash = "sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/9e/c3/059298687310d527a58bb01f3b1965787ee3b40dce76752eda8b44e9a2c5/pexpect-4.9.0-py2.py3-none-any.whl", hash = "sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523", size = 63772, upload-time = "2023-11-25T06:56:14.81Z" },
 ]
 
 [[package]]
