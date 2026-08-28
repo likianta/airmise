@@ -32,4 +32,4 @@ from .util import get_local_ip_address
 from .util import random_name
 from .worker import Worker  # experimental
 
-__version__ = '3.0.0'
+__version__ = '3.0.1'

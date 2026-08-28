@@ -1,55 +1,62 @@
-import pinkrain as pr
+import airmise as air
+import streamlit as st
+import streamlit_canary as sc
 
-import aircontrol as air
+
+@sc.init_state
+class State:
+    client = None
+    numbers = []
+    __version__ = 7
 
 
 def main():
-    with pr.daisy.MainPage():
-        with pr.html.Script() as item:
-            session_id = item.id.plain.split('_')[1]
-            client = air.WebClient(uid=session_id)
-            item.text = client.front_script
+    if not State.client:
+        State.client = air.Client().open()
+        State.client.exec('from random import randint\nreturn None')
+        _init_remote_env()
+
+    if st.button('Refresh numbers'):
+        State.numbers = State.client.exec(
+            'return [randint(0, 100) for _ in range(10)]'
+        )
+
+    if State.numbers:
+        st.write(f'Numbers: {State.numbers}')
+
+
+def _init_remote_env() -> None:
+    assert State.client
+    State.client.exec(
+        """
+        import os
+        import sys
+        from lk_utils import fs
+        from time import sleep
+
+        def get_current_working_dir() -> str:
+            return os.getcwd()
         
-        with pr.comp.Column():
-            with pr.daisy.Button('Test', cls='w-32') as btn:
-                @btn.on_click
-                def _():
-                    data = client.run(
-                        '''
-                        from pprint import pprint
-                        from random import randint
-                        
-                        memo alist := []
-                        alist.append(randint(0, 0xFFFF))
-                        aaa = 'alpha'
-                        
-                        out = hex(alist[-1])
-                        
-                        print('{} check globals'.format('-' * 60))
-                        pprint({
-                            k: v for k, v in globals().items()
-                            if not (k.startswith('__') and k != '__result__')
-                        })
-                        
-                        print('{} check locals'.format('-' * 60))
-                        pprint({
-                            k: v for k, v in locals().items()
-                            if not (k.startswith('__') and k != '__result__')
-                        })
-                        
-                        return out
-                        '''
-                    )
-                    print(data)
-                    para.text = f'Got data: {data}'
-            
-            with pr.html.p() as para:
-                para.text = 'Click the button to test the websocket connection.'
+        def get_manifest_data(file: str) -> bytes:
+            # transmit the raw data (bytes) to server.
+            if not file:
+                file = fs.here('source/.depsland/manifest.pkl')
+            assert fs.exist(file), file
+            return fs.load(file, 'binary')
+        
+        print('remote init done')
+        return None
+        """
+    )
 
 
 if __name__ == '__main__':
-    # A: pox -m aircontrol run-web-server
-    # A: pox test/webapp_test.py
-    # B: pox -m aircontrol run-local-server
-    # B: open http://<host_of_A>:<port_of_A>
-    pr.app.run(main, host=air.get_local_ip_address(), debug=True)
+    # python -m airmise run_server
+    # strun 3001 test/webapp_test.py
+
+    # test schedule:
+    #   1. edit State.__version__
+    #   2. refresh gui
+    #   3. see if error occurs
+
+    main()

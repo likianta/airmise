@@ -1,9 +1,11 @@
 import inspect
-import re
 import sys
-import typing as t
-from textwrap import dedent
+import typing as tp
+from types import FrameType
 from types import FunctionType
+
+from lk_utils import dedent
+from lk_utils import re
 
 from . import const
 from .codec import decode
@@ -14,21 +16,21 @@ from .socket_wrapper import Socket
 class Master:
     def __init__(self, socket: Socket) -> None:
         self.socket = socket
-    
-    def call(self, func_name: str, *args, **kwargs) -> t.Any:
+
+    def call(self, func_name: str, *args, **kwargs) -> tp.Any:
         self._send(
             const.CALL_FUNCTION,
             func_name,
             {'args': args, 'kwargs': kwargs} if args or kwargs else None,
         )
         return self._recv()
-    
+
     def exec(
         self,
-        source: t.Union[str, FunctionType],
+        source: tp.Union[str, FunctionType],
         delegate: bool = False,
-        **kwargs
-    ) -> t.Any:
+        **kwargs,
+    ) -> tp.Any:
         # TODO: check if source is a file path.
         if isinstance(source, str):
             # print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
@@ -37,29 +39,33 @@ class Master:
             # print(':v', source)
             code = _interpret_func(source)
         
+        frame: FrameType = inspect.currentframe().f_back  # type: ignore
+        kwargs['_source_file'] = frame.f_code.co_filename
+        kwargs['_source_lineno'] = frame.f_lineno
+
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
-        
+
         self._send(
-            const.DELEGATE if delegate else const.NORMAL,
-            code,
-            kwargs or None
+            const.DELEGATE if delegate else const.NORMAL, code, kwargs
         )
         return self._recv()
-    
-    def set_passive(self, user_namespace: t.Optional[dict] = None) -> None:
+
+    def set_passive(self, user_namespace: tp.Optional[dict] = None) -> None:
         from .slave import Slave
+
         self._send(const.INTERNAL, 'switch_roleplay')
         s = Slave(self.socket, user_namespace)
         s.active = True
         s.mainloop()  # blocking
-    
-    def _recv(self) -> t.Any:
+
+    def _recv(self) -> tp.Any:
         code, result = decode(self.socket.recvall())
         if code == const.CLOSED:
             print(':v7', 'server closed connection')
             sys.exit()
         elif code == const.DELEGATE:
             from .remote_control import RemoteCall
+
             return RemoteCall(remote_object_id=result)
         elif code == const.ERROR:
             raise Exception(result)
@@ -72,8 +78,8 @@ class Master:
             return result
         elif code == const.YIELD_OVER:
             return StopIteration
-    
-    def _iterate(self, id: str) -> t.Iterator:
+
+    def _iterate(self, id: str) -> tp.Iterator:
         _args = {'is_iterator': True, 'id': id}
         while True:
             self._send(const.ITERATOR, None, _args)
@@ -85,17 +91,15 @@ class Master:
                 break
             else:
                 raise Exception(code, result)
-    
+
     def _send(
-        self,
-        flag: int,
-        code: t.Optional[str],
-        args: t.Optional[dict] = None
+        self, flag: int, code: tp.Optional[str], args: tp.Optional[dict] = None
     ) -> None:
         self.socket.sendall(encode((flag, code, args)))
-    
+
 
 # -----------------------------------------------------------------------------
+
 
 def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
     """
@@ -132,24 +136,24 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
             `.server.Server._on_message`.
     """
     out = ''
-    
+
     # var abbrs:
     #   ws: whitespaces
     #   linex: left stripped line
     #   __ctx__: context namespace. see also `.server.Server._context`
-    
+
     if '\n' in raw_code:
         scope = []
         for line in dedent(raw_code).splitlines():
-            ws, linex = re.match(r'( *)(.*)', line).groups()
+            ws, linex = re.match(r'( *)(.*)', line).sure().groups()
             indent = len(ws)
-            
+
             # noinspection PyUnresolvedReferences
             if linex and scope and indent <= scope[-1]:
                 scope.pop()
             if linex.startswith(('class ', 'def ')):
                 scope.append(indent)
-            
+
             if linex.startswith('memo '):
                 a, b, c = re.match(
                     r'memo (\w+)(?: (:)?= (.+))?', linex
@@ -157,8 +161,9 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
                 if b:
                     out += (
                         '{}{} = __ref__["{}"] if "{}" in __ref__ else '
-                        '__ref__.setdefault("{}", {})\n'
-                        .format(ws, a, a, a, a, c)
+                        '__ref__.setdefault("{}", {})\n'.format(
+                            ws, a, a, a, a, c
+                        )
                     )
                 elif c:
                     out += '{}{} = __ref__["{}"] = {}\n'.format(ws, a, a, c)
@@ -174,12 +179,14 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
             out = '__ref__["__result__"] = {}\n'.format(raw_code[7:])
         else:
             out = '__ref__["__result__"] = {}\n'.format(raw_code)
-    
+
     return out
 
 
 def _interpret_func(func: FunctionType) -> str:
-    return '\n'.join((
-        _interpret_code(inspect.getsource(func), interpret_return=False),
-        '__ref__["__result__"] = {}(*args, **kwargs)'.format(func.__name__),
-    ))
+    return '\n'.join(
+        (
+            _interpret_code(inspect.getsource(func), interpret_return=False),
+            '__ref__["__result__"] = {}(*args, **kwargs)'.format(func.__name__),
+        )
+    )

@@ -1,5 +1,5 @@
 import atexit
-import typing as t
+import typing as tp
 from types import FunctionType
 
 from . import const
@@ -10,9 +10,9 @@ from .socket_wrapper import Socket
 class Client:
     # FIXME: should we distinguish server_host, server_port from host and port?
     host: str
-    master: t.Optional[Master]
+    master: tp.Optional[Master]
     port: int
-    _socket: t.Optional[Socket]
+    _socket: tp.Optional[Socket]
     
     def __init__(
         self,
@@ -38,8 +38,8 @@ class Client:
         return 'tcp://{}:{}'.format(self.host, self.port)
     
     def config(
-        self, host: str, port: int, verbose: t.Optional[bool] = None
-    ) -> t.Self:
+        self, host: str, port: int, verbose: tp.Optional[bool] = None
+    ) -> tp.Self:
         if (self.host, self.port) != (host, port):
             self.host, self.port = host, port
             if self.is_opened:
@@ -49,14 +49,14 @@ class Client:
                     self._socket.verbose = verbose
         return self
     
-    def open(self, timeout: int = 0) -> None:
+    def open(self, timeout: int = 0) -> tp.Self:
         if self.is_opened:
             # print(
             #     ':v6p',
             #     'client already connected. if you want to reconnect, please '
             #     'use `reopen` method'
             # )
-            return
+            return self
         self._socket = Socket()
         try:
             self._socket.connect(self.host, self.port, timeout)
@@ -65,6 +65,7 @@ class Client:
             self._socket = None
             raise e
         self.master = Master(self._socket)
+        return self
     
     def close(self) -> None:
         if self.is_opened:
@@ -80,11 +81,11 @@ class Client:
         self.close()
         self.open()
     
-    def exec(self, source: t.Union[str, FunctionType], **kwargs) -> t.Any:
+    def exec(self, source: tp.Union[str, FunctionType], **kwargs) -> tp.Any:
         if not self.is_opened: self.open()
         return self.master.exec(source, **kwargs)
     
-    def call(self, func_name: str, *args, **kwargs) -> t.Any:
+    def call(self, func_name: str, *args, **kwargs) -> tp.Any:
         if not self.is_opened: self.open()
         return self.master.call(func_name, *args, **kwargs)
 
@@ -99,7 +100,9 @@ config = default_client.config
 def connect(
     host: str = '', port: int = 0, path: str = '', timeout: int = 0
 ) -> None:
-    if host: default_client.host = host
-    if port: default_client.port = port
-    if path: default_client.path = path
+    # fmt: off
+    if host: default_client.host = host  # noqa
+    if port: default_client.port = port  # noqa
+    if path: default_client.path = path  # noqa
     default_client.open(timeout)
+    # fmt: on
