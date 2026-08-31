@@ -25,6 +25,7 @@ from .remote_control import register
 from .remote_control import wrap
 from .server import Server
 from .server import run_server
+from .slave import NonblockingSlave
 from .slave import Slave
 from .socket_wrapper import Socket
 from .socket_wrapper import SocketClosed

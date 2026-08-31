@@ -1,40 +1,15 @@
-import typing as t
+import typing as tp
 from time import sleep
 
-from lk_utils import run_new_thread
-from lk_utils.subproc import ThreadBroker
-
 from . import const
-from .slave import Slave
+from .slave import NonblockingSlave
 from .socket_wrapper import Socket
 from .util import fix_ctrl_c_keystroke
 from .util import get_local_ip_address
 
 
-class NonblockingSlave(Slave):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._mainloop_thread: t.Optional[ThreadBroker] = None
-    
-    def mainloop(self) -> None:
-        assert not self._mainloop_thread
-        self._mainloop_thread = run_new_thread(
-            self._mainloop,
-            self.socket,
-            self._user_namespace,
-            interruptible=True,
-        )
-    
-    def set_active(self) -> None:
-        if not self.active:
-            assert self._mainloop_thread
-            self._mainloop_running = False
-            self.active = True
-            self._mainloop_thread.stop()
-
-
 class Server:
-    connections: t.Dict[int, NonblockingSlave]
+    connections: tp.Dict[int, NonblockingSlave]
     host: str
     port: int
     verbose: bool
@@ -55,11 +30,11 @@ class Server:
     
     def run(
         self,
-        user_namespace: dict = None,
+        user_namespace: tp.Optional[dict] = None,
         /,
-        host: str = None,
-        port: int = None,
-        verbose: t.Union[bool, int] = 0,
+        host: tp.Optional[str] = None,
+        port: tp.Optional[int] = None,
+        verbose: tp.Union[bool, int] = 0,
     ) -> None:
         """
         verbose:
@@ -89,7 +64,7 @@ class Server:
 
 
 def run_server(
-    user_namespace: dict = None,
+    user_namespace: tp.Optional[dict] = None,
     /,
     host: str = const.DEFAULT_HOST,
     port: int = const.DEFAULT_PORT,

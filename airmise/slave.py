@@ -8,6 +8,8 @@ from types import GeneratorType
 
 from lk_utils import timestamp
 from lk_utils import uuid
+from lk_utils.subproc import Thread
+from lk_utils.subproc import run_new_thread
 
 from . import const
 from .codec import decode
@@ -222,3 +224,25 @@ class Slave(Master):
             self.active = False
             # self._socket.sendall(encode((const.INTERNAL, 'exit_loop', None)))
             self._send(const.INTERNAL, 'exit_loop')
+
+
+class NonblockingSlave(Slave):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._mainloop_thread: tp.Optional[Thread] = None
+    
+    def mainloop(self) -> None:
+        assert not self._mainloop_thread
+        self._mainloop_thread = run_new_thread(
+            self._mainloop,
+            self.socket,
+            self._user_namespace,
+            interruptible=True,
+        )
+    
+    def set_active(self) -> None:
+        if not self.active:
+            assert self._mainloop_thread
+            self._mainloop_running = False
+            self.active = True
+            self._mainloop_thread.stop()
