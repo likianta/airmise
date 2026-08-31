@@ -20,15 +20,23 @@ from .socket_wrapper import Socket
 from .socket_wrapper import SocketClosed
 
 
+class T:
+    Namespace = tp.Dict[str, tp.Union[tp.Callable, '_ConnectionRequired']]
+
+
 class Slave(Master):
     def __init__(
-        self, socket: Socket, user_namespace: tp.Optional[dict] = None
+        self, socket: Socket, user_namespace: tp.Optional[T.Namespace] = None
     ) -> None:
         super().__init__(socket)
         self.active = False
         self.verbose = False
         self._mainloop_running = False
         self._user_namespace = user_namespace or {}
+
+    @property
+    def connection(self) -> Socket:
+        return self.socket
 
     def call(self, func_name: str, *args, **kwargs) -> tp.Any:
         assert self.active
@@ -53,8 +61,11 @@ class Slave(Master):
                 break
         print('mainloop exited', ':pv7')
 
-    def _mainloop(self, socket: Socket, namespace: dict) -> tp.Iterator:
-        ctx = {**namespace, '__ref__': {'__result__': None}}
+    def _mainloop(self, socket: Socket, namespace: T.Namespace) -> tp.Iterator:
+        ctx: tp.Dict[str, tp.Any] = {
+            **namespace,
+            '__ref__': {'__result__': None},
+        }
         session_data = {}
 
         def code_glance() -> None:
@@ -76,10 +87,7 @@ class Slave(Master):
                     code.strip(),
                     '```json\n{}\n```'.format(
                         json.dumps(
-                            args,
-                            default=str,
-                            ensure_ascii=False,
-                            indent=4,
+                            args, default=str, ensure_ascii=False, indent=4
                         )
                     )
                     if args
@@ -93,6 +101,7 @@ class Slave(Master):
             exec(code, ctx)
             return ctx['__ref__']['__result__']
 
+        # FIXME
         def calibrate_exception(
             e: Exception, source_file: str, source_lineno: int
         ) -> tp.Iterable[str]:
@@ -178,7 +187,12 @@ class Slave(Master):
 
                 try:
                     if flag == const.CALL_FUNCTION:
-                        func = tp.cast(FunctionType, ctx[code])
+                        x = tp.cast(tp.Union[FunctionType, _ConnectionRequired], ctx[code])
+                        if isinstance(x, _ConnectionRequired):
+                            func = x.target
+                            args['args'] = (self.connection,) + args['args']
+                        else:
+                            func = x
                         if args['args'] or args['kwargs']:
                             result = func(*args['args'], **args['kwargs'])
                         else:
@@ -230,7 +244,7 @@ class NonblockingSlave(Slave):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._mainloop_thread: tp.Optional[Thread] = None
-    
+
     def mainloop(self) -> None:
         assert not self._mainloop_thread
         self._mainloop_thread = run_new_thread(
@@ -239,10 +253,34 @@ class NonblockingSlave(Slave):
             self._user_namespace,
             interruptible=True,
         )
-    
+
     def set_active(self) -> None:
         if not self.active:
             assert self._mainloop_thread
             self._mainloop_running = False
             self.active = True
             self._mainloop_thread.stop()
+
+
+class _ConnectionRequired:
+    def __init__(self, target: tp.Callable) -> None:
+        self.target = target
+
+
+def inject_connection(target_func: tp.Callable) -> _ConnectionRequired:
+    """
+    This wrapper is used for objects in server's namespace.
+
+    Usage:
+        import airmise as air
+
+        def echo(connection: air.Connection, msg: str) -> None:
+            print(connection.host, connection.port, msg)
+
+        air.run_server(
+            namespace=dict(
+                foo=air.inject_connection(echo)
+            )
+        )
+    """
+    return _ConnectionRequired(target_func)

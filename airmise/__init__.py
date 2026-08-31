@@ -27,10 +27,11 @@ from .server import Server
 from .server import run_server
 from .slave import NonblockingSlave
 from .slave import Slave
+from .slave import inject_connection
 from .socket_wrapper import Socket
 from .socket_wrapper import SocketClosed
 from .util import get_local_ip_address
 from .util import random_name
 from .worker import Worker  # experimental
 
-__version__ = '3.0.1'
+__version__ = '3.1.0'
