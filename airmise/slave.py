@@ -55,26 +55,56 @@ class Slave(Master):
         ctx = {**namespace, '__ref__': {'__result__': None}}
         session_data = {}
 
+        def code_glance() -> None:
+            print(
+                ':pvr2',
+                dedent(
+                    """
+                    > *message at {}*
+
+                    ```python
+                    {}
+                    ```
+
+                    {}
+                    """
+                )
+                .format(
+                    timestamp(),
+                    code.strip(),
+                    '```json\n{}\n```'.format(
+                        json.dumps(
+                            args,
+                            default=str,
+                            ensure_ascii=False,
+                            indent=4,
+                        )
+                    )
+                    if args
+                    else '',
+                )
+                .strip(),
+            )
+
         def exec_code() -> tp.Any:
             ctx['__ref__']['__result__'] = None
             exec(code, ctx)
             return ctx['__ref__']['__result__']
 
-        def calibrate_exception(e: Exception) -> tp.Iterable[str]:
-            src_file = tp.cast(tp.Optional[str], ctx.get('_source_file'))
-            src_lineno = tp.cast(tp.Optional[int], ctx.get('_source_lineno'))
-            if src_file and src_lineno:
-                for line in format_exception(e):
-                    if line.lstrip().startswith('File "<string>"'):
-                        a, b, c = line.split(', ', 2)
-                        wrong_lineno = int(b)
-                        correct_lineno = src_lineno + wrong_lineno
-                        yield 'File "{}", line {}, {}'.format(
-                            src_file, correct_lineno, c
-                        )
-                    else:
-                        yield line
-                return format_exception(e)
+        def calibrate_exception(
+            e: Exception, source_file: str, source_lineno: int
+        ) -> tp.Iterable[str]:
+            # https://chatgpt.com/share/6a9161d8-c738-83e8-a06c-04c44dfd896a
+            for line in format_exception(e):
+                if line.lstrip().startswith('File "<string>"'):
+                    a, b, c = line.split(', ', 2)
+                    wrong_lineno = int(b.removeprefix('line '))
+                    correct_lineno = source_lineno + wrong_lineno
+                    yield 'File "{}", line {}, {}'.format(
+                        source_file, correct_lineno, c
+                    )
+                else:
+                    yield line
 
         flag: int
         code: str
@@ -124,10 +154,7 @@ class Slave(Master):
                             resp = (const.YIELD_OVER, buffer)
                             break
                         except Exception as e:
-                            resp = (
-                                const.ERROR,
-                                ''.join(calibrate_exception(e)),
-                            )
+                            resp = (const.ERROR, ''.join(format_exception(e)))
                             break
                         else:
                             buffer.append(datum)
@@ -145,40 +172,12 @@ class Slave(Master):
 
             else:  # CALL_FUNCTION | DELEGATE | NORMAL
                 if self.verbose and code:
-                    print(
-                        ':vr2',
-                        dedent(
-                            """
-                            > *message at {}*
-    
-                            ```python
-                            {}
-                            ```
-    
-                            {}
-                            """
-                        )
-                        .format(
-                            timestamp(),
-                            code.strip(),
-                            '```json\n{}\n```'.format(
-                                json.dumps(
-                                    args,
-                                    default=str,
-                                    ensure_ascii=False,
-                                    indent=4,
-                                )
-                            )
-                            if args
-                            else '',
-                        )
-                        .strip(),
-                    )
+                    code_glance()
 
                 try:
                     if flag == const.CALL_FUNCTION:
                         func = tp.cast(FunctionType, ctx[code])
-                        if args:
+                        if args['args'] or args['kwargs']:
                             result = func(*args['args'], **args['kwargs'])
                         else:
                             result = func()
@@ -187,7 +186,16 @@ class Slave(Master):
                             ctx.update(args)
                         result = exec_code()
                 except Exception as e:
-                    resp = (const.ERROR, ''.join(format_exception(e)))
+                    code_glance()
+                    resp = (
+                        const.ERROR,
+                        ''.join(
+                            format_exception(e)
+                            # calibrate_exception(
+                            #     e, args['_source_file'], args['_source_lineno']
+                            # )
+                        ),
+                    )
                 else:
                     if flag == const.DELEGATE:
                         store_object(x := str(id(result)), result)

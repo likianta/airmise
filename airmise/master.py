@@ -18,10 +18,16 @@ class Master:
         self.socket = socket
 
     def call(self, func_name: str, *args, **kwargs) -> tp.Any:
+        frame: FrameType = inspect.currentframe().f_back  # type: ignore
         self._send(
             const.CALL_FUNCTION,
             func_name,
-            {'args': args, 'kwargs': kwargs} if args or kwargs else None,
+            {
+                'args': args,
+                'kwargs': kwargs,
+                '_source_file': frame.f_code.co_filename,
+                '_source_lineno': frame.f_lineno,
+            },
         )
         return self._recv()
 
@@ -38,16 +44,14 @@ class Master:
         else:
             # print(':v', source)
             code = _interpret_func(source)
-        
+
         frame: FrameType = inspect.currentframe().f_back  # type: ignore
         kwargs['_source_file'] = frame.f_code.co_filename
         kwargs['_source_lineno'] = frame.f_lineno
 
         # print(':r2', '```python\n{}\n```'.format(code.strip()))
 
-        self._send(
-            const.DELEGATE if delegate else const.NORMAL, code, kwargs
-        )
+        self._send(const.DELEGATE if delegate else const.NORMAL, code, kwargs)
         return self._recv()
 
     def set_passive(self, user_namespace: tp.Optional[dict] = None) -> None:

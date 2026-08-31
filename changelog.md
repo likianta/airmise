@@ -1,5 +1,9 @@
 # Airmise Changelog
 
+### 3.1.0 (WIP)
+
+- Show accurate position of error source.
+
 ### 3.0.0 (2026-07-07)
 
 - Airmise-flavored fast reverse proxy.

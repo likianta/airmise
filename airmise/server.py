@@ -26,9 +26,11 @@ class NonblockingSlave(Slave):
         )
     
     def set_active(self) -> None:
-        if self._mainloop_thread:
+        if not self.active:
+            assert self._mainloop_thread
+            self._mainloop_running = False
+            self.active = True
             self._mainloop_thread.stop()
-        self.active = True
 
 
 class Server:
