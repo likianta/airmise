@@ -27,8 +27,8 @@ class Broker(Slave):
 
     def _mainloop(self, *_, **__) -> tp.Iterator:
         flag: int
-        event: tp.Literal['register', 'request', 'response']
-        data: dict
+        event: tp.Literal['close', 'request', 'response']
+        data: tp.Optional[dict]
 
         while True:
             yield
@@ -40,12 +40,20 @@ class Broker(Slave):
 
             flag, event, data = decode(data_bytes)
             assert flag == const.INTERNAL
-            assert event in ('request', 'response')
-            assert 'uid' in data and 'raw' in data
+            assert event in ('close', 'request', 'response')
+            # assert 'uid' in data and 'raw' in data
 
-            self._target.sendall(data['raw'])
-            rsp = self._target.recvall()
-            self._source.sendall(rsp)
+            if event == 'close':
+                self._target.send_close_event()
+                self._target.close()
+                # self._source.sendall(b'ok')
+                self._source.close()
+                print('close broker', ':v7')
+                return
+            else:
+                self._target.sendall(data['raw'])
+                rsp = self._target.recvall()
+                self._source.sendall(rsp)
 
 
 class Router(Server):
@@ -109,6 +117,16 @@ class Callee(Slave):
 
 
 class Caller(Slave):
+    """
+    Message flow:
+        `Caller.connect:_send` 
+            -> `Router._handle_connection:register caller`.
+        `Caller:call/exec/close:_send` 
+            -> `Broker._mainloop:self._source.recvall`.
+        `Caller.call/exec:return self._recv` 
+            <- `Broker._mainloop:self._source.sendall`.
+    """
+
     def __init__(self, uid: str) -> None:
         self._uid = uid
 
@@ -128,6 +146,12 @@ class Caller(Slave):
             self._send(const.INTERNAL, 'register', {'uid': self._uid})
             assert self._recv() == 'ok'
         return self
+
+    def close(self) -> None:
+        self._send(const.INTERNAL, 'close', None)
+        # assert self._recv() == 'ok'
+        # self.socket.send_close_event()
+        self.socket.close()
 
     def call(self, func_name: str, *args, **kwargs) -> tp.Any:
         self._send(

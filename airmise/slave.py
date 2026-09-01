@@ -31,7 +31,7 @@ class Slave(Master):
         super().__init__(socket)
         self.active = False
         self.verbose = False
-        self._mainloop_running = False
+        self._mainloop_living = False
         self._mainloop_thread: tp.Optional[Thread] = None
         self._user_namespace = user_namespace or {}
 
@@ -52,7 +52,7 @@ class Slave(Master):
     def set_active(self) -> None:
         if not self.active:
             self.active = True
-            self._mainloop_running = False
+            self._mainloop_living = False
             if self._mainloop_thread:
                 self._mainloop_thread.stop()
 
@@ -67,28 +67,23 @@ class Slave(Master):
         user_namespace: tp.Optional[T.Namespace] = None,
         blocking: bool = True,
     ) -> None:
-        # design thinking:
-        #   we decouple mainloop into an interator method (`_mainloop`) and a
-        #   shell method (`mainloop`), the former one is good for subclass to
-        #   operate on it more flexible, while later is good for general caller
-        #   to use, which is intuitive and simple (simply blocking).
-        #   see also `NonblockingSlave`.
-
         if user_namespace is None:
             user_namespace = self._user_namespace
 
-        def _blocking_mainloop() -> None:
-            self._mainloop_running = True
+        def living_mainloop() -> tp.Iterator:
+            self._mainloop_living = True
             for _ in self._mainloop(self.socket, user_namespace):
-                if not self._mainloop_running:
+                if not self._mainloop_living:
                     break
+                yield
             print('mainloop exited', ':{}v7'.format('p2' if blocking else ''))
 
         if blocking:
-            _blocking_mainloop()
+            for _ in living_mainloop():
+                pass
         else:
             self._mainloop_thread = run_new_thread(
-                _blocking_mainloop, interruptible=True
+                living_mainloop, interruptible=True
             )
 
     def _mainloop(self, socket: Socket, namespace: T.Namespace) -> tp.Iterator:
