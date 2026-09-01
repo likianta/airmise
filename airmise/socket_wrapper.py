@@ -56,14 +56,14 @@ class Socket:
             self._socket.connect((server_host, server_port))
             if timeout:
                 self._socket.settimeout(None)
-        except Exception as e:
+        except Exception:
             print(
                 ':v8p',
                 'cannot connect to server via "{}"! '
                 'please check if server online.'
                 .format('tcp://{}:{}'.format(server_host, server_port))
             )
-            raise e
+            raise
         else:
             # notice: the port from `getsockname` may be wrong if server is
             # bridged via frp service.

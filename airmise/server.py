@@ -2,6 +2,7 @@ import typing as tp
 from time import sleep
 
 from . import const
+from .codec import decode
 from .slave import Slave
 from .socket_wrapper import Socket
 from .util import fix_ctrl_c_keystroke
@@ -62,10 +63,15 @@ class Server:
             sleep(0.1)
     
     def _handle_connection(self, conn: Socket) -> None:
-        slave = self.connections[conn.port] = Slave(
+        assert decode(conn.recvall()) == (const.INTERNAL, 'hi', None)
+        #   why does connector say hi?
+        #   it helps server to distinguish the connector type. see practical 
+        #   usage in `./fast_reverse_proxy/proxy_roles.py:Router
+        #   :_handle_connection`.
+        endpoint = self.connections[conn.port] = Slave(
             conn, self._default_user_namespace
         )
-        slave.mainloop(blocking=False)
+        endpoint.mainloop(blocking=False)
 
 
 def run_server(

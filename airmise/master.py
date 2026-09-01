@@ -87,6 +87,8 @@ class Master:
             return result
         elif code == const.YIELD_OVER:
             return StopIteration
+        else:
+            raise Exception(code, result)
 
     def _iterate(self, id: str) -> tp.Iterator:
         _args = {'is_iterator': True, 'id': id}

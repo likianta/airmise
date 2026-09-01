@@ -65,19 +65,23 @@ class Router(Server):
         data_bytes = conn.recvall()
         flag, event, data = decode(data_bytes)
         assert flag == const.INTERNAL
-        assert event == 'register'
-
-        if data is None:  # register callee
-            uid = uuid()
-            self._routes[uid] = conn
-            conn.sendall(encode((const.NORMAL, uid)))
-
-        else:  # register caller
+        if event == 'register_proxy_caller':
+            uid = data['uid']
+            assert uid in self._routes, uid
             broker = self.connections[conn.port] = Broker(
-                source=conn, target=self._routes[data['uid']]
+                source=conn, target=self._routes[uid]
             )
             broker.mainloop(blocking=False)
             conn.sendall(encode((const.NORMAL, 'ok')))
+        elif event == 'register_proxy_callee':
+            uid = uuid()
+            self._routes[uid] = conn
+            conn.sendall(encode((const.NORMAL, uid)))
+        else:
+            # maybe regular client, see `../client.py:Client:_say_hi` and
+            # `../server.py:Server:_handle_connection`
+            endpoint = self.connections[conn.port] = Slave(conn)
+            endpoint.mainloop(blocking=False)
 
 
 class Callee(Slave):
@@ -98,10 +102,13 @@ class Callee(Slave):
             self.socket.close()
             raise
         else:
-            self._send(const.INTERNAL, 'register', None)
-            self.uid = self._recv()
-            print(self.uid, ':nv2p')
+            self._say_hi()
         return self
+
+    def _say_hi(self) -> None:
+        self._send(const.INTERNAL, 'register_proxy_callee')
+        self.uid = self._recv()
+        print(self.uid, ':nv2')
 
 
 class Caller(Slave):
@@ -128,9 +135,12 @@ class Caller(Slave):
             self.socket.close()
             raise
         else:
-            self._send(const.INTERNAL, 'register', {'uid': self._uid})
-            assert self._recv() == 'ok'
+            self._say_hi()
         return self
+
+    def _say_hi(self) -> None:
+        self._send(const.INTERNAL, 'register_proxy_caller', {'uid': self._uid})
+        assert self._recv() == 'ok'
 
     def close(self) -> None:
         self.socket.sendall(encode(('close', b'')))

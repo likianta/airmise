@@ -70,6 +70,7 @@ class Client:
             raise
         else:
             self.host, self.port = host, port
+            self._say_hi()
         self.master = Master(self._socket)
         return self
 
@@ -88,6 +89,12 @@ class Client:
     def reopen(self) -> None:
         self.close()
         self.open()
+
+    def _say_hi(self) -> None:
+        """
+        The first message sent to server when connection established.
+        """
+        self.master._send(const.INTERNAL, 'hi')
 
     def exec(self, source: tp.Union[str, FunctionType], **kwargs) -> tp.Any:
         if not self.is_opened:
