@@ -15,7 +15,7 @@ def register(obj: T.Object) -> T.Object:
     return obj
 
 
-def delegate(obj: T.Object, *args, **kwargs) -> T.Object:
+def call(obj: T.Object, *args, **kwargs) -> T.Object:
     if str(type(obj)) == "<class 'type'>":
         # obj is a class
         _references[obj.__qualname__] = obj
@@ -64,7 +64,7 @@ def wrap(obj: T.Object) -> T.Object:
             else:
                 return obj(*args, **kwargs)
             
-        return _instantiate_class
+        return t.cast(T.Object, _instantiate_class)
     else:
         raise NotImplementedError
 

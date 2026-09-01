@@ -59,7 +59,7 @@ class Router(Server):
         self, host: str = const.DEFAULT_HOST, port: int = const.SERVER_PORT
     ) -> None:
         super().__init__(host, port)
-        self._routes: tp.Dict[str, Socket] = {}
+        self.routes: tp.Dict[str, Socket] = {}
 
     def _handle_connection(self, conn: Socket) -> None:
         data_bytes = conn.recvall()
@@ -67,15 +67,15 @@ class Router(Server):
         assert flag == const.INTERNAL
         if event == 'register_proxy_caller':
             uid = data['uid']
-            assert uid in self._routes, uid
+            assert uid in self.routes, uid
             broker = self.connections[conn.port] = Broker(
-                source=conn, target=self._routes[uid]
+                source=conn, target=self.routes[uid]
             )
             broker.mainloop(blocking=False)
             conn.sendall(encode((const.NORMAL, 'ok')))
         elif event == 'register_proxy_callee':
             uid = uuid()
-            self._routes[uid] = conn
+            self.routes[uid] = conn
             conn.sendall(encode((const.NORMAL, uid)))
         else:
             # maybe regular client, see `../client.py:Client:_say_hi` and

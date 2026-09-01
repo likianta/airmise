@@ -24,13 +24,13 @@ from .fast_reverse_proxy import Caller as ProxyCaller
 from .fast_reverse_proxy import Router as ProxyServer
 from .fast_reverse_proxy import proxy
 from .master import Master
-from .remote_control import delegate
+from .remote_control import call as remote_call
 from .remote_control import register
-from .remote_control import wrap
+from .remote_control import wrap as delegate
 from .server import Server
 from .server import run_server
 from .slave import Slave
-from .slave import inject_connection
+from .slave import inject_connection as wrap
 from .socket_wrapper import Socket
 from .socket_wrapper import Socket as Connection
 from .socket_wrapper import SocketClosed

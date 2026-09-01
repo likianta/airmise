@@ -4,7 +4,7 @@
 
 - Show accurate position of error source.
 
-### 3.1.0 (WIP)
+### 3.1.0 (2026-09-01)
 
 - Inject connection object into server holded functions.
 - Proxy roles.
