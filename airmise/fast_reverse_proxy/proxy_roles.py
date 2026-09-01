@@ -26,9 +26,8 @@ class Broker(Slave):
         self._target = target
 
     def _mainloop(self, *_, **__) -> tp.Iterator:
-        flag: int
         event: tp.Literal['close', 'request', 'response']
-        data: tp.Optional[dict]
+        data: bytes
 
         while True:
             yield
@@ -38,10 +37,9 @@ class Broker(Slave):
             except (SocketClosed, ConnectionResetError):
                 return
 
-            flag, event, data = decode(data_bytes)
-            assert flag == const.INTERNAL
+            event, data = decode(data_bytes)
+            # assert flag == const.INTERNAL
             assert event in ('close', 'request', 'response')
-            # assert 'uid' in data and 'raw' in data
 
             if event == 'close':
                 self._target.send_close_event()
@@ -51,7 +49,7 @@ class Broker(Slave):
                 print('close broker', ':v7')
                 return
             else:
-                self._target.sendall(data['raw'])
+                self._target.sendall(data)  # -> Callee:_mainloop:socket.recvall
                 rsp = self._target.recvall()
                 self._source.sendall(rsp)
 
@@ -61,7 +59,7 @@ class Router(Server):
         self, host: str = const.DEFAULT_HOST, port: int = const.SERVER_PORT
     ) -> None:
         super().__init__(host, port, _assignment=Broker)
-        self._channels = {}
+        self._routes = {}
 
     def _handle_connection(self, conn: Socket) -> None:
         data_bytes = conn.recvall()
@@ -71,21 +69,21 @@ class Router(Server):
 
         if data is None:  # register callee
             uid = uuid()
-            self._channels[uid] = (None, conn)
+            self._routes[uid] = (None, conn)
             conn.sendall(encode((const.NORMAL, uid)))
 
         else:  # register caller
             uid = data['uid']
             assert (
-                uid in self._channels
-                and self._channels[uid][0] is None
-                and self._channels[uid][1] is not None
+                uid in self._routes
+                and self._routes[uid][0] is None
+                and self._routes[uid][1] is not None
             )
-            self._channels[uid] = (conn, self._channels[uid][1])
+            self._routes[uid] = (conn, self._routes[uid][1])
             conn.sendall(encode((const.NORMAL, 'ok')))
 
             slave = self.connections[conn.port] = self._assignment(
-                *self._channels[uid]
+                *self._routes[uid]
             )
             slave.mainloop(blocking=False)
 
@@ -119,12 +117,9 @@ class Callee(Slave):
 class Caller(Slave):
     """
     Message flow:
-        `Caller.connect:_send` 
-            -> `Router._handle_connection:register caller`.
-        `Caller:call/exec/close:_send` 
-            -> `Broker._mainloop:self._source.recvall`.
-        `Caller.call/exec:return self._recv` 
-            <- `Broker._mainloop:self._source.sendall`.
+        `Caller.connect:_send` -> `Router._handle_connection:register caller`.
+        `Caller:_request` -> `Broker._mainloop:self._source.recvall`.
+        `Caller.call/exec:_recv` <- `Broker._mainloop:self._source.sendall`.
     """
 
     def __init__(self, uid: str) -> None:
@@ -154,19 +149,14 @@ class Caller(Slave):
         self.socket.close()
 
     def call(self, func_name: str, *args, **kwargs) -> tp.Any:
-        self._send(
-            const.INTERNAL,
-            'request',
-            {
-                'uid': self._uid,
-                'raw': encode(
-                    (
-                        const.CALL_FUNCTION,
-                        func_name,
-                        {'args': args, 'kwargs': kwargs},
-                    )
-                ),
-            },
+        self._request(
+            encode(
+                (
+                    const.CALL_FUNCTION,
+                    func_name,
+                    {'args': args, 'kwargs': kwargs},
+                )
+            )
         )
         return self._recv()
 
@@ -175,9 +165,8 @@ class Caller(Slave):
             code = interpret_code(source)
         else:
             code = interpret_func(source)
-        self._send(
-            const.INTERNAL,
-            'request',
-            {'uid': self._uid, 'raw': encode((const.NORMAL, code, kwargs))},
-        )
+        self._request(encode((const.NORMAL, code, kwargs)))
         return self._recv()
+
+    def _request(self, raw_data: bytes) -> None:
+        self.socket.sendall(encode(('request', raw_data)))
