@@ -58,8 +58,9 @@ class Router(Server):
     def __init__(
         self, host: str = const.DEFAULT_HOST, port: int = const.SERVER_PORT
     ) -> None:
+        # DELETE: remove `_assignment` from server class.
         super().__init__(host, port, _assignment=Broker)
-        self._routes = {}
+        self._routes: tp.Dict[str, Socket] = {}
 
     def _handle_connection(self, conn: Socket) -> None:
         data_bytes = conn.recvall()
@@ -69,23 +70,15 @@ class Router(Server):
 
         if data is None:  # register callee
             uid = uuid()
-            self._routes[uid] = (None, conn)
+            self._routes[uid] = conn
             conn.sendall(encode((const.NORMAL, uid)))
 
         else:  # register caller
-            uid = data['uid']
-            assert (
-                uid in self._routes
-                and self._routes[uid][0] is None
-                and self._routes[uid][1] is not None
+            broker = self.connections[conn.port] = Broker(
+                source=conn, target=self._routes[data['uid']]
             )
-            self._routes[uid] = (conn, self._routes[uid][1])
+            broker.mainloop(blocking=False)
             conn.sendall(encode((const.NORMAL, 'ok')))
-
-            slave = self.connections[conn.port] = self._assignment(
-                *self._routes[uid]
-            )
-            slave.mainloop(blocking=False)
 
 
 class Callee(Slave):
@@ -143,7 +136,7 @@ class Caller(Slave):
         return self
 
     def close(self) -> None:
-        self._send(const.INTERNAL, 'close', None)
+        self.socket.sendall(encode(('close', b'')))
         # assert self._recv() == 'ok'
         # self.socket.send_close_event()
         self.socket.close()
