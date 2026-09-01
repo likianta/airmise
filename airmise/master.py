@@ -40,10 +40,10 @@ class Master:
         # TODO: check if source is a file path.
         if isinstance(source, str):
             # print(':vr2', '```python\n{}\n```'.format(dedent(source).strip()))
-            code = _interpret_code(source)
+            code = interpret_code(source)
         else:
             # print(':v', source)
-            code = _interpret_func(source)
+            code = interpret_func(source)
 
         frame: FrameType = inspect.currentframe().f_back  # type: ignore
         kwargs['_source_file'] = frame.f_code.co_filename
@@ -54,10 +54,15 @@ class Master:
         self._send(const.DELEGATE if delegate else const.NORMAL, code, kwargs)
         return self._recv()
 
-    def set_passive(self, user_namespace: tp.Optional[dict] = None) -> None:
+    def set_passive(
+        self,
+        user_namespace: tp.Optional[dict] = None,
+        switch_roleplay: bool = True,
+    ) -> None:
         from .slave import Slave
 
-        self._send(const.INTERNAL, 'switch_roleplay')
+        if switch_roleplay:
+            self._send(const.INTERNAL, 'switch_roleplay')
         s = Slave(self.socket, user_namespace)
         s.active = True
         s.mainloop()  # blocking
@@ -102,10 +107,10 @@ class Master:
         self.socket.sendall(encode((flag, code, args)))
 
 
-# -----------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
-def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
+def interpret_code(raw_code: str, interpret_return: bool = True) -> str:
     """
     special syntax:
         memo <varname> := <value>
@@ -187,10 +192,10 @@ def _interpret_code(raw_code: str, interpret_return: bool = True) -> str:
     return out
 
 
-def _interpret_func(func: FunctionType) -> str:
+def interpret_func(func: FunctionType) -> str:
     return '\n'.join(
         (
-            _interpret_code(inspect.getsource(func), interpret_return=False),
+            interpret_code(inspect.getsource(func), interpret_return=False),
             '__ref__["__result__"] = {}(*args, **kwargs)'.format(func.__name__),
         )
     )

@@ -44,7 +44,7 @@ class Client:
                     self._socket.verbose = verbose
         return self
 
-    def open(
+    def connect(
         self,
         host: str = const.DEFAULT_HOST,
         port: int = const.DEFAULT_PORT,
@@ -73,7 +73,7 @@ class Client:
         self.master = Master(self._socket)
         return self
 
-    connect = open
+    open = connect
 
     def close(self) -> None:
         if self.is_opened:
@@ -99,8 +99,9 @@ class Client:
             self.open()
         return self.master.call(func_name, *args, **kwargs)
 
-    def set_passive(self) -> None:  # blocking
-        self.master.set_passive()
+    def set_passive(self, *args, **kwargs) -> None:
+        assert self.master
+        self.master.set_passive(*args, **kwargs)
 
 
 default_client = Client()
