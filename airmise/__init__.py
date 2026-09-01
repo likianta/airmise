@@ -19,6 +19,7 @@ from .const import DEFAULT_HOST
 from .const import DEFAULT_PORT
 from .environment import non_native
 from .export import export_functions
+from .fast_reverse_proxy import Repeater
 from .master import Master
 from .remote_control import delegate
 from .remote_control import register
@@ -29,6 +30,7 @@ from .slave import NonblockingSlave
 from .slave import Slave
 from .slave import inject_connection
 from .socket_wrapper import Socket
+from .socket_wrapper import Socket as Connection
 from .socket_wrapper import SocketClosed
 from .util import get_local_ip_address
 from .util import random_name
