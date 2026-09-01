@@ -2,14 +2,14 @@ import typing as tp
 from time import sleep
 
 from . import const
-from .slave import NonblockingSlave
+from .slave import Slave
 from .socket_wrapper import Socket
 from .util import fix_ctrl_c_keystroke
 from .util import get_local_ip_address
 
 
 class Server:
-    connections: tp.Dict[int, NonblockingSlave]
+    connections: tp.Dict[int, Slave]
     host: str
     port: int
     verbose: bool
@@ -20,6 +20,7 @@ class Server:
         self,
         host: str = const.DEFAULT_HOST,
         port: int = const.DEFAULT_PORT,
+        _assignment: tp.Type[Slave] = Slave,
     ) -> None:
         self.connections = {}
         self.host = host
@@ -27,6 +28,7 @@ class Server:
         self.verbose = False
         self._default_user_namespace = {}
         self._socket = Socket()
+        self._assignment = _assignment
     
     def run(
         self,
@@ -56,11 +58,14 @@ class Server:
         
         while True:
             conn = self._socket.accept()  # blocking
-            slave = self.connections[conn.port] = NonblockingSlave(
-                conn, self._default_user_namespace
-            )
-            slave.mainloop()  # nonblocking
+            self._handle_connection(conn)
             sleep(0.1)
+    
+    def _handle_connection(self, conn: Socket) -> None:
+        slave = self.connections[conn.port] = self._assignment(
+            conn, self._default_user_namespace
+        )
+        slave.mainloop(blocking=False)
 
 
 def run_server(

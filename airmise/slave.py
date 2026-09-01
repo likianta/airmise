@@ -32,6 +32,7 @@ class Slave(Master):
         self.active = False
         self.verbose = False
         self._mainloop_running = False
+        self._mainloop_thread: tp.Optional[Thread] = None
         self._user_namespace = user_namespace or {}
 
     @property
@@ -48,18 +49,47 @@ class Slave(Master):
         assert self.active
         return super().exec(source, **kwargs)
 
-    def mainloop(self) -> None:
+    def set_active(self) -> None:
+        if not self.active:
+            self.active = True
+            self._mainloop_running = False
+            if self._mainloop_thread:
+                self._mainloop_thread.stop()
+
+    def set_passive(self, *_, **__) -> None:
+        if self.active:
+            self.active = False
+            # self._socket.sendall(encode((const.INTERNAL, 'exit_loop', None)))
+            self._send(const.INTERNAL, 'exit_loop')
+
+    def mainloop(
+        self,
+        user_namespace: tp.Optional[T.Namespace] = None,
+        blocking: bool = True,
+    ) -> None:
         # design thinking:
         #   we decouple mainloop into an interator method (`_mainloop`) and a
         #   shell method (`mainloop`), the former one is good for subclass to
         #   operate on it more flexible, while later is good for general caller
         #   to use, which is intuitive and simple (simply blocking).
-        #   see also `./server.py : NonblockingSlave`.
-        self._mainloop_running = True
-        for _ in self._mainloop(self.socket, self._user_namespace):
-            if not self._mainloop_running:
-                break
-        print('mainloop exited', ':pv7')
+        #   see also `NonblockingSlave`.
+
+        if user_namespace is None:
+            user_namespace = self._user_namespace
+
+        def _blocking_mainloop() -> None:
+            self._mainloop_running = True
+            for _ in self._mainloop(self.socket, user_namespace):
+                if not self._mainloop_running:
+                    break
+            print('mainloop exited', ':{}v7'.format('p2' if blocking else ''))
+
+        if blocking:
+            _blocking_mainloop()
+        else:
+            self._mainloop_thread = run_new_thread(
+                _blocking_mainloop, interruptible=True
+            )
 
     def _mainloop(self, socket: Socket, namespace: T.Namespace) -> tp.Iterator:
         ctx: tp.Dict[str, tp.Any] = {
@@ -187,7 +217,10 @@ class Slave(Master):
 
                 try:
                     if flag == const.CALL_FUNCTION:
-                        x = tp.cast(tp.Union[FunctionType, _ConnectionRequired], ctx[code])
+                        x = tp.cast(
+                            tp.Union[FunctionType, _ConnectionRequired],
+                            ctx[code],
+                        )
                         if isinstance(x, _ConnectionRequired):
                             func = x.target
                             args['args'] = (self.connection,) + args['args']
@@ -228,38 +261,27 @@ class Slave(Master):
             # assert resp
             socket.sendall(encode(resp))
 
-    def set_active(self) -> None:
-        if not self.active:
-            self._mainloop_running = False
-            self.active = True
 
-    def set_passive(self, user_namespace: tp.Optional[dict] = None) -> None:
-        if self.active:
-            self.active = False
-            # self._socket.sendall(encode((const.INTERNAL, 'exit_loop', None)))
-            self._send(const.INTERNAL, 'exit_loop')
+# class NonblockingSlave(Slave):
+#     def __init__(self, *args, **kwargs) -> None:
+#         super().__init__(*args, **kwargs)
+#         self._mainloop_thread: tp.Optional[Thread] = None
 
+#     def mainloop(self) -> None:
+#         assert not self._mainloop_thread
+#         self._mainloop_thread = run_new_thread(
+#             self._mainloop,
+#             self.socket,
+#             self._user_namespace,
+#             interruptible=True,
+#         )
 
-class NonblockingSlave(Slave):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._mainloop_thread: tp.Optional[Thread] = None
-
-    def mainloop(self) -> None:
-        assert not self._mainloop_thread
-        self._mainloop_thread = run_new_thread(
-            self._mainloop,
-            self.socket,
-            self._user_namespace,
-            interruptible=True,
-        )
-
-    def set_active(self) -> None:
-        if not self.active:
-            assert self._mainloop_thread
-            self._mainloop_running = False
-            self.active = True
-            self._mainloop_thread.stop()
+#     def set_active(self) -> None:
+#         if not self.active:
+#             assert self._mainloop_thread
+#             self._mainloop_running = False
+#             self.active = True
+#             self._mainloop_thread.stop()
 
 
 class _ConnectionRequired:

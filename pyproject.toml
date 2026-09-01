@@ -43,6 +43,10 @@ relative-imports-order = "closest-to-furthest"
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 
+[tool.ty.rules]
+# invalid-type-form = "ignore"
+unresolved-attribute = "ignore"
+
 [tool.uv]
 prerelease = "allow"
 
