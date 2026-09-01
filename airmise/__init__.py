@@ -19,6 +19,9 @@ from .const import DEFAULT_HOST
 from .const import DEFAULT_PORT
 from .environment import non_native
 from .export import export_functions
+from .fast_reverse_proxy import Callee as ProxyClient
+from .fast_reverse_proxy import Caller as ProxyCaller
+from .fast_reverse_proxy import Router as ProxyServer
 from .fast_reverse_proxy import proxy
 from .master import Master
 from .remote_control import delegate

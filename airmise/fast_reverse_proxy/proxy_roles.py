@@ -42,8 +42,8 @@ class Broker(Slave):
             assert event in ('close', 'request', 'response')
 
             if event == 'close':
-                self._target.send_close_event()
-                self._target.close()
+                # self._target.send_close_event()
+                # self._target.close()
                 # self._source.sendall(b'ok')
                 self._source.close()
                 print('close broker', ':v7')
@@ -58,8 +58,7 @@ class Router(Server):
     def __init__(
         self, host: str = const.DEFAULT_HOST, port: int = const.SERVER_PORT
     ) -> None:
-        # DELETE: remove `_assignment` from server class.
-        super().__init__(host, port, _assignment=Broker)
+        super().__init__(host, port)
         self._routes: tp.Dict[str, Socket] = {}
 
     def _handle_connection(self, conn: Socket) -> None:
@@ -85,8 +84,6 @@ class Callee(Slave):
     def __init__(self, user_namespace: tp.Optional[T.Namespace] = None) -> None:
         super().__init__(None, user_namespace)  # type: ignore
         self.uid = ''
-        self._mainloop_running = False
-        self._user_namespace = user_namespace or {}
 
     def connect(
         self,

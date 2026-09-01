@@ -20,7 +20,7 @@ class Server:
         self,
         host: str = const.DEFAULT_HOST,
         port: int = const.DEFAULT_PORT,
-        _assignment: tp.Type[Slave] = Slave,
+        # _assignment: tp.Type[Slave] = Slave,
     ) -> None:
         self.connections = {}
         self.host = host
@@ -28,7 +28,7 @@ class Server:
         self.verbose = False
         self._default_user_namespace = {}
         self._socket = Socket()
-        self._assignment = _assignment
+        # self._assignment = _assignment
     
     def run(
         self,
@@ -62,7 +62,7 @@ class Server:
             sleep(0.1)
     
     def _handle_connection(self, conn: Socket) -> None:
-        slave = self.connections[conn.port] = self._assignment(
+        slave = self.connections[conn.port] = Slave(
             conn, self._default_user_namespace
         )
         slave.mainloop(blocking=False)
