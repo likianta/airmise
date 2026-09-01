@@ -13,7 +13,7 @@ from .codec import encode
 from .socket_wrapper import Socket
 
 
-class Master:
+class Requester:
     def __init__(self, socket: Socket) -> None:
         self.socket = socket
 
@@ -59,13 +59,13 @@ class Master:
         user_namespace: tp.Optional[dict] = None,
         switch_roleplay: bool = True,
     ) -> None:
-        from .slave import Slave
+        from .responder import Responder
 
         if switch_roleplay:
             self._send(const.INTERNAL, 'switch_roleplay')
-        s = Slave(self.socket, user_namespace)
-        s.active = True
-        s.mainloop()  # blocking
+        res = Responder(self.socket, user_namespace)
+        res.active = True
+        res.mainloop()  # blocking
 
     def _recv(self) -> tp.Any:
         code, result = decode(self.socket.recvall())

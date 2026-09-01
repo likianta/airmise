@@ -3,14 +3,14 @@ import typing as tp
 from types import FunctionType
 
 from . import const
-from .master import Master
+from .requester import Requester
 from .socket_wrapper import Socket
 
 
 class Client:
     # FIXME: should we distinguish server_host, server_port from host and port?
     host: str
-    master: tp.Optional[Master]
+    master: tp.Optional[Requester]
     port: int
     _socket: tp.Optional[Socket]
 
@@ -71,7 +71,7 @@ class Client:
         else:
             self.host, self.port = host, port
             self._say_hi()
-        self.master = Master(self._socket)
+        self.master = Requester(self._socket)
         return self
 
     open = connect

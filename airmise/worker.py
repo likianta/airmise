@@ -1,7 +1,7 @@
 import typing as tp
 from .codec import decode
 from .codec import encode
-from .slave import Slave
+from .responder import Responder
 from .socket_wrapper import Socket
 # from lk_utils import run_new_thread
 # from .server import Server
@@ -46,7 +46,7 @@ class Worker:
             ),
             ':r',
         )
-        slave = Slave(sock, self.context or {})
+        res = Responder(sock, self.context or {})
         if callback:
-            callback(tunnel_port, slave)
-        slave.mainloop()  # blocking
+            callback(tunnel_port, res)
+        res.mainloop()  # blocking

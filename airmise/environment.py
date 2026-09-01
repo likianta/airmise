@@ -1,12 +1,12 @@
-import typing as t
+import typing as tp
 from contextlib import contextmanager
 
 # native: bool = True
-working_mode: t.Literal['native', 'server', 'client'] = 'native'
+working_mode: tp.Literal['native', 'server', 'client'] = 'native'
 
 
 @contextmanager
-def non_native() -> t.Iterator:
+def non_native() -> tp.Iterator:
     global working_mode
     backup = working_mode
     working_mode = 'client'

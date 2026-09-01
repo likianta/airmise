@@ -10,16 +10,16 @@ from lk_utils import uuid
 from .. import const
 from ..codec import decode
 from ..codec import encode
-from ..master import interpret_code
-from ..master import interpret_func
+from ..requester import interpret_code
+from ..requester import interpret_func
 from ..server import Server
-from ..slave import Slave
-from ..slave import T
+from ..responder import Responder
+from ..responder import T
 from ..socket_wrapper import Socket
 from ..socket_wrapper import SocketClosed
 
 
-class Broker(Slave):
+class Broker(Responder):
     def __init__(self, source: Socket, target: Socket) -> None:
         super().__init__(source)
         self._source = source
@@ -80,11 +80,11 @@ class Router(Server):
         else:
             # maybe regular client, see `../client.py:Client:_say_hi` and
             # `../server.py:Server:_handle_connection`
-            endpoint = self.connections[conn.port] = Slave(conn)
+            endpoint = self.connections[conn.port] = Responder(conn)
             endpoint.mainloop(blocking=False)
 
 
-class Callee(Slave):
+class Callee(Responder):
     def __init__(self, user_namespace: tp.Optional[T.Namespace] = None) -> None:
         super().__init__(None, user_namespace)  # type: ignore
         self.uid = ''
@@ -111,7 +111,7 @@ class Callee(Slave):
         print(self.uid, ':nv2')
 
 
-class Caller(Slave):
+class Caller(Responder):
     """
     Message flow:
         `Caller.connect:_send` -> `Router._handle_connection:register caller`.

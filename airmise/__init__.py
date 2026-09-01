@@ -23,14 +23,14 @@ from .fast_reverse_proxy import Callee as ProxyClient
 from .fast_reverse_proxy import Caller as ProxyCaller
 from .fast_reverse_proxy import Router as ProxyServer
 from .fast_reverse_proxy import proxy
-from .master import Master
 from .remote_control import call as remote_call
 from .remote_control import register
 from .remote_control import wrap as delegate
+from .requester import Requester
+from .responder import Responder
+from .responder import inject_connection as wrap
 from .server import Server
 from .server import run_server
-from .slave import Slave
-from .slave import inject_connection as wrap
 from .socket_wrapper import Socket
 from .socket_wrapper import Socket as Connection
 from .socket_wrapper import SocketClosed
@@ -38,4 +38,4 @@ from .util import get_local_ip_address
 from .util import random_name
 from .worker import Worker  # experimental
 
-__version__ = '3.1.0'
+__version__ = '3.2.0'

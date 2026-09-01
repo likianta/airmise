@@ -1,5 +1,6 @@
 from time import sleep
-from ...slave import Slave
+
+from ...responder import Responder
 from ...socket_wrapper import Socket
 from ...const import DEFAULT_PORT
 from ...const import FRP_TRANSCEIVER_PORT
@@ -40,8 +41,8 @@ def connect_to_public_transport(
     
     fix_ctrl_c_keystroke()
     
-    slave = Slave(sock, namespace)
-    slave.mainloop()
+    res = Responder(sock, namespace)
+    res.mainloop()
 
 def _discard_incoming_connection(sock: Socket):
     # sock._socket.listen(1)

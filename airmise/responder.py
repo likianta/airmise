@@ -14,8 +14,8 @@ from lk_utils.subproc import run_new_thread
 from . import const
 from .codec import decode
 from .codec import encode
-from .master import Master
 from .remote_control import store_object
+from .requester import Requester
 from .socket_wrapper import Socket
 from .socket_wrapper import SocketClosed
 
@@ -24,7 +24,7 @@ class T:
     Namespace = tp.Dict[str, tp.Union[tp.Callable, '_ConnectionRequired']]
 
 
-class Slave(Master):
+class Responder(Requester):
     def __init__(
         self, socket: Socket, user_namespace: tp.Optional[T.Namespace] = None
     ) -> None:

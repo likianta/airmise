@@ -3,14 +3,14 @@ from time import sleep
 
 from . import const
 from .codec import decode
-from .slave import Slave
+from .responder import Responder
 from .socket_wrapper import Socket
 from .util import fix_ctrl_c_keystroke
 from .util import get_local_ip_address
 
 
 class Server:
-    connections: tp.Dict[int, Slave]
+    connections: tp.Dict[int, Responder]
     host: str
     port: int
     verbose: bool
@@ -21,7 +21,7 @@ class Server:
         self,
         host: str = const.DEFAULT_HOST,
         port: int = const.DEFAULT_PORT,
-        # _assignment: tp.Type[Slave] = Slave,
+        # _assignment: tp.Type[Responder] = Responder,
     ) -> None:
         self.connections = {}
         self.host = host
@@ -68,7 +68,7 @@ class Server:
         #   it helps server to distinguish the connector type. see practical 
         #   usage in `./fast_reverse_proxy/proxy_roles.py:Router
         #   :_handle_connection`.
-        endpoint = self.connections[conn.port] = Slave(
+        endpoint = self.connections[conn.port] = Responder(
             conn, self._default_user_namespace
         )
         endpoint.mainloop(blocking=False)

@@ -4,6 +4,10 @@
 
 - Show accurate position of error source.
 
+### 3.2.0 (WIP)
+
+- Refactor master/slave to requester/responder.
+
 ### 3.1.0 (2026-09-01)
 
 - Inject connection object into server holded functions.
