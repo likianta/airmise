@@ -8,6 +8,7 @@
 
 - Refactor master/slave to requester/responder.
 - Clarify terms in vocabulary to reduce variable naming confusion. ([Reference](https://chatgpt.com/s/t_6a97931bcaac819187b14ac1ad17d503))
+- Simplify and strengthen code interpreter.
 
 ### 3.1.0 (2026-09-01)
 

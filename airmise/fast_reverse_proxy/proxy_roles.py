@@ -3,6 +3,7 @@ https://chatgpt.com/share/6a965430-dab0-83ee-aac8-916c0bd374be
 """
 
 import os
+import platform
 import typing as tp
 from types import FunctionType
 
@@ -27,6 +28,8 @@ class T:
     UserInfo = tp.TypedDict(
         'UserInfo',
         {
+            'unique_id': str,
+            'comp_name': str,
             'user_name': str,
             'user_host': str,
             'user_port': int,
@@ -53,11 +56,12 @@ class Broker(Responder):
             try:
                 data_bytes = self._source.recvall()
             except (SocketClosed, ConnectionResetError):
-                return
+                break
 
             event, data = decode(data_bytes)
             # assert flag == const.INTERNAL
-            assert event in ('close', 'request', 'response')
+            # assert event in ('close', 'request', 'response')
+            assert event in ('close', 'request'), (event, data)
 
             if event == 'close':
                 # self._target.send_close_event()
@@ -65,10 +69,11 @@ class Broker(Responder):
                 # self._source.sendall(b'ok')
                 self._source.close()
                 print('close broker', ':v7')
-                return
+                break
             else:
                 self._target.sendall(data)  # -> Callee:_mainloop:socket.recvall
                 rsp = self._target.recvall()
+                print(str(decode(data))[:500], str(decode(rsp))[:500], ':ilnv')
                 self._source.sendall(rsp)
 
 
@@ -95,7 +100,9 @@ class Router(Server):
         elif event == 'register_proxy_callee':
             user_id = uuid()
             user_info: T.UserInfo = {
-                'user_name': data['name'],
+                'unique_id': user_id,
+                'comp_name': data['computer_name'],
+                'user_name': data['user_name'],
                 'user_host': data['ip'],
                 #   i don't name it "user_ip" because i want all key names'
                 #   lengths equal, feels a little good in code formatting.
@@ -104,6 +111,7 @@ class Router(Server):
                 'conn_port': conn.port,
                 'timestamp': now(),
             }
+            print(user_info, ':nv2li')
             self.routes[user_id] = (conn, user_info)
             conn.sendall(encode((const.NORMAL, user_id)))
         else:
@@ -118,6 +126,7 @@ class Router(Server):
 class Callee(Responder):
     def __init__(self, user_namespace: tp.Optional[T.Namespace] = None) -> None:
         super().__init__(None, user_namespace)  # type: ignore
+        self.computer_name = platform.node()
         self.user_name = os.getlogin()
         self.user_ip = get_local_ip_address()
         self.user_id = ''
@@ -156,7 +165,8 @@ class Callee(Responder):
             const.INTERNAL,
             'register_proxy_callee',
             {
-                'name': self.user_name,
+                'user_name': self.user_name,
+                'computer_name': self.computer_name,
                 'ip': self.user_ip,
                 'port': self.socket.port,
             },

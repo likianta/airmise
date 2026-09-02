@@ -1,15 +1,16 @@
 import json
 import typing as tp
-from textwrap import dedent
 from time import time
 from traceback import format_exception
 from types import FunctionType
 from types import GeneratorType
 
+from lk_utils import dedent
 from lk_utils import timestamp
 from lk_utils import uuid
 from lk_utils.subproc import Thread
 from lk_utils.subproc import run_new_thread
+from neoprint import markdown
 
 from . import const
 from .codec import decode
@@ -30,7 +31,7 @@ class Responder(Requester):
     ) -> None:
         super().__init__(socket)
         self.active = False
-        self.verbose = False
+        # self.verbose = False
         self._mainloop_living = False
         self._mainloop_thread: tp.Optional[Thread] = None
         self._user_namespace = user_namespace or {}
@@ -60,19 +61,24 @@ class Responder(Requester):
         if self.active:
             self.active = False
             # self._socket.sendall(encode((const.INTERNAL, 'exit_loop', None)))
-            self._send(const.INTERNAL, 'exit_loop')
+            # self._send(const.INTERNAL, 'exit_loop')
 
     def mainloop(
         self,
         user_namespace: tp.Optional[T.Namespace] = None,
         blocking: bool = True,
+        **kwargs,
     ) -> None:
+        assert not self.active, (
+            'to run mainloop, you must set responder passive'
+        )
+
         if user_namespace is None:
             user_namespace = self._user_namespace
 
         def living_mainloop() -> tp.Iterator:
             self._mainloop_living = True
-            for _ in self._mainloop(self.socket, user_namespace):
+            for _ in self._mainloop(self.socket, user_namespace, **kwargs):
                 if not self._mainloop_living:
                     break
                 yield
@@ -86,40 +92,18 @@ class Responder(Requester):
                 living_mainloop, interruptible=True
             )
 
-    def _mainloop(self, socket: Socket, namespace: T.Namespace) -> tp.Iterator:
+    def _mainloop(
+        self,
+        socket: Socket,
+        namespace: T.Namespace,
+        verbose: bool = False,
+        fragile: bool = False,
+    ) -> tp.Iterator:
         ctx: tp.Dict[str, tp.Any] = {
             **namespace,
             '__ref__': {'__result__': None},
         }
         session_data = {}
-
-        def code_glance() -> None:
-            print(
-                ':pvr2',
-                dedent(
-                    """
-                    > *message at {}*
-
-                    ```python
-                    {}
-                    ```
-
-                    {}
-                    """
-                )
-                .format(
-                    timestamp(),
-                    code.strip(),
-                    '```json\n{}\n```'.format(
-                        json.dumps(
-                            args, default=str, ensure_ascii=False, indent=4
-                        )
-                    )
-                    if args
-                    else '',
-                )
-                .strip(),
-            )
 
         def exec_code() -> tp.Any:
             ctx['__ref__']['__result__'] = None
@@ -207,8 +191,8 @@ class Responder(Requester):
                     #     resp = (const.NORMAL, 'ready')
 
             else:  # CALL_FUNCTION | DELEGATE | NORMAL
-                if self.verbose and code:
-                    code_glance()
+                if verbose and code:
+                    self._code_glance(code, args, ctx)
 
                 try:
                     if flag == const.CALL_FUNCTION:
@@ -225,12 +209,32 @@ class Responder(Requester):
                             result = func(*args['args'], **args['kwargs'])
                         else:
                             result = func()
+                        # if code == 'get_manifest_data':  # TEST
+                        #     assert result is not None, (code, func, func())
                     else:
                         if args:
                             ctx.update(args)
                         result = exec_code()
                 except Exception as e:
-                    code_glance()
+                    if not verbose:
+                        self._code_glance(code, args, ctx)
+                    if fragile:
+                        for err_line in reversed(format_exception(e)):
+                            if err_line.lstrip().startswith(
+                                'File "<string>", line'
+                            ):
+                                from lk_utils import slice_text
+
+                                lineno = int(
+                                    slice_text(err_line)
+                                    .find('line ')
+                                    .then_cut()
+                                    .find(',')
+                                    .slice()
+                                )
+                                print(':v8', code.splitlines()[lineno - 1])
+                                break
+                        raise e
                     resp = (
                         const.ERROR,
                         ''.join(
@@ -254,29 +258,62 @@ class Responder(Requester):
                             resp = (const.NORMAL, result)
 
             # assert resp
+            # print(str(resp)[:500], ':iv')
             socket.sendall(encode(resp))
 
+    def _code_glance(
+        self, code: str, args: tp.Optional[dict], context: dict
+    ) -> None:
+        print(':div', 'message at {}'.format(timestamp('h:n:s')))
+        ctx = {k: v for k, v in context.items() if not k.startswith('_')}
 
-# class NonblockingSlave(Slave):
-#     def __init__(self, *args, **kwargs) -> None:
-#         super().__init__(*args, **kwargs)
-#         self._mainloop_thread: tp.Optional[Thread] = None
+        def _crop_if_too_long(x) -> str:
+            x = str(x)
+            if len(x) > 100:
+                x = x[:100] + '...'
+            return x
 
-#     def mainloop(self) -> None:
-#         assert not self._mainloop_thread
-#         self._mainloop_thread = run_new_thread(
-#             self._mainloop,
-#             self.socket,
-#             self._user_namespace,
-#             interruptible=True,
-#         )
+        markdown(
+            dedent(
+                """
+                Code:
 
-#     def set_active(self) -> None:
-#         if not self.active:
-#             assert self._mainloop_thread
-#             self._mainloop_running = False
-#             self.active = True
-#             self._mainloop_thread.stop()
+                ```python
+                {}
+                ```
+
+                Args:
+
+                ```python
+                {}
+                ```
+
+                Context:
+
+                ```python
+                {}
+                ```
+                """,
+                lstrip=False,
+            ).format(
+                code.strip(),
+                (
+                    json.dumps(args, default=str, ensure_ascii=False, indent=4)
+                    if args
+                    else '# NO ARGS'
+                ),
+                (
+                    json.dumps(
+                        ctx,
+                        default=_crop_if_too_long,
+                        ensure_ascii=False,
+                        indent=4,
+                    )
+                    if ctx
+                    else '# NO CONTEXT YET'
+                ),
+            )
+        )
 
 
 class _ConnectionRequired:

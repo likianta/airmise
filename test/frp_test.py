@@ -4,41 +4,64 @@ from lk_utils import start_ipython
 from neoprint import print
 
 
-@cli
-def server() -> None:
-    air.frp.run_transceiver(port=2144)
+# @cli
+# def server() -> None:
+#     air.frp.run_transceiver(port=2144)
+
+
+# @cli
+# def client(target_host: str, target_port: int = 2144) -> None:
+#     air.frp.connect_to_public_transport(
+#         {'test': _greeting},
+#         source_port=2140,
+#         target_host=target_host,
+#         target_port=target_port,
+#     )
 
 
 @cli
-def client(target_host: str, target_port: int = 2144) -> None:
-    air.frp.connect_to_public_transport(
-        {'test': _greeting},
-        source_port=2140,
-        target_host=target_host,
-        target_port=target_port,
-    )
-
-
-@cli
-def proxy_role_1() -> None:
+def proxy_part_1() -> None:
     air.frp.Router().run(port=2140)
 
 
 @cli
-def proxy_role_2() -> None:
+def proxy_part_2(debug: bool = False) -> None:
     callee = air.frp.Callee().connect(port=2140)
-    callee.mainloop({'greeting': _greeting, 'ping': _ping})
+    callee.mainloop({'greeting': _greeting, 'ping': _ping}, verbose=debug)
 
 
 @cli
-def proxy_role_3(
+def proxy_part_3(
     uid: str, interactive: bool = False, close: bool = True
 ) -> None:
     caller = air.frp.Caller(uid).connect(port=2140)
+    
     caller.call('greeting', 'Alice')
+    
     pong = caller.call('ping')
     print(pong)
     assert pong == 'pong'
+
+    caller.exec(
+        """
+        from lk_utils import fs
+        def bar(file: str = 'pyproject.toml'):
+            print(file, fs.filesize(file, str))
+            return fs.load(file, 'binary')
+        assert bar() is not None
+        return None
+        """
+    )
+    print(len(caller.call('bar')))
+
+    result = caller.exec(
+        """
+        print('hello world')  # this should be found in the server console
+        return 123
+        """
+    )
+    print(result)  # -> 123
+
     if interactive:
         start_ipython(locals())
     if close:
@@ -57,8 +80,8 @@ def _ping() -> str:
 if __name__ == '__main__':
     # python test/frp_test.py server
     # python test/frp_test.py client localhost
-    # python test/frp_test.py proxy_role_1
-    # python test/frp_test.py proxy_role_2
-    # python test/frp_test.py proxy_role_3 <uid>
-    # python test/frp_test.py proxy_role_3 <uid> --interactive
+    # python test/frp_test.py proxy_part_1
+    # python test/frp_test.py proxy_part_2
+    # python test/frp_test.py proxy_part_3 <uid>
+    # python test/frp_test.py proxy_part_3 <uid> --interactive
     cli.run()

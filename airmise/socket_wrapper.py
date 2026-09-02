@@ -25,6 +25,10 @@ class Socket:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     @property
+    def plain_addr(self) -> str:
+        return '{}:{}'.format(self.host, self.port)
+
+    @property
     def url(self) -> str:
         return 'tcp://{}:{}'.format(self.host, self.port)
 
@@ -32,9 +36,12 @@ class Socket:
         conn, addr = self._socket.accept()
         new_socket = Socket(_socket=conn, host=addr[0], port=addr[1])
         print(
-            '[green dim]new connection accepted. '
-            '[default]{}[/] <- {}[/]'.format(self.url, new_socket.url),
-            ':r',
+            '[green]new connection accepted: '
+            '[default dim]server ({}:[u dim]{}[/])[/] '
+            '<- client [dim]({}:[u dim]{}[/])[/][/]'.format(
+                self.host, self.port, new_socket.host, new_socket.port
+            ),
+            ':rp',
         )
         return new_socket
 
@@ -60,10 +67,10 @@ class Socket:
                 self._socket.settimeout(None)
         except Exception:
             print(
-                ':v8p',
-                'cannot connect to server via "{}"! '
-                'please check if server online.'.format(
-                    'tcp://{}:{}'.format(server_host, server_port)
+                ':pr',
+                '[red]cannot connect to server [dim]({}:[u dim]{}[/])[/]! '
+                'please check if server online.[/]'.format(
+                    server_host, server_port
                 ),
             )
             raise
@@ -75,14 +82,16 @@ class Socket:
             self.host, self.port = self._socket.getsockname()
             print(
                 ':pr',
-                '[green]connected to server: {} [dim]<- {}[/][/]'.format(
-                    'tcp://{}:{}'.format(server_host, server_port), self.url
+                '[green]connected to server: '
+                '[default dim]local ({}:[u dim]{}[/])[/] '
+                '-> server [dim]({}:[u dim]{}[/])[/][/]'.format(
+                    self.host, self.port, server_host, server_port
                 ),
             )
 
     def listen(self, backlog: int = 1) -> None:
         self._socket.listen(backlog)
-        print(':pv2', 'server is listening at {}'.format(self.url))
+        print(':pv2', 'server is listening at "{}"'.format(self.plain_addr))
 
     def recvall(self) -> bytes:
         size_width = int(self._socket.recv(1))
@@ -101,7 +110,11 @@ class Socket:
             9       FFFFFFFFF   64GB
         """
         if size_width == 0:
-            print(':pv7', 'remote request closing this connection', self.url)
+            print(
+                ':pv7',
+                'remote request closing this connection',
+                self.plain_addr,
+            )
             self.sendall(b'ok')
             self._socket.close()
             print(':pv3', 'port released', self.port)
