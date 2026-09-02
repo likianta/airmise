@@ -56,6 +56,8 @@ class Broker(Responder):
             try:
                 data_bytes = self._source.recvall()
             except (SocketClosed, ConnectionResetError):
+                self._source.close()
+                print('close broker', ':v7')
                 break
 
             event, data = decode(data_bytes)
@@ -73,7 +75,7 @@ class Broker(Responder):
             else:
                 self._target.sendall(data)  # -> Callee:_mainloop:socket.recvall
                 rsp = self._target.recvall()
-                print(str(decode(data))[:500], str(decode(rsp))[:500], ':ilnv')
+                # print(str(decode(data))[:500], str(decode(rsp))[:500], ':ilnv')
                 self._source.sendall(rsp)
 
 

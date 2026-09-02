@@ -171,16 +171,18 @@ def interpret_code(raw_code: str, interpret_return: bool = True) -> str:
         has_return_statement = False
         for line in dedent(raw_code).splitlines():
             if flag == 'START':
-                linex = line.lstrip()
-                space = ' ' * (len(line) - len(linex))
-                if linex.startswith('return '):
+                line_stripped = line.lstrip()
+                space = ' ' * (len(line) - len(line_stripped))
+                if line_stripped.startswith('return '):
                     has_return_statement = True
                     out_lines.append(
-                        '{}__ref__["__result__"] = {}'.format(space, linex[7:])
+                        '{}__ref__["__result__"] = {}'.format(
+                            space, line_stripped[7:]
+                        )
                     )
                 else:
                     out_lines.append(line)
-                    if linex.startswith(
+                    if line_stripped.startswith(
                         ('def ', 'class ', 'lambda ', 'lambda:', 'async ')
                     ):
                         flag = 'SCOPED'
@@ -194,16 +196,22 @@ def interpret_code(raw_code: str, interpret_return: bool = True) -> str:
                 else:
                     out_lines.append(line)
                     if line and line[0] != '#' and line[0] != ' ':
-                        flag = 'START'
-                        out_lines.append(line)
+                        if line_stripped.startswith(
+                            ('def ', 'class ', 'lambda ', 'lambda:', 'async ')
+                        ):
+                            pass  # new scope
+                        else:
+                            flag = 'START'
+            else:
+                raise Exception(flag)
         if flag == 'START' and not has_return_statement:
             out_lines.append('__ref__["__result__"] = None')
         return '\n'.join(out_lines)
     else:
         if raw_code.startswith('return '):
-            return '__ref__["__result__"] = {}\n'.format(raw_code[7:])
+            return '__ref__["__result__"] = {}'.format(raw_code[7:])
         else:
-            return '__ref__["__result__"] = {}\n'.format(raw_code)
+            return '__ref__["__result__"] = {}'.format(raw_code)
 
 
 def interpret_func(func: FunctionType) -> str:

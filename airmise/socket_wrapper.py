@@ -94,21 +94,26 @@ class Socket:
         print(':pv2', 'server is listening at "{}"'.format(self.plain_addr))
 
     def recvall(self) -> bytes:
-        size_width = int(self._socket.recv(1))
-        """
-            digits  max_hex     max_size
-            ------  ----------  --------
-            0       .           CLOSED
-            1       F           16B
-            2       FF          256B
-            3       FFF         4KB
-            4       FFFF        64KB
-            5       FFFFF       1MB
-            6       FFFFFF      16MB
-            7       FFFFFFF     256MB
-            8       FFFFFFFF    4GB
-            9       FFFFFFFFF   64GB
-        """
+        if x := self._socket.recv(1):
+            size_width = int(x)
+            """
+                digits  max_hex     max_size
+                ------  ----------  --------
+                0       .           CLOSED
+                1       F           16B
+                2       FF          256B
+                3       FFF         4KB
+                4       FFFF        64KB
+                5       FFFFF       1MB
+                6       FFFFFF      16MB
+                7       FFFFFFF     256MB
+                8       FFFFFFFF    4GB
+                9       FFFFFFFFF   64GB
+            """
+        else:  # https://chatgpt.com/share/6a980167-78a0-83ee-9897-47fc08baa7fd
+            print(':v7p', 'peer disconnected')
+            raise SocketClosed
+
         if size_width == 0:
             print(
                 ':pv7',

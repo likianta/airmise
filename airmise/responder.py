@@ -82,7 +82,9 @@ class Responder(Requester):
                 if not self._mainloop_living:
                     break
                 yield
-            print('mainloop exited', ':{}v7'.format('p2' if blocking else ''))
+            print(
+                "responder's mainloop is over", ':v' + (blocking and 'p2' or '')
+            )
 
         if blocking:
             for _ in living_mainloop():
@@ -136,6 +138,7 @@ class Responder(Requester):
             try:
                 data_bytes = socket.recvall()
             except (SocketClosed, ConnectionResetError):
+                socket.close()
                 return
 
             flag, code, args = decode(data_bytes)
