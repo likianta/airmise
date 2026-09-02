@@ -16,10 +16,25 @@ from ..requester import interpret_code
 from ..requester import interpret_func
 from ..server import Server
 from ..responder import Responder
-from ..responder import T
+from ..responder import T as T0
 from ..socket_wrapper import Socket
 from ..socket_wrapper import SocketClosed
 from ..util import get_local_ip_address
+
+
+class T:
+    Namespace = T0.Namespace
+    UserInfo = tp.TypedDict(
+        'UserInfo',
+        {
+            'user_name': str,
+            'user_host': str,
+            'user_port': int,
+            'conn_host': str,
+            'conn_port': int,
+            'timestamp': str,
+        },
+    )
 
 
 class Broker(Responder):
@@ -62,7 +77,7 @@ class Router(Server):
         self, host: str = const.DEFAULT_HOST, port: int = const.SERVER_PORT
     ) -> None:
         super().__init__(host, port)
-        self.routes: tp.Dict[str, tp.Tuple[Socket, dict]] = {}
+        self.routes: tp.Dict[str, tp.Tuple[Socket, T.UserInfo]] = {}
         #   {uid: (connection, user_info), ...}
 
     def _handle_connection(self, conn: Socket) -> None:
@@ -78,18 +93,25 @@ class Router(Server):
             broker.mainloop(blocking=False)
             conn.sendall(encode((const.NORMAL, 'ok')))
         elif event == 'register_proxy_callee':
-            data.update({'connection_port': conn.port, 'register_time': now()})
-            uid = uuid(
-                '{}@{}:{}'.format(
-                    data['user_name'], data['ip'], data['connection_port']
-                )
-            )
-            self.routes[uid] = (conn, data)
-            conn.sendall(encode((const.NORMAL, uid)))
+            user_id = uuid()
+            user_info: T.UserInfo = {
+                'user_name': data['name'],
+                'user_host': data['ip'],
+                #   i don't name it "user_ip" because i want all key names'
+                #   lengths equal, feels a little good in code formatting.
+                'user_port': data['port'],
+                'conn_host': conn.host,
+                'conn_port': conn.port,
+                'timestamp': now(),
+            }
+            self.routes[user_id] = (conn, user_info)
+            conn.sendall(encode((const.NORMAL, user_id)))
         else:
             # maybe regular client, see `../client.py:Client:_say_hi` and
             # `../server.py:Server:_handle_connection`
-            endpoint = self.connections[conn.port] = Responder(conn)
+            endpoint = self.connections[conn.port] = Responder(
+                conn, self._default_user_namespace
+            )
             endpoint.mainloop(blocking=False)
 
 
@@ -134,7 +156,7 @@ class Callee(Responder):
             const.INTERNAL,
             'register_proxy_callee',
             {
-                'user_name': self.user_name,
+                'name': self.user_name,
                 'ip': self.user_ip,
                 'port': self.socket.port,
             },

@@ -70,8 +70,8 @@ class Client:
             raise
         else:
             self.host, self.port = host, port
+            self.master = Requester(self._socket)
             self._say_hi()
-        self.master = Requester(self._socket)
         return self
 
     open = connect

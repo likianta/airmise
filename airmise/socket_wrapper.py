@@ -32,9 +32,9 @@ class Socket:
         conn, addr = self._socket.accept()
         new_socket = Socket(_socket=conn, host=addr[0], port=addr[1])
         print(
-            'new connection accepted',
-            '{} <- {}'.format(self.url, new_socket.url),
-            ':v',
+            '[green dim]new connection accepted. '
+            '[default]{}[/] <- {}[/]'.format(self.url, new_socket.url),
+            ':r',
         )
         return new_socket
 
@@ -74,8 +74,8 @@ class Socket:
             # src/client.py`.
             self.host, self.port = self._socket.getsockname()
             print(
-                ':pv4r',
-                'connected to server: {} [green dim]<- {}[/]'.format(
+                ':pr',
+                '[green]connected to server: {} [dim]<- {}[/][/]'.format(
                     'tcp://{}:{}'.format(server_host, server_port), self.url
                 ),
             )
