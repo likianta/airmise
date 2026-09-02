@@ -5,7 +5,6 @@ from types import FrameType
 from types import FunctionType
 
 from lk_utils import dedent
-from lk_utils import re
 
 from . import const
 from .codec import decode
@@ -114,84 +113,97 @@ class Requester:
 
 def interpret_code(raw_code: str, interpret_return: bool = True) -> str:
     """
-    special syntax:
-        memo <varname> := <value>
-            get <varname>, if not exist, init with <value>.
-        memo <varname> = <value>
-            set <varname> to <value>. no matter if <varname> exists.
-        memo <varname>
-            get <varname>, assert it already exists.
-        return <obj>
-            store <obj> to `__result__`.
-
-    example:
-        raw_code:
-            from random import randint
-            def aaa() -> int:
-                memo history := []
-                history.append(randint(0, 9))
-                return sum(history)
-            return aaa()
-        interpreted:
-            from random import randint
-            def aaa() -> int:
-                if 'history' not in __ref__:
-                    __ref__['history'] = []
-                history = __ref__['history']
-                history.append(randint(0, 9))
-                return sum(history)
-            __ref__['__result__'] = aaa()
-            __ctx__.update(locals())
-        note:
-            `__ctx__` and `__ref__` are explained in
-            `.server.Server._on_message`.
+    The `raw_code` is like valid Python code, but has "top return" statements:
+        req.exec('return os.getcwd()')
+        req.exec(
+            '''
+            if os.getenv('SOMETHING'):
+                return 'ON'
+            else:
+                return 'OFF'
+            '''
+        )
+        req.exec(
+            '''
+            def foo():
+                return 'foo'
+            return 'bar'
+            '''
+        )
+    We will convert the `return` statements to `__ref__["__result__"] = ...`:
+        (1) __ref__["__result__"] = os.getcwd()
+        (2)
+            if os.getenv('SOMETHING'):
+                __ref__["__result__"] = 'ON'
+            else:
+                __ref__["__result__"] = 'OFF'
+        (3)
+            def foo():
+                return 'foo'
+                #   be noticed, function returns are not "top-level" returns, so
+                #   they won't be translated.
+            __ref__["__result__"] = 'bar'
+    Limitation:
+        This function cannot handle triple quoted strings well.
+        For example, this will fail:
+            req.exec(
+                ```
+                def foo():  # foo must return 'foo'
+                    '''
+                return 'bar'
+                    '''
+                    return 'foo'
+                return 'baz'
+                ```
+            )
+        It becomes:
+            def foo():  # warning: foo returns None
+                '''
+            __ref__["__result__"] = 'bar'
+                '''
+                __ref__["__result__"] = 'foo'
+            __ref__["__result__"] = 'baz'
     """
-    out = ''
-
-    # var abbrs:
-    #   ws: whitespaces
-    #   linex: left stripped line
-    #   __ctx__: context namespace. see also `.server.Server._context`
 
     if '\n' in raw_code:
-        scope = []
+        out_lines = []
+        flag = 'START'
+        has_return_statement = False
         for line in dedent(raw_code).splitlines():
-            ws, linex = re.match(r'( *)(.*)', line).sure().groups()
-            indent = len(ws)
-
-            # noinspection PyUnresolvedReferences
-            if linex and scope and indent <= scope[-1]:
-                scope.pop()
-            if linex.startswith(('class ', 'def ')):
-                scope.append(indent)
-
-            if linex.startswith('memo '):
-                a, b, c = re.match(
-                    r'memo (\w+)(?: (:)?= (.+))?', linex
-                ).groups()
-                if b:
-                    out += (
-                        '{}{} = __ref__["{}"] if "{}" in __ref__ else '
-                        '__ref__.setdefault("{}", {})\n'.format(
-                            ws, a, a, a, a, c
-                        )
+            if flag == 'START':
+                linex = line.lstrip()
+                space = ' ' * (len(line) - len(linex))
+                if linex.startswith('return '):
+                    has_return_statement = True
+                    out_lines.append(
+                        '{}__ref__["__result__"] = {}'.format(space, linex[7:])
                     )
-                elif c:
-                    out += '{}{} = __ref__["{}"] = {}\n'.format(ws, a, a, c)
                 else:
-                    out += '{}{} = __ref__["{}"]\n'.format(ws, a, a)
-            elif linex.startswith('return ') and not scope and interpret_return:
-                out += '{}__ref__["__result__"] = {}\n'.format(ws, linex[7:])
-            else:
-                out += line + '\n'
-        assert not scope
+                    out_lines.append(line)
+                    if linex.startswith(
+                        ('def ', 'class ', 'lambda ', 'lambda:', 'async ')
+                    ):
+                        flag = 'SCOPED'
+            elif flag == 'SCOPED':
+                if line.startswith('return '):
+                    has_return_statement = True
+                    out_lines.append(
+                        '__ref__["__result__"] = {}'.format(line[7:])
+                    )
+                    flag = 'START'
+                else:
+                    out_lines.append(line)
+                    if line and line[0] != '#' and line[0] != ' ':
+                        flag = 'START'
+                        out_lines.append(line)
+        if flag == 'START' and not has_return_statement:
+            out_lines.append('__ref__["__result__"] = None')
+        return '\n'.join(out_lines)
     else:
         if raw_code.startswith('return '):
-            out = '__ref__["__result__"] = {}\n'.format(raw_code[7:])
+            return '__ref__["__result__"] = {}\n'.format(raw_code[7:])
         else:
-            out = '__ref__["__result__"] = {}\n'.format(raw_code)
-
-    return out
+            return '__ref__["__result__"] = {}\n'.format(raw_code)
 
 
 def interpret_func(func: FunctionType) -> str:
