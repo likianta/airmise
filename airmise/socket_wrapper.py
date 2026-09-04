@@ -169,6 +169,22 @@ class Socket:
         yield data_bytes
 
 
+def get_any_vaild_socket(
+    try_hosts: tp.Iterable[str], port: int, timeout: int = 0
+) -> tp.Tuple[Socket, str]:
+    for host in try_hosts:
+        s = Socket()
+        try:
+            s.connect(host, port, timeout)
+        except Exception:
+            s.close()
+            continue
+        else:
+            return s, host
+    else:
+        raise Exception('connection failed', try_hosts)
+
+
 def _pretty_size(size: tp.Union[int, float]) -> str:
     for unit in ('B', 'KB', 'MB', 'GB'):
         if size < 1024:

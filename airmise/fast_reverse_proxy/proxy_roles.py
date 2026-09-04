@@ -11,20 +11,23 @@ from lk_utils import now
 from lk_utils import uuid
 
 from .. import const
+from ..client import T as T0
 from ..codec import decode
 from ..codec import encode
 from ..requester import interpret_code
 from ..requester import interpret_func
 from ..server import Server
 from ..responder import Responder
-from ..responder import T as T0
+from ..responder import T as T1
 from ..socket_wrapper import Socket
 from ..socket_wrapper import SocketClosed
+from ..socket_wrapper import get_any_vaild_socket
 from ..util import get_local_ip_address
 
 
 class T:
-    Namespace = T0.Namespace
+    HostOrHosts = T0.HostOrHosts
+    Namespace = T1.Namespace
     UserInfo = tp.TypedDict(
         'UserInfo',
         {
@@ -145,18 +148,14 @@ class Callee(Responder):
 
     def connect(
         self,
-        host: str = const.DEFAULT_HOST,
+        host: T.HostOrHosts = const.DEFAULT_HOST,
         port: int = const.SERVER_PORT,
         timeout: int = 0,
     ) -> tp.Self:
-        self.socket = Socket()
-        try:
-            self.socket.connect(host, port, timeout)
-        except Exception:
-            self.socket.close()
-            raise
-        else:
-            self._say_hi()
+        self.socket, _ = get_any_vaild_socket(
+            (host,) if isinstance(host, str) else host, port, timeout
+        )
+        self._say_hi()
         return self
 
     def _say_hi(self) -> None:

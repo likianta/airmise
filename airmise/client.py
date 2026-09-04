@@ -5,6 +5,11 @@ from types import FunctionType
 from . import const
 from .requester import Requester
 from .socket_wrapper import Socket
+from .socket_wrapper import get_any_vaild_socket
+
+
+class T:
+    HostOrHosts = tp.Union[str, tp.Iterable[str]]
 
 
 class Client:
@@ -52,7 +57,7 @@ class Client:
 
     def connect(
         self,
-        host: tp.Union[str, tp.Sequence[str]] = const.DEFAULT_HOST,
+        host: T.HostOrHosts = const.DEFAULT_HOST,
         port: int = const.DEFAULT_PORT,
         timeout: int = 0,
     ) -> tp.Self:
@@ -68,23 +73,9 @@ class Client:
             else:
                 self.close()
 
-        hosts = (host,) if isinstance(host, str) else host
-        for try_host in hosts:
-            s = Socket()
-            try:
-                s.connect(try_host, port, timeout)
-            except Exception:
-                s.close()
-                continue
-            else:
-                self._socket = s
-                final_host = try_host
-                break
-        else:
-            raise Exception(
-                'connection failed', hosts[0] if len(hosts) == 1 else hosts
-            )
-
+        self._socket, final_host = get_any_vaild_socket(
+            (host,) if isinstance(host, str) else host, port, timeout
+        )
         self.host, self.port = final_host, port
         self.master = Requester(self._socket)
         self._say_hi()
