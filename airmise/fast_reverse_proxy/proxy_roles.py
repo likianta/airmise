@@ -28,7 +28,7 @@ class T:
     UserInfo = tp.TypedDict(
         'UserInfo',
         {
-            'unique_id': str,
+            'client_id': str,
             'comp_name': str,
             'user_name': str,
             'user_host': str,
@@ -100,9 +100,9 @@ class Router(Server):
             broker.mainloop(blocking=False)
             conn.sendall(encode((const.NORMAL, 'ok')))
         elif event == 'register_proxy_callee':
-            user_id = uuid()
+            client_id = uuid()
             user_info: T.UserInfo = {
-                'unique_id': user_id,
+                'client_id': client_id,
                 'comp_name': data['computer_name'],
                 'user_name': data['user_name'],
                 'user_host': data['ip'],
@@ -114,8 +114,8 @@ class Router(Server):
                 'timestamp': now(),
             }
             print(user_info, ':nv2li')
-            self.routes[user_id] = (conn, user_info)
-            conn.sendall(encode((const.NORMAL, user_id)))
+            self.routes[client_id] = (conn, user_info)
+            conn.sendall(encode((const.NORMAL, client_id)))
         else:
             # maybe regular client, see `../client.py:Client:_say_hi` and
             # `../server.py:Server:_handle_connection`

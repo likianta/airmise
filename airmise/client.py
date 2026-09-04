@@ -46,7 +46,7 @@ class Client:
 
     def connect(
         self,
-        host: str = const.DEFAULT_HOST,
+        host: tp.Union[str, tp.Sequence[str]] = const.DEFAULT_HOST,
         port: int = const.DEFAULT_PORT,
         timeout: int = 0,
     ) -> tp.Self:
@@ -61,17 +61,27 @@ class Client:
                 return self
             else:
                 self.close()
-        self._socket = Socket()
-        try:
-            self._socket.connect(host, port, timeout)
-        except Exception:
-            self._socket.close()
-            self._socket = None
-            raise
+
+        hosts = (host,) if isinstance(host, str) else host
+        for try_host in hosts:
+            s = Socket()
+            try:
+                s.connect(try_host, port, timeout)
+            except Exception:
+                s.close()
+                continue
+            else:
+                self._socket = s
+                final_host = try_host
+                break
         else:
-            self.host, self.port = host, port
-            self.master = Requester(self._socket)
-            self._say_hi()
+            raise Exception(
+                'connection failed', hosts[0] if len(hosts) == 1 else hosts
+            )
+
+        self.host, self.port = final_host, port
+        self.master = Requester(self._socket)
+        self._say_hi()
         return self
 
     open = connect
