@@ -7,51 +7,57 @@ class SocketClosed(Exception):
 
 
 class Socket:
-    host: str
-    port: int
+    # host: str
+    # port: int
+    # peer_host: str
+    # peer_port: int
     verbose: bool
+    _host: str
+    _peer_host: str
+    _peer_port: int
+    _port: int
     _socket: socket.socket
 
-    def __init__(self, verbose: bool = False, **kwargs) -> None:
+    def __init__(self, verbose: bool = False) -> None:
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # `self._host`, `self._port` are not initialized until 
+        # `self.connect/bind/accept`.
         self.verbose = verbose
-        if '_socket' in kwargs:
-            self._socket = kwargs['_socket']
-            self.host = kwargs['host']
-            self.port = kwargs['port']
-            # del self.accept
-            # del self.bind
-            # del self.connect
-        else:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     @property
+    def host(self) -> str:
+        return self._host
+
+    @property
+    def port(self) -> int:
+        return self._port
+
+    @property
+    def local_host(self) -> str:
+        return self._host
+
+    @property
+    def local_port(self) -> int:
+        return self._port
+
+    @property
+    def peer_host(self) -> str:
+        return self._peer_host
+
+    @property
+    def peer_port(self) -> int:
+        return self._peer_port
+
+    @property  # DELETE
     def plain_addr(self) -> str:
-        return '{}:{}'.format(self.host, self.port)
+        return '{}:{}'.format(self._host, self._port)
 
-    @property
+    @property  # DELETE
     def url(self) -> str:
-        return 'tcp://{}:{}'.format(self.host, self.port)
+        return 'tcp://{}:{}'.format(self._host, self._port)
 
-    def accept(self) -> 'Socket':
-        conn, addr = self._socket.accept()
-        new_socket = Socket(_socket=conn, host=addr[0], port=addr[1])
-        print(
-            '[green]new connection accepted: '
-            '[default dim]server ({}:[u dim]{}[/])[/] '
-            '<- client [dim]({}:[u dim]{}[/])[/][/]'.format(
-                self.host, self.port, new_socket.host, new_socket.port
-            ),
-            ':rp',
-        )
-        return new_socket
-
-    def bind(self, host: str, port: int) -> None:
-        self.host = host
-        self.port = port
-        self._socket.bind((host, port))
-
-    def close(self) -> None:
-        self._socket.close()
+    # --------------------------------------------------------------------------
+    # client side
 
     def connect(
         self, server_host: str, server_port: int, timeout: int = 0
@@ -74,24 +80,52 @@ class Socket:
                 ),
             )
             raise
-        else:
-            # notice: the port from `getsockname` may be wrong if server is
-            # bridged via frp service.
-            # see a workaround in `build/build_standalone/airclient_standalone/
-            # src/client.py`.
-            self.host, self.port = self._socket.getsockname()
-            print(
-                ':pr',
-                '[green]connected to server: '
-                '[default dim]local ({}:[u dim]{}[/])[/] '
-                '-> server [dim]({}:[u dim]{}[/])[/][/]'.format(
-                    self.host, self.port, server_host, server_port
-                ),
-            )
+        # notice: the port from `getsockname` may be wrong if server is bridged
+        # via frp service.
+        # see a workaround in `build/build_standalone/airclient_standalone
+        # /src/client.py`.
+        self._host, self._port = self._socket.getsockname()
+        self._peer_host = server_host
+        self._peer_port = server_port
+        print(
+            ':pr',
+            '[green]connected to server: '
+            '[default dim]local ({}:[u dim]{}[/])[/] '
+            '-> server [dim]({}:[u dim]{}[/])[/][/]'.format(
+                self.local_host, self.local_port, self.peer_host, self.peer_port
+            ),
+        )
+
+    def close(self) -> None:
+        self._socket.close()
+
+    # --------------------------------------------------------------------------
+    # server side
+
+    def bind(self, host: str, port: int) -> None:
+        self._host = host
+        self._port = port
+        self._socket.bind((host, port))
 
     def listen(self, backlog: int = 1) -> None:
         self._socket.listen(backlog)
         print(':pv2', 'server is listening at "{}"'.format(self.plain_addr))
+
+    def accept(self) -> 'PeerSocket':
+        conn, addr = self._socket.accept()
+        self._peer_host = addr[0]
+        self._peer_port = addr[1]
+
+        peer_sock = PeerSocket(conn, addr[0], addr[1], self.verbose)
+        print(
+            '[green]new connection accepted: '
+            '[default dim]server ({}:[u dim]{}[/])[/] '
+            '<- client [dim]({}:[u dim]{}[/])[/][/]'.format(
+                self.host, self.port, peer_sock.host, peer_sock.port
+            ),
+            ':rp',
+        )
+        return peer_sock
 
     def recvall(self) -> bytes:
         if x := self._socket.recv(1):
@@ -167,6 +201,30 @@ class Socket:
         yield str(size_width).encode()
         yield exact_size.encode()
         yield data_bytes
+
+
+class PeerSocket(Socket):
+    host: str
+    port: int
+    # this_host: str
+    # this_port: int
+    # peer_host: str
+    # peer_port: int
+
+    def __init__(
+        self,
+        # peer_connection: socket.socket,
+        # this_address,
+        # peer_address,
+        connection: socket.socket,
+        host: str,
+        port: int,
+        verbose: bool = False,
+    ) -> None:
+        self._socket = connection
+        self.host = host
+        self.port = port
+        self.verbose = verbose
 
 
 def get_any_vaild_socket(

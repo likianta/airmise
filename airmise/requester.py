@@ -16,6 +16,14 @@ class Requester:
     def __init__(self, socket: Socket) -> None:
         self.socket = socket
 
+    @property
+    def host(self) -> str:
+        return self.socket.peer_host
+
+    @property
+    def port(self) -> int:
+        return self.socket.peer_port
+
     def call(self, func_name: str, *args, **kwargs) -> tp.Any:
         frame: FrameType = inspect.currentframe().f_back  # type: ignore
         self._send(
