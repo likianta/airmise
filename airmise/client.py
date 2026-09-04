@@ -19,6 +19,12 @@ class Client:
         self._socket = None
         atexit.register(self.close)
 
+    def __enter__(self) -> tp.Self:
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.close()
+
     @property
     def id(self) -> int:
         return self._socket.port
