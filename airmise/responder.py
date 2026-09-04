@@ -1,7 +1,6 @@
 import json
 import typing as tp
 from time import time
-from traceback import format_exception
 from types import FunctionType
 from types import GeneratorType
 
@@ -19,6 +18,7 @@ from .remote_control import store_object
 from .requester import Requester
 from .socket_wrapper import Socket
 from .socket_wrapper import SocketClosed
+from .util import format_exception
 
 
 class T:
@@ -112,22 +112,6 @@ class Responder(Requester):
             exec(code, ctx)
             return ctx['__ref__']['__result__']
 
-        # FIXME
-        def calibrate_exception(
-            e: Exception, source_file: str, source_lineno: int
-        ) -> tp.Iterable[str]:
-            # https://chatgpt.com/share/6a9161d8-c738-83e8-a06c-04c44dfd896a
-            for line in format_exception(e):
-                if line.lstrip().startswith('File "<string>"'):
-                    a, b, c = line.split(', ', 2)
-                    wrong_lineno = int(b.removeprefix('line '))
-                    correct_lineno = source_lineno + wrong_lineno
-                    yield 'File "{}", line {}, {}'.format(
-                        source_file, correct_lineno, c
-                    )
-                else:
-                    yield line
-
         flag: int
         code: str
         args: tp.Optional[dict]
@@ -166,7 +150,7 @@ class Responder(Requester):
                     #     resp = (const.YIELD_OVER, None)
                     #     session_data.pop(iter_id)
                     # except Exception as e:
-                    #     resp = (const.ERROR, ''.join(format_exception(e)))
+                    #     resp = (const.ERROR, format_exception(e))
                     # --- b.
                     buffer = []
                     start_time = time()
@@ -177,7 +161,7 @@ class Responder(Requester):
                             resp = (const.YIELD_OVER, buffer)
                             break
                         except Exception as e:
-                            resp = (const.ERROR, ''.join(format_exception(e)))
+                            resp = (const.ERROR, format_exception(e))
                             break
                         else:
                             buffer.append(datum)
@@ -189,7 +173,7 @@ class Responder(Requester):
                     # try:
                     #     session_data[iter_id] = exec_code()
                     # except Exception as e:
-                    #     resp = (const.ERROR, ''.join(format_exception(e)))
+                    #     resp = (const.ERROR, format_exception(e))
                     # else:
                     #     resp = (const.NORMAL, 'ready')
 
@@ -222,31 +206,14 @@ class Responder(Requester):
                     if not verbose:
                         self._code_glance(code, args, ctx)
                     if fragile:
-                        for err_line in reversed(format_exception(e)):
-                            if err_line.lstrip().startswith(
-                                'File "<string>", line'
-                            ):
-                                from lk_utils import slice_text
-
-                                lineno = int(
-                                    slice_text(err_line)
-                                    .find('line ')
-                                    .then_cut()
-                                    .find(',')
-                                    .slice()
-                                )
-                                print(':v8', code.splitlines()[lineno - 1])
-                                break
+                        print(
+                            ':v8',
+                            format_exception(e, code)
+                            if flag == const.NORMAL
+                            else code,
+                        )
                         raise e
-                    resp = (
-                        const.ERROR,
-                        ''.join(
-                            format_exception(e)
-                            # calibrate_exception(
-                            #     e, args['_source_file'], args['_source_lineno']
-                            # )
-                        ),
-                    )
+                    resp = (const.ERROR, format_exception(e, code))
                 else:
                     if flag == const.DELEGATE:
                         store_object(x := str(id(result)), result)
