@@ -240,7 +240,7 @@ def _parse_function(func: FunctionType) -> dict:
             type_ = annotations.get_kwarg_type(name, default)
             kwargs.append((name, type_, default))
     if spec.kwonlyargs:
-        for name, default in spec.kwonlydefaults.items():  # type: ignore
+        for name, default in spec.kwonlydefaults.items():
             type_ = annotations.get_kwarg_type(name, default)
             kwargs.append((name, type_, default))
     if spec.varkw:
@@ -298,7 +298,7 @@ class Annotations:
 
         if isinstance(type_, str):
             pass
-        elif isinstance(type_, t._TypedDictMeta):  # type: ignore
+        elif isinstance(type_, t._TypedDictMeta):
             return 'dict'
         elif (x := getattr(type_, '__base__', None)) and str(
             x
@@ -311,20 +311,20 @@ class Annotations:
                 getattr(t, '_LiteralGenericAlias', None) is None
             )
             if _is_legacy_typing:
-                if isinstance(type_, t._GenericAlias):  # type: ignore
+                if isinstance(type_, t._GenericAlias):
                     return 'any'
             else:
-                if isinstance(type_, t._LiteralGenericAlias):  # type: ignore
+                if isinstance(type_, t._LiteralGenericAlias):
                     # e.g.
                     #   sometype = typing.Literal['A', 'B', 'C']
                     #   type(sometype)  # -> typing._LiteralGenericAlias
                     return 'str'
-                elif isinstance(type_, t._UnionGenericAlias):  # type: ignore
+                elif isinstance(type_, t._UnionGenericAlias):
                     # e.g.
                     #   sometype = typing.Union[str, None]
                     #   type(sometype)  # -> typing._UnionGenericAlias
                     return self._normalize_type(type_.__args__[0])
-                elif isinstance(type_, t._GenericAlias):  # type: ignore
+                elif isinstance(type_, t._GenericAlias):
                     out = type_._name
 
         assert isinstance(out, str)

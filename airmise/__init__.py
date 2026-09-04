@@ -1,7 +1,5 @@
 # fmt: off
-if 1:
-    import neoprint as np
-    np.setup()
+if 1: import neoprint as np; np.setup()  # noqa
 # fmt: on
 
 from . import const

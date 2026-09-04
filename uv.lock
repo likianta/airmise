@@ -157,7 +157,7 @@ wheels = [
 
 [[package]]
 name = "airmise"
-version = "3.1.0b1"
+version = "3.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
@@ -169,6 +169,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipython" },
+    { name = "neoprint" },
 ]
 
 [package.metadata]
@@ -180,7 +181,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ipython", specifier = ">=9.16.0" }]
+dev = [
+    { name = "ipython", specifier = ">=9.16.0" },
+    { name = "neoprint", specifier = ">=0.1.10b1", index = "http://localhost:2131/" },
+]
 
 [[package]]
 name = "argsense"
@@ -557,13 +561,13 @@ wheels = [
 
 [[package]]
 name = "neoprint"
-version = "0.1.10a3"
+version = "0.1.10b1"
 source = { registry = "http://localhost:2131/" }
 dependencies = [
     { name = "rich" },
 ]
 wheels = [
-    { url = "http://localhost:2131/neoprint/neoprint-0.1.10a3-py3-none-any.whl" },
+    { url = "http://localhost:2131/neoprint/neoprint-0.1.10b1-py3-none-any.whl" },
 ]
 
 [[package]]

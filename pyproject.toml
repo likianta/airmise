@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "3.2.0b0"
+version = "3.2.0"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 readme = "readme.md"
@@ -19,8 +19,8 @@ requires = ["hatchling>=1.29.0"]
 [dependency-groups]
 dev = [
     "ipython>=9.16.0",
-    "neoprint>=0.1.10a3",
-    # "streamlit>=1.61.0",
+    "neoprint>=0.1.10b1",
+    # "streamlit>=1.63.0",
     # "streamlit-canary>=0.4.0a7",
 ]
 
