@@ -4,6 +4,10 @@
 
 - Show accurate position of error source.
 
+### 3.2.1 (2026-09-07)
+
+- Separate socket local address and peer address.
+
 ### 3.2.0 (2026-09-04)
 
 - Refactor master/slave to requester/responder.

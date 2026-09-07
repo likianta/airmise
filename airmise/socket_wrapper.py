@@ -24,13 +24,13 @@ class Socket:
         # `self.connect/bind/accept`.
         self.verbose = verbose
 
-    @property
-    def host(self) -> str:
-        return self._host
+    # @property
+    # def host(self) -> str:
+    #     return self._host
 
-    @property
-    def port(self) -> int:
-        return self._port
+    # @property
+    # def port(self) -> int:
+    #     return self._port
 
     @property
     def local_host(self) -> str:
@@ -121,7 +121,7 @@ class Socket:
             '[green]new connection accepted: '
             '[default dim]server ({}:[u dim]{}[/])[/] '
             '<- client [dim]({}:[u dim]{}[/])[/][/]'.format(
-                self.host, self.port, peer_sock.host, peer_sock.port
+                self.local_host, self.local_port, peer_sock.host, peer_sock.port
             ),
             ':rp',
         )
