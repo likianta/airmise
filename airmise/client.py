@@ -10,6 +10,7 @@ from .socket_wrapper import get_any_vaild_socket
 
 class T:
     HostOrHosts = tp.Union[str, tp.Iterable[str]]
+HostOrHosts = T.HostOrHosts  # expose to interface
 
 
 class Client:

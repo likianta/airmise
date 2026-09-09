@@ -22,18 +22,24 @@ from .util import format_exception
 
 
 class T:
-    Namespace = tp.Dict[str, tp.Union[tp.Callable, '_ConnectionRequired']]
+    Namespace = tp.Dict[str, tp.Union[tp.Any, '_ConnectionRequired']]
 
 
 class Responder(Requester):
+    active: tp.Optional[bool]
+    # verbose: bool
+    _mainloop_living: bool
+    _mainloop_thread: tp.Optional[Thread]
+    _user_namespace: T.Namespace
+
     def __init__(
         self, socket: Socket, user_namespace: tp.Optional[T.Namespace] = None
     ) -> None:
         super().__init__(socket)
-        self.active = False
+        self.active = None
         # self.verbose = False
         self._mainloop_living = False
-        self._mainloop_thread: tp.Optional[Thread] = None
+        self._mainloop_thread = None
         self._user_namespace = user_namespace or {}
 
     @property
@@ -41,24 +47,24 @@ class Responder(Requester):
         return self.socket
 
     def call(self, func_name: str, *args, **kwargs) -> tp.Any:
-        assert self.active
+        assert self.active is not False
         return super().call(func_name, *args, **kwargs)
 
     def exec(  # type: ignore
         self, source: tp.Union[str, FunctionType], **kwargs
     ) -> tp.Any:
-        assert self.active
+        assert self.active is not False
         return super().exec(source, **kwargs)
 
     def set_active(self) -> None:
-        if not self.active:
+        if self.active is not True:
             self.active = True
             self._mainloop_living = False
             if self._mainloop_thread:
                 self._mainloop_thread.stop()
 
     def set_passive(self, *_, **__) -> None:
-        if self.active:
+        if self.active is not False:
             self.active = False
             # self._socket.sendall(encode((const.INTERNAL, 'exit_loop', None)))
             # self._send(const.INTERNAL, 'exit_loop')
@@ -68,10 +74,11 @@ class Responder(Requester):
         user_namespace: tp.Optional[T.Namespace] = None,
         blocking: bool = True,
         **kwargs,
-    ) -> None:
-        assert not self.active, (
-            'to run mainloop, you must set responder passive'
-        )
+    ) -> tp.Optional[Thread]:
+        if self.active is True:
+            raise Exception('to run mainloop, you must set responder passive')
+        elif self.active is None:
+            self.active = False
 
         if user_namespace is None:
             user_namespace = self._user_namespace
@@ -93,6 +100,7 @@ class Responder(Requester):
             self._mainloop_thread = run_new_thread(
                 living_mainloop, interruptible=True
             )
+            return self._mainloop_thread
 
     def _mainloop(
         self,

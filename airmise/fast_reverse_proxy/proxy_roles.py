@@ -169,7 +169,7 @@ class Callee(Responder):
                 'user_name': self.user_name,
                 'computer_name': self.computer_name,
                 'ip': self.user_ip,
-                'port': self.socket.port,
+                'port': self.socket.local_port,
             },
         )
         self.user_id = self._recv()

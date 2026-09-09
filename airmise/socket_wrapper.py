@@ -32,6 +32,17 @@ class Socket:
     # def port(self) -> int:
     #     return self._port
 
+    @property  # DELETE
+    def plain_addr(self) -> str:
+        return '{}:{}'.format(self._host, self._port)
+
+    # @property  # DELETE
+    # def url(self) -> str:
+    #     return 'tcp://{}:{}'.format(self._host, self._port)
+
+    # --------------------------------------------------------------------------
+    # client side
+
     @property
     def local_host(self) -> str:
         return self._host
@@ -39,25 +50,6 @@ class Socket:
     @property
     def local_port(self) -> int:
         return self._port
-
-    @property
-    def peer_host(self) -> str:
-        return self._peer_host
-
-    @property
-    def peer_port(self) -> int:
-        return self._peer_port
-
-    @property  # DELETE
-    def plain_addr(self) -> str:
-        return '{}:{}'.format(self._host, self._port)
-
-    @property  # DELETE
-    def url(self) -> str:
-        return 'tcp://{}:{}'.format(self._host, self._port)
-
-    # --------------------------------------------------------------------------
-    # client side
 
     def connect(
         self, server_host: str, server_port: int, timeout: int = 0
@@ -101,6 +93,14 @@ class Socket:
 
     # --------------------------------------------------------------------------
     # server side
+
+    @property
+    def peer_host(self) -> str:
+        return self._peer_host
+
+    @property
+    def peer_port(self) -> int:
+        return self._peer_port
 
     def bind(self, host: str, port: int) -> None:
         self._host = host

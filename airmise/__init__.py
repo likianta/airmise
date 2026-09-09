@@ -6,6 +6,7 @@ from . import const
 from . import fast_reverse_proxy as frp
 from . import remote_control
 from .client import Client
+from .client import HostOrHosts
 from .client import call
 from .client import config
 from .client import connect
@@ -36,4 +37,4 @@ from .util import get_local_ip_address
 from .util import random_name
 from .worker import Worker  # experimental
 
-__version__ = '3.2.1'
+__version__ = '3.2.2'
