@@ -7,6 +7,7 @@ from functools import cache
 from random import choices
 from string import ascii_lowercase
 
+import neoprint as np
 from lk_utils import dedent
 
 
@@ -23,6 +24,12 @@ def format_exception(error: Exception, source: str = '') -> str:
     if not source or '\n' not in source:
         return '\n'.join(traceback.format_exception(error))
 
+    def dim(text: str) -> str:
+        return np.format(text, markup=':sv')
+
+    def red(text: str) -> str:
+        return np.format(text, markup=':sv8')
+
     out_lines = []
     src_lines = source.splitlines()
     for line in traceback.format_exception(error):
@@ -38,15 +45,17 @@ def format_exception(error: Exception, source: str = '') -> str:
                       > {}
                         {}
                     """
-                ).format(
+                )
+                .format(
                     '"<string>"',
                     line_num,
-                    src_lines[src_index - 1] if src_index > 0 else '',
-                    src_lines[src_index],
-                    src_lines[src_index + 1]
+                    dim(src_lines[src_index - 1]) if src_index > 0 else '',
+                    red(src_lines[src_index]),
+                    dim(src_lines[src_index + 1])
                     if (src_index + 1) < len(src_lines)
                     else '',
                 )
+                .rstrip()
             )
         else:
             out_lines.append(line)
