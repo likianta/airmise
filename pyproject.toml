@@ -1,6 +1,6 @@
 [project]
 name = "airmise"
-version = "3.2.2a5"
+version = "3.2.2"
 description = "The native experience of calling remote functions, like local ones."
 authors = [{ name = "Likianta", email = "likianta@foxmail.com" }]
 readme = "readme.md"

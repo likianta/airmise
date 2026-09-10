@@ -60,22 +60,25 @@ class Broker(Responder):
                 data_bytes = self._source.recvall()
             except (SocketClosed, ConnectionResetError):
                 self._source.close()
-                print('close broker', ':v7')
+                print('close source-broker', ':v7')
                 break
 
             event, data = decode(data_bytes)
             # assert flag == const.INTERNAL
-            # assert event in ('close', 'request', 'response')
-            assert event in ('close', 'request'), (event, data)
+            # assert event in ('close', 'disconnect', 'request', 'response')
+            assert event in ('close', 'disconnect', 'request'), (event, data)
 
             if event == 'close':
-                # self._target.send_close_event()
-                # self._target.close()
-                # self._source.sendall(b'ok')
+                self._target.send_close_event()
+                self._target.close()
                 self._source.close()
-                print('close broker', ':v7')
+                print('close source-broker-target', ':v7')
                 break
-            else:
+            elif event == 'disconnect':
+                self._source.close()
+                print('close source-broker', ':v7')
+                break
+            else:  # 'request'
                 self._target.sendall(data)  # -> Callee:_mainloop:socket.recvall
                 rsp = self._target.recvall()
                 # print(str(decode(data))[:500], str(decode(rsp))[:500], ':ilnv')
@@ -203,14 +206,16 @@ class Caller(Responder):
             self._say_hi()
         return self
 
-    def _say_hi(self) -> None:
-        self._send(const.INTERNAL, 'register_proxy_caller', {'uid': self._uid})
-        assert self._recv() == 'ok'
+    def disconnect(self):
+        self.socket.sendall(encode(('disconnect', b'')))
+        self.socket.close()
 
-    def close(self) -> None:
-        self.socket.sendall(encode(('close', b'')))
-        # assert self._recv() == 'ok'
-        # self.socket.send_close_event()
+    open = connect
+
+    def close(self, peer_close: bool = False) -> None:
+        self.socket.sendall(
+            encode(('close' if peer_close else 'disconnect', b''))
+        )
         self.socket.close()
 
     def call(self, func_name: str, *args, **kwargs) -> tp.Any:
@@ -235,3 +240,7 @@ class Caller(Responder):
 
     def _request(self, raw_data: bytes) -> None:
         self.socket.sendall(encode(('request', raw_data)))
+
+    def _say_hi(self) -> None:
+        self._send(const.INTERNAL, 'register_proxy_caller', {'uid': self._uid})
+        assert self._recv() == 'ok'

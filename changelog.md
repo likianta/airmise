@@ -4,6 +4,10 @@
 
 - Show accurate position of error source.
 
+### 3.2.2 (2026-09-10)
+
+- Close proxy callee by caller.
+
 ### 3.2.1 (2026-09-07)
 
 - Separate socket local address and peer address.
