@@ -15,7 +15,6 @@ class Server:
     connections: tp.Dict[int, Responder]
     host: str
     port: int
-    verbose: bool
     _default_user_namespace: dict
     _socket: Socket
 
@@ -28,7 +27,6 @@ class Server:
         self.connections = {}
         self.host = host
         self.port = port
-        self.verbose = False
         self._default_user_namespace = {}
         self._socket = Socket()
         # self._assignment = _assignment
@@ -39,7 +37,7 @@ class Server:
         # /,
         host: str = '',
         port: int = 0,
-        verbose: tp.Union[bool, int] = 0,
+        # verbose: tp.Union[bool, int] = 0,
         proxy_host: str = '',
         proxy_port: int = 0,
         proxy_secret: str = '',
@@ -65,8 +63,7 @@ class Server:
         if user_namespace:
             self._default_user_namespace.update(user_namespace)
 
-        self.verbose = bool(verbose == 2)
-        self._socket.verbose = bool(verbose)
+        # self.verbose = bool(verbose == 2)
         self._socket.bind(host or self.host, port or self.port)
         self._socket.listen(20)
 
@@ -110,7 +107,6 @@ def run_server(
     # /,
     host: str = const.DEFAULT_HOST,
     port: int = const.DEFAULT_PORT,
-    verbose: bool = False,
 ) -> None:
     if host == '0.0.0.0':
         print(
@@ -121,4 +117,4 @@ def run_server(
             ':rp',
         )
     server = Server(host, port)
-    server.run(user_namespace, verbose=verbose)
+    server.run(user_namespace)

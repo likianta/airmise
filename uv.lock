@@ -157,7 +157,7 @@ wheels = [
 
 [[package]]
 name = "airmise"
-version = "3.2.2"
+version = "3.2.3"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
@@ -169,7 +169,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipython" },
-    { name = "neoprint" },
 ]
 
 [package.metadata]
@@ -177,14 +176,11 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.13.3" },
     { name = "argsense", specifier = ">=1.1.2" },
     { name = "lk-utils", specifier = ">=3.8.1", index = "http://localhost:2131/" },
-    { name = "neoprint", specifier = ">=0.1.10", index = "http://localhost:2131/" },
+    { name = "neoprint", specifier = ">=0.1.11", index = "http://localhost:2131/" },
 ]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "ipython", specifier = ">=9.16.0" },
-    { name = "neoprint", specifier = ">=0.1.10b1", index = "http://localhost:2131/" },
-]
+dev = [{ name = "ipython", specifier = ">=9.16.0" }]
 
 [[package]]
 name = "argsense"
@@ -396,7 +392,7 @@ wheels = [
 
 [[package]]
 name = "lk-utils"
-version = "3.8.2a0"
+version = "3.8.2a16"
 source = { registry = "http://localhost:2131/" }
 dependencies = [
     { name = "argsense" },
@@ -406,7 +402,7 @@ dependencies = [
     { name = "rich" },
 ]
 wheels = [
-    { url = "http://localhost:2131/lk-utils/lk_utils-3.8.2a0-py3-none-any.whl" },
+    { url = "http://localhost:2131/lk-utils/lk_utils-3.8.2a16-py3-none-any.whl" },
 ]
 
 [[package]]
@@ -561,13 +557,13 @@ wheels = [
 
 [[package]]
 name = "neoprint"
-version = "0.1.11b0"
+version = "0.1.11"
 source = { registry = "http://localhost:2131/" }
 dependencies = [
     { name = "rich" },
 ]
 wheels = [
-    { url = "http://localhost:2131/neoprint/neoprint-0.1.11b0-py3-none-any.whl" },
+    { url = "http://localhost:2131/neoprint/neoprint-0.1.11-py3-none-any.whl" },
 ]
 
 [[package]]

@@ -97,7 +97,7 @@ class Router(Server):
         data_bytes = conn.recvall()
         flag, event, data = decode(data_bytes)
         assert flag == const.INTERNAL
-        if event == 'register_proxy_caller':
+        if event == 'register_proxy_caller':  # Caller:_say_hi
             uid = data['uid']
             assert uid in self.routes, uid
             broker = self.connections[conn.port] = Broker(
@@ -105,7 +105,7 @@ class Router(Server):
             )
             broker.mainloop(blocking=False)
             conn.sendall(encode((const.NORMAL, 'ok')))
-        elif event == 'register_proxy_callee':
+        elif event == 'register_proxy_callee':  # Callee:_say_hi
             client_id = uuid()
             user_info: T.UserInfo = {
                 'client_id': client_id,
@@ -122,9 +122,7 @@ class Router(Server):
             print(user_info, ':nv2li')
             self.routes[client_id] = (conn, user_info)
             conn.sendall(encode((const.NORMAL, client_id)))
-        else:
-            # maybe regular client, see `../client.py:Client:_say_hi` and
-            # `../server.py:Server:_handle_connection`
+        else:  # `../client.py:Client:_say_hi`
             endpoint = self.connections[conn.port] = Responder(
                 conn, self._default_user_namespace
             )

@@ -11,18 +11,16 @@ class Socket:
     # port: int
     # peer_host: str
     # peer_port: int
-    verbose: bool
     _host: str
     _peer_host: str
     _peer_port: int
     _port: int
     _socket: socket.socket
 
-    def __init__(self, verbose: bool = False) -> None:
+    def __init__(self) -> None:
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # `self._host`, `self._port` are not initialized until 
+        # `self._host`, `self._port` are not initialized until
         # `self.connect/bind/accept`.
-        self.verbose = verbose
 
     # @property
     # def host(self) -> str:
@@ -116,7 +114,7 @@ class Socket:
         self._peer_host = addr[0]
         self._peer_port = addr[1]
 
-        peer_sock = PeerSocket(conn, addr[0], addr[1], self.verbose)
+        peer_sock = PeerSocket(conn, addr[0], addr[1])
         print(
             '[green]new connection accepted: '
             '[default dim]server ({}:[u dim]{}[/])[/] '
@@ -168,14 +166,13 @@ class Socket:
             fact_bytes = self._socket.recv(requested_size)
             data_bytes.extend(fact_bytes)
             requested_size -= len(fact_bytes)
-        if self.verbose:
-            print(
-                ':vi3',
-                'recv',
-                size_width,
-                '{:X} ({})'.format(exact_size, _pretty_size(exact_size)),
-                _shortify_message(data_bytes),
-            )
+
+        # print(
+        #     ':pvi3',
+        #     'recvall',
+        #     'header_size: {}'.format(size_width),
+        #     'body_size: {:X} ({})'.format(exact_size, _pretty_size(exact_size)),
+        # )
         return bytes(data_bytes)
 
     def send_close_event(self) -> None:
@@ -190,14 +187,6 @@ class Socket:
         exact_size = '{:X}'.format(len(data_bytes))
         size_width = len(exact_size)
         assert 0 < size_width <= 9
-        if self.verbose:
-            print(
-                ':vi3',
-                'send',
-                size_width,
-                '{} ({})'.format(exact_size, _pretty_size(int(exact_size, 16))),
-                _shortify_message(data_bytes),
-            )
         yield str(size_width).encode()
         yield exact_size.encode()
         yield data_bytes
@@ -212,12 +201,10 @@ class PeerSocket(Socket):
         connection: socket.socket,
         host: str,
         port: int,
-        verbose: bool = False,
     ) -> None:
         self._socket = connection
         self._host = host
         self._port = port
-        self.verbose = verbose
 
     @property
     def host(self) -> str:
@@ -251,15 +238,3 @@ def _pretty_size(size: tp.Union[int, float]) -> str:
         size /= 1024
     else:
         return f'{size:.2f}TB'
-
-
-def _shortify_message(
-    msg_in_bytes: tp.Union[bytes, bytearray], chunk_size: int = 10
-) -> str:
-    if len(msg_in_bytes) < chunk_size * 2:
-        return msg_in_bytes.decode()
-    else:
-        return '{}...{}'.format(
-            msg_in_bytes[:chunk_size].decode(),
-            msg_in_bytes[-chunk_size:].decode(),
-        )

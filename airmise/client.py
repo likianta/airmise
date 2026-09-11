@@ -10,6 +10,8 @@ from .socket_wrapper import get_any_vaild_socket
 
 class T:
     HostOrHosts = tp.Union[str, tp.Iterable[str]]
+
+
 HostOrHosts = T.HostOrHosts  # expose to interface
 
 
@@ -43,17 +45,12 @@ class Client:
     def url(self) -> str:  # DELETE?
         return 'tcp://{}:{}'.format(self.host, self.port)
 
-    def config(
-        self, host: str, port: int, verbose: tp.Optional[bool] = None
-    ) -> tp.Self:
+    def config(self, host: str, port: int) -> tp.Self:
         if (self.host, self.port) != (host, port):
             self.host, self.port = host, port
             if self.is_opened:
                 print('restart client to apply new config', ':pv')
                 self.reopen()
-                if verbose is not None:
-                    assert self._socket
-                    self._socket.verbose = verbose
         return self
 
     def connect(

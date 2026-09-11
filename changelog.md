@@ -4,6 +4,10 @@
 
 - Show accurate position of error source.
 
+### 3.2.3 (2026-09-21)
+
+- Remove verbose parameter from socket, client and server.
+
 ### 3.2.2 (2026-09-10)
 
 - Close proxy callee by caller.
