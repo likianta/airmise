@@ -156,7 +156,7 @@ class Socket:
             )
             self.sendall(b'ok')
             self._socket.close()
-            print(':pv3', 'port released', self.port)
+            print(':pv3', 'port released', self.local_port)
             raise SocketClosed
 
         exact_size = int(self._socket.recv(size_width), 16)
@@ -204,13 +204,6 @@ class Socket:
 
 
 class PeerSocket(Socket):
-    host: str
-    port: int
-    # this_host: str
-    # this_port: int
-    # peer_host: str
-    # peer_port: int
-
     def __init__(
         self,
         # peer_connection: socket.socket,
@@ -222,9 +215,17 @@ class PeerSocket(Socket):
         verbose: bool = False,
     ) -> None:
         self._socket = connection
-        self.host = host
-        self.port = port
+        self._host = host
+        self._port = port
         self.verbose = verbose
+
+    @property
+    def host(self) -> str:
+        return self._host
+
+    @property
+    def port(self) -> int:
+        return self._port
 
 
 def get_any_vaild_socket(

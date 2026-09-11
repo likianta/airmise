@@ -22,12 +22,10 @@ def client(server_port: int = air.DEFAULT_PORT) -> None:
         """
         from lk_utils import fs
         def bar():
-            file = 'uv.lock'
+            file = 'pyproject.toml'
             print(file, fs.filesize(file, str))
-            return fs.load(file)
-
+            return fs.load(file, 'plain')
         assert bar() is not None
-        return None
         """
     )
 
